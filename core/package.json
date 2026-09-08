@@ -1,0 +1,9 @@
+{
+  "name": "@2176studios/core",
+  "version": "0.0.1",
+  "private": true,
+  "main": "src/index.js",
+  "scripts": {
+    "test": "node --test"
+  }
+}

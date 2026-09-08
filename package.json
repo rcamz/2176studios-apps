@@ -1,0 +1,13 @@
+{
+  "name": "2176studios-apps",
+  "private": true,
+  "workspaces": [
+    "core",
+    "web"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=web",
+    "build": "npm run build --workspace=web",
+    "test": "npm run test --workspace=core"
+  }
+}
