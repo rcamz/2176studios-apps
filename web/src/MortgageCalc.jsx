@@ -738,13 +738,13 @@ export default function MortgageCalc() {
         <div className="modal-overlay" onClick={() => setModal(null)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <button className="modal-close" onClick={() => setModal(null)}>×</button>
-            <div className="modal-icon">{modal === 'save' ? '⬇' : '⤴'}</div>
+            {modal === 'share' && <div className="modal-icon">⤴</div>}
             <h2 className="modal-title">
               {modal === 'save' ? 'Save your calculation' : 'Share your calculation'}
             </h2>
             <p className="modal-desc">
               {modal === 'save'
-                ? 'Copy this link and bookmark it. Open it any time to return to exactly these inputs and results.'
+                ? 'Copy this link. Open it any time to return to exactly these inputs and results.'
                 : 'Copy this link and send it. Anyone who opens it will see the same inputs and results instantly.'}
             </p>
             <div className="modal-url-wrap">
