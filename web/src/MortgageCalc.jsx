@@ -7,6 +7,12 @@ import { amortize, summarize } from './lib/amortize.js';
 import AdUnit from './AdUnit.jsx';
 import './MortgageCalc.css';
 
+const IconBubble = () => (
+  <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M2 3.5A1.5 1.5 0 0 1 3.5 2h9A1.5 1.5 0 0 1 14 3.5v6A1.5 1.5 0 0 1 12.5 11H6l-3 2.5V11H3.5A1.5 1.5 0 0 1 2 9.5v-6Z"/>
+  </svg>
+);
+
 const IconDisk = () => (
   <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
     <rect x="1.5" y="1.5" width="13" height="13" rx="1.5"/>
@@ -325,6 +331,7 @@ export default function MortgageCalc() {
       <div className="calc-topbar">
         <span className="calc-brand">2176 Studios</span>
         <div className="topbar-actions">
+          <a className="btn-icon" title="Feedback / Support" href="mailto:support@2176studios.com"><IconBubble /></a>
           <button className="btn-icon" title="Save" onClick={() => { setCopied(false); setModal('save'); }}><IconDisk /></button>
           <button className="btn-icon" title="Share" onClick={handleShare}><IconShare /></button>
           <button className="btn-icon" title="Toggle theme" onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}><IconSun /></button>
