@@ -35,7 +35,9 @@ const DEFAULTS = {
   fixedRatePercent: 5.8,
   fixedPeriodYears: 2,
   revertRatePercent: 6.5,
+  splitMode: 'pct',
   splitFixedPct: 60,
+  splitFixedAmt: 390000,
   splitVariableRatePercent: 6.2,
   offsetStart: 25000,
   offsetMonthly: 3500,
@@ -73,8 +75,10 @@ export default function MortgageCalc() {
   const { withRows, baseRows, withSummary, baseSummary, chartData, rateSwitchMonth } =
     useMemo(() => {
       const isSplit = inputs.rateType === 'split';
-      const fixedAmt = isSplit ? inputs.loanAmount * (inputs.splitFixedPct / 100) : inputs.loanAmount;
-      const varAmt   = isSplit ? inputs.loanAmount * ((100 - inputs.splitFixedPct) / 100) : 0;
+      const fixedAmt = isSplit
+        ? (inputs.splitMode === 'dollar' ? inputs.splitFixedAmt : inputs.loanAmount * (inputs.splitFixedPct / 100))
+        : inputs.loanAmount;
+      const varAmt = isSplit ? inputs.loanAmount - fixedAmt : 0;
 
       const baseCfg = {
         loanAmount: inputs.loanAmount,
@@ -232,21 +236,57 @@ export default function MortgageCalc() {
 
             {inputs.rateType === 'split' && (
               <div className="field">
-                <label>Split ratio</label>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 8, alignItems: 'center' }}>
-                  <div className="input-wrap has-suffix">
-                    <input type="number" value={inputs.splitFixedPct} onChange={(e) => {
-                      const v = Math.min(99, Math.max(1, parseFloat(e.target.value) || 0));
-                      set('splitFixedPct', v);
-                    }} min="1" max="99" step="1" />
-                    <span className="input-suffix">% fixed</span>
-                  </div>
-                  <span style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.8rem' }}>/</span>
-                  <div className="input-wrap has-suffix">
-                    <input type="number" value={100 - inputs.splitFixedPct} readOnly style={{ background: 'var(--surface-alt)', color: 'var(--text-muted)' }} />
-                    <span className="input-suffix">% variable</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <label style={{ marginBottom: 0 }}>Split</label>
+                  <div className="segmented" style={{ width: 'auto' }}>
+                    {['pct', 'dollar'].map((m) => (
+                      <button key={m} className={inputs.splitMode === m ? 'active' : ''} onClick={() => set('splitMode', m)}
+                        style={{ padding: '4px 12px', fontSize: '0.78rem' }}>
+                        {m === 'pct' ? '%' : '$'}
+                      </button>
+                    ))}
                   </div>
                 </div>
+
+                {inputs.splitMode === 'pct' ? (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 8, alignItems: 'center' }}>
+                    <div className="input-wrap has-suffix">
+                      <input type="number" value={inputs.splitFixedPct} onChange={(e) => {
+                        const v = Math.min(99, Math.max(1, parseFloat(e.target.value) || 0));
+                        set('splitFixedPct', v);
+                        set('splitFixedAmt', Math.round(inputs.loanAmount * v / 100));
+                      }} min="1" max="99" step="1" />
+                      <span className="input-suffix">% fixed</span>
+                    </div>
+                    <span style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.8rem' }}>/</span>
+                    <div className="input-wrap has-suffix">
+                      <input type="number" value={100 - inputs.splitFixedPct} readOnly style={{ background: 'var(--surface-alt)', color: 'var(--text-muted)' }} />
+                      <span className="input-suffix">% variable</span>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 8, alignItems: 'center' }}>
+                      <div className="input-wrap has-prefix">
+                        <span className="input-prefix">$</span>
+                        <input type="number" value={inputs.splitFixedAmt} onChange={(e) => {
+                          const v = Math.min(inputs.loanAmount - 1, Math.max(1, parseFloat(e.target.value) || 0));
+                          set('splitFixedAmt', v);
+                          set('splitFixedPct', Math.round(v / inputs.loanAmount * 100));
+                        }} min="1" step="1000" />
+                      </div>
+                      <span style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.8rem' }}>/</span>
+                      <div className="input-wrap has-prefix">
+                        <span className="input-prefix">$</span>
+                        <input type="number" value={inputs.loanAmount - inputs.splitFixedAmt} readOnly style={{ background: 'var(--surface-alt)', color: 'var(--text-muted)' }} />
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                      <span>fixed ({Math.round(inputs.splitFixedAmt / inputs.loanAmount * 100)}%)</span>
+                      <span>variable ({Math.round((inputs.loanAmount - inputs.splitFixedAmt) / inputs.loanAmount * 100)}%)</span>
+                    </div>
+                  </>
+                )}
               </div>
             )}
 
