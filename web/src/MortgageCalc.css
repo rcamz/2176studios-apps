@@ -102,28 +102,22 @@
   .calc-instances[data-count="1"] .compare-card {
     position: fixed;
     right: 36px;
-    top: 50%;
+    top: 60%;
     transform: translateY(-50%);
     width: 160px;
     min-height: 220px;
     z-index: 40;
   }
 
-  /* 2-instance: narrow strip at the end of the row, same ghost style */
+  /* 2-instance: same fixed card as single mode, sits to the right of both columns */
   .calc-instances[data-count="2"] .compare-card {
-    width: 80px;
-    flex-shrink: 0;
-    align-self: stretch;
-    min-height: 200px;
-    margin: 18px 18px 18px 0;
-    padding: 16px 8px;
-    gap: 6px;
-  }
-  .calc-instances[data-count="2"] .compare-card .compare-card-sub {
-    display: none;
-  }
-  .calc-instances[data-count="2"] .compare-card .compare-card-plus {
-    font-size: 1.5rem;
+    position: fixed;
+    right: 36px;
+    top: 60%;
+    transform: translateY(-50%);
+    width: 160px;
+    min-height: 220px;
+    z-index: 40;
   }
 }
 
@@ -621,19 +615,20 @@ select.field-select {
 
 /* ─── Left sidebar ads — desktop single mode ──────────────────────── */
 .ad-sidebar {
-  display: none; /* hidden on mobile and narrow viewports */
+  display: none;
 }
 
-@media (min-width: 1200px) {
+@media (min-width: 980px) {
   .ad-sidebar {
     display: flex;
     flex-direction: column;
     gap: 14px;
     position: fixed;
-    left: 16px;
+    /* sits 16px to the left of the centred 640px calc: 50% - 320px - 16px - 140px */
+    left: calc(50% - 476px);
     top: 50%;
     transform: translateY(-50%);
-    width: 160px;
+    width: 140px;
     z-index: 40;
   }
 }
@@ -650,8 +645,8 @@ select.field-select {
   padding: 8px 18px;
 }
 
-/* Hide bottom bar on wide desktop when sidebar is showing instead */
-@media (min-width: 1200px) {
+/* Hide bottom bar on desktop when sidebar is showing instead */
+@media (min-width: 980px) {
   .ad-bar-float.ad-bar-desktop-hide { display: none; }
 }
 
