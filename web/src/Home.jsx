@@ -35,8 +35,10 @@ const APPS = [
   },
   {
     name: 'Pay / Tax Calculator',
+    sub: 'Income Tax + Medicare + Super',
     desc: 'Gross to net take-home pay, Medicare levy, HECS/HELP, super guarantee.',
-    live: false,
+    href: '/paytaxcalc',
+    live: true,
     color: '#639922',
     bg: '#EAF3DE',
     darkColor: '#7DBB2A',

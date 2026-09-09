@@ -1,0 +1,782 @@
+/* ─── Page shell ─────────────────────────────────────────────────── */
+.calc-page {
+  min-height: 100vh;
+}
+
+/* ─── Instances container ─────────────────────────────────────────── */
+
+/* All counts share flex so the compare card sits naturally to the right */
+.calc-instances {
+  display: flex;
+  align-items: start;
+}
+
+/* 1 column: block, instance centred — compare card is fixed so out of flow */
+.calc-instances[data-count="1"] {
+  display: block;
+}
+.calc-instances[data-count="1"] .calc-instance {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 0 18px 120px;
+}
+
+/* 2 columns: fill viewport, no horizontal scroll */
+.calc-instances[data-count="2"] {
+  overflow-x: hidden;
+}
+.calc-instances[data-count="2"] .calc-instance {
+  flex: 1;
+  min-width: 0;
+  padding: 0 18px 120px;
+  border-right: 1px solid var(--border);
+}
+
+/* 3 columns: fit if viewport allows, scroll if not */
+.calc-instances[data-count="3"] {
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+}
+.calc-instances[data-count="3"] .calc-instance {
+  flex: 1;
+  min-width: min(380px, 90vw);
+  padding: 0 18px 120px;
+  border-right: 1px solid var(--border);
+  scroll-snap-align: start;
+}
+.calc-instances[data-count="3"] .calc-instance:last-child {
+  border-right: none;
+}
+
+.calc-instances[data-count="3"]::-webkit-scrollbar { height: 5px; }
+.calc-instances[data-count="3"]::-webkit-scrollbar-track { background: transparent; }
+.calc-instances[data-count="3"]::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
+
+/* ─── Ghosted compare card ────────────────────────────────────────── */
+.compare-card {
+  /* Hidden on mobile — Compare isn't available there */
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+  background: none;
+  border: 1.5px dashed var(--border-strong);
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-family: var(--sans);
+  color: var(--text-muted);
+  opacity: 0.68;
+  transition: opacity 0.15s, border-color 0.15s, color 0.15s;
+  padding: 28px 16px;
+}
+.compare-card:hover {
+  opacity: 1;
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.compare-card-plus {
+  font-size: 2rem;
+  font-weight: 300;
+  line-height: 1;
+}
+.compare-card-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+.compare-card-sub {
+  font-size: 0.72rem;
+  line-height: 1.5;
+  max-width: 140px;
+}
+
+/* Single-instance: tall sticky card to the right of the calc */
+@media (min-width: 860px) {
+  .compare-card {
+    display: flex;
+  }
+
+  .calc-instances[data-count="1"] .compare-card {
+    position: fixed;
+    /* 16px to the right of the 640px centred calc; min 16px from viewport edge */
+    right: max(16px, calc(50% - 496px));
+    top: 60%;
+    transform: translateY(-50%);
+    width: 160px;
+    min-height: 220px;
+    z-index: 40;
+  }
+
+  /* 2-instance: fixed narrow strip, vertically centred, flush to right edge */
+  .calc-instances[data-count="2"] .compare-card {
+    position: fixed;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 80px;
+    z-index: 40;
+    padding: 28px 8px;
+    gap: 6px;
+    border: none;
+    border-left: 1.5px dashed var(--border-strong);
+    border-radius: 0;
+  }
+  .calc-instances[data-count="2"] .compare-card .compare-card-sub {
+    display: none;
+  }
+  .calc-instances[data-count="2"] .compare-card .compare-card-plus {
+    font-size: 1.5rem;
+  }
+  .calc-instances[data-count="2"] .compare-card .compare-card-title {
+    font-size: 0.65rem;
+  }
+
+  /* Reserve space on the right so 2-instance columns don't sit behind the card */
+  .calc-instances[data-count="2"] {
+    padding-right: 80px;
+  }
+}
+
+/* ─── Scenario header (comparison mode only) ──────────────────────── */
+.instance-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0 0;
+  margin-bottom: 20px;
+}
+
+
+.instance-label {
+  font-size: 0.63rem;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.instance-remove {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  font-size: 1rem;
+  line-height: 1;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.12s, border-color 0.12s;
+}
+
+.instance-remove:hover {
+  color: var(--red);
+  border-color: var(--red);
+}
+
+/* ─── Mobile desktop CTA ──────────────────────────────────────────── */
+.desktop-cta {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 0.78rem;
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+}
+.desktop-cta:hover { text-decoration: underline; }
+
+/* Hide on desktop — Compare button in topbar serves the same purpose */
+@media (min-width: 860px) {
+  .desktop-cta { display: none; }
+}
+
+
+/* ─── Below-chart action buttons ─────────────────────────────────── */
+.chart-actions {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.btn-action {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 11px 0;
+  background: var(--surface);
+  border: none;
+  border-right: 1px solid var(--border);
+  color: var(--accent);
+  font-family: var(--sans);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+.btn-action:last-child { border-right: none; }
+.btn-action:hover {
+  background: var(--text);
+  color: var(--bg);
+}
+
+/* ─── Page heading ────────────────────────────────────────────────── */
+.calc-heading {
+  margin-bottom: 28px;
+}
+.calc-heading h1 {
+  font-size: clamp(1.3rem, 3vw, 1.75rem);
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  line-height: 1.15;
+  color: var(--text);
+}
+.calc-heading-sub {
+  display: block;
+  font-size: 0.82em;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: -0.2px;
+  margin-top: 6px;
+}
+.calc-heading p {
+  margin-top: 6px;
+  font-size: 0.83rem;
+  color: var(--text-muted);
+}
+
+.calc-heading--compact {
+  margin-bottom: 16px;
+}
+.calc-heading--compact h2 {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  color: var(--text);
+}
+
+/* ─── Action buttons (Save / Share) ──────────────────────────────── */
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  padding: 7px 14px;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+  white-space: nowrap;
+}
+.btn-outline:hover {
+  background: var(--text);
+  color: var(--bg);
+  border-color: var(--text);
+}
+
+/* ─── Single-column layout inside each instance ──────────────────── */
+.calc-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ─── Input panel ─────────────────────────────────────────────────── */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.panel-section {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.panel-section:last-child { border-bottom: none; }
+
+.section-title {
+  font-size: 0.63rem;
+  font-weight: 700;
+  letter-spacing: 0.9px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+/* ─── Form fields ─────────────────────────────────────────────────── */
+.field { margin-bottom: 10px; }
+.field:last-child { margin-bottom: 0; }
+
+.field label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+  font-weight: 400;
+}
+
+.input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.input-prefix, .input-suffix {
+  position: absolute;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+.input-prefix { left: 9px; }
+.input-suffix { right: 9px; }
+
+.input-wrap input,
+input.field-input {
+  width: 100%;
+  padding: 7px 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.input-wrap input:focus,
+input.field-input:focus {
+  border-color: var(--accent);
+}
+.input-wrap.has-prefix input { padding-left: 22px; }
+.input-wrap.has-suffix input { padding-right: 28px; }
+
+select.field-select {
+  width: 100%;
+  padding: 7px 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: var(--sans);
+  font-size: 0.82rem;
+  color: var(--text);
+  outline: none;
+}
+
+/* ─── Segmented control ───────────────────────────────────────────── */
+.segmented {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.segmented button {
+  flex: 1;
+  padding: 6px 0;
+  border: none;
+  background: var(--surface-2);
+  font-family: var(--sans);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: background 0.12s, color 0.12s;
+  border-right: 1px solid var(--border);
+}
+.segmented button:last-child { border-right: none; }
+.segmented button.active {
+  background: var(--accent);
+  color: var(--accent-on);
+}
+
+/* ─── Lump sums ───────────────────────────────────────────────────── */
+.lump-list { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+.lump-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 6px;
+  align-items: center;
+}
+.lump-row input {
+  padding: 6px 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--text);
+  width: 100%;
+  outline: none;
+}
+.lump-row input:focus { border-color: var(--accent); }
+.lump-row button {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 2px 4px;
+  transition: color 0.12s;
+}
+.lump-row button:hover { color: var(--red); }
+.add-lump {
+  margin-top: 8px;
+  background: none;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  font-family: var(--sans);
+  font-size: 0.75rem;
+  padding: 6px 10px;
+  cursor: pointer;
+  width: 100%;
+  text-align: center;
+  transition: border-color 0.15s, color 0.15s;
+}
+.add-lump:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ─── Results panel ───────────────────────────────────────────────── */
+.results-panel { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+
+/* ─── Savings block ───────────────────────────────────────────────── */
+.savings-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px 20px 18px;
+}
+.savings-label {
+  font-size: 0.63rem;
+  font-weight: 700;
+  letter-spacing: 0.9px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+.savings-amount {
+  font-family: var(--mono);
+  font-size: clamp(2.4rem, 5vw, 3.4rem);
+  font-weight: 500;
+  letter-spacing: -2px;
+  line-height: 1;
+  color: var(--accent);
+}
+.savings-sub {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 5px;
+}
+.savings-meta {
+  display: flex;
+  gap: 0;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.savings-stat {
+  flex: 1;
+  padding-right: 16px;
+  border-right: 1px solid var(--border);
+  margin-right: 16px;
+}
+.savings-stat:last-child { border-right: none; margin-right: 0; padding-right: 0; }
+.savings-stat-label { font-size: 0.68rem; color: var(--text-muted); }
+.savings-stat-value {
+  font-family: var(--mono);
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text);
+  margin-top: 2px;
+}
+
+/* ─── Stat cards ──────────────────────────────────────────────────── */
+.stat-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.stat-card {
+  background: var(--surface);
+  padding: 12px 14px;
+  border-right: 1px solid var(--border);
+}
+.stat-card:last-child { border-right: none; }
+.stat-card-label {
+  font-size: 0.67rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+.stat-card-value {
+  font-family: var(--mono);
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text);
+  margin-top: 3px;
+}
+
+/* ─── Rate callout ────────────────────────────────────────────────── */
+.rate-callout {
+  background: var(--accent-dim);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  font-size: 0.78rem;
+  color: var(--text);
+}
+.rate-callout strong { display: block; margin-bottom: 2px; font-weight: 600; }
+
+/* ─── Chart card ──────────────────────────────────────────────────── */
+.chart-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+.chart-title {
+  font-size: 0.63rem;
+  font-weight: 700;
+  letter-spacing: 0.9px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+}
+
+/* ─── Schedule table ──────────────────────────────────────────────── */
+.schedule-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.schedule-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.12s;
+}
+.schedule-header:hover { background: var(--surface-2); }
+.schedule-title {
+  font-size: 0.63rem;
+  font-weight: 700;
+  letter-spacing: 0.9px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.schedule-toggle { font-size: 0.72rem; color: var(--text-muted); }
+
+.schedule-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.7rem;
+}
+.schedule-table th {
+  background: var(--surface-2);
+  padding: 6px 7px;
+  text-align: right;
+  font-weight: 600;
+  color: var(--text-muted);
+  font-size: 0.63rem;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+.schedule-table th:first-child { text-align: left; }
+.schedule-table td {
+  padding: 5px 7px;
+  text-align: right;
+  border-top: 1px solid var(--border);
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: var(--text);
+}
+.schedule-table td:first-child {
+  text-align: left;
+  font-family: var(--sans);
+  color: var(--text-muted);
+}
+.schedule-table tr.rate-switch { background: var(--accent-dim); }
+.schedule-table tr:hover { background: var(--surface-2); }
+
+.show-all-btn {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  background: none;
+  border: none;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-family: var(--sans);
+  font-size: 0.75rem;
+  cursor: pointer;
+  text-align: center;
+  transition: color 0.12s, background 0.12s;
+}
+.show-all-btn:hover { background: var(--surface-2); color: var(--text); }
+
+/* ─── Ad placeholder ──────────────────────────────────────────────── */
+.ad-wrap {
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 0.65rem;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+/* ─── Left sidebar ads — desktop single mode ──────────────────────── */
+.ad-sidebar {
+  display: none;
+}
+
+@media (min-width: 980px) {
+  .ad-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    position: fixed;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 140px;
+    z-index: 40;
+  }
+}
+
+/* ─── Floating bottom ad bar ─────────────────────────────────────── */
+.ad-bar-float {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  padding: 8px 18px;
+}
+
+/* Hide bottom bar on desktop when sidebar is showing instead */
+@media (min-width: 980px) {
+  .ad-bar-float.ad-bar-desktop-hide { display: none; }
+}
+
+/* ─── Disclaimer ──────────────────────────────────────────────────── */
+.disclaimer {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  /* Extra bottom gap for floating bar in single mode */
+  margin-bottom: 0;
+}
+
+
+/* ─── Modal ───────────────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 20px;
+  backdrop-filter: blur(4px);
+}
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  padding: 28px 24px 24px;
+  max-width: 420px;
+  width: 100%;
+  position: relative;
+}
+.modal-close {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  line-height: 1;
+  transition: color 0.12s;
+}
+.modal-close:hover { color: var(--text); }
+.modal-icon { font-size: 1.4rem; margin-bottom: 10px; }
+.modal-title {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+.modal-desc {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+.modal-url-wrap { margin-bottom: 12px; }
+.modal-url {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  background: var(--surface-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: text;
+  outline: none;
+}
+.modal-copy {
+  width: 100%;
+  padding: 10px;
+  background: var(--accent);
+  color: var(--accent-on);
+  border: none;
+  border-radius: var(--radius);
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.modal-copy:hover { opacity: 0.88; }
+
+/* ─── Offset note ─────────────────────────────────────────────────── */
+.offset-note {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
