@@ -4,7 +4,8 @@ import CalcInstance from './CalcInstance.jsx';
 import AdUnit from './AdUnit.jsx';
 import './MortgageCalc.css';
 
-const AD_SLOT_BANNER = 'XXXXXXXXXX';
+const AD_SLOT_BANNER  = 'XXXXXXXXXX';
+const AD_SLOT_SIDEBAR = 'XXXXXXXXXX';
 
 const IconBubble = () => (
   <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -89,7 +90,17 @@ export default function MortgageCalc() {
         )}
       </div>
 
-      <div className="ad-bar-float">
+      {/* Left sidebar — desktop single mode only (hidden on mobile and comparison) */}
+      {!isMulti && (
+        <div className="ad-sidebar">
+          <AdUnit slotId={AD_SLOT_SIDEBAR} format="skyscraper" />
+          <AdUnit slotId={AD_SLOT_SIDEBAR} format="skyscraper" />
+          <AdUnit slotId={AD_SLOT_SIDEBAR} format="skyscraper" />
+        </div>
+      )}
+
+      {/* Bottom bar — always on mobile; on desktop only in comparison mode */}
+      <div className={`ad-bar-float${!isMulti ? ' ad-bar-desktop-hide' : ''}`}>
         <AdUnit slotId={AD_SLOT_BANNER} format="horizontal" />
       </div>
     </div>

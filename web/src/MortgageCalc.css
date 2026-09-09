@@ -619,6 +619,25 @@ select.field-select {
   font-weight: 600;
 }
 
+/* ─── Left sidebar ads — desktop single mode ──────────────────────── */
+.ad-sidebar {
+  display: none; /* hidden on mobile and narrow viewports */
+}
+
+@media (min-width: 1200px) {
+  .ad-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    position: fixed;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 160px;
+    z-index: 40;
+  }
+}
+
 /* ─── Floating bottom ad bar ─────────────────────────────────────── */
 .ad-bar-float {
   position: fixed;
@@ -629,6 +648,11 @@ select.field-select {
   background: var(--bg);
   border-top: 1px solid var(--border);
   padding: 8px 18px;
+}
+
+/* Hide bottom bar on wide desktop when sidebar is showing instead */
+@media (min-width: 1200px) {
+  .ad-bar-float.ad-bar-desktop-hide { display: none; }
 }
 
 /* ─── Disclaimer ──────────────────────────────────────────────────── */

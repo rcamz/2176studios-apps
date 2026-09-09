@@ -5,6 +5,7 @@ const PUBLISHER_ID = 'ca-pub-9072302221360810';
 const SIZES = {
   horizontal: { width: '100%', height: 90 },
   rectangle:  { width: '100%', height: 250 },
+  skyscraper: { width: '100%', height: 260 },
   auto:       { width: '100%', height: 120 },
 };
 
