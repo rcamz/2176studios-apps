@@ -58,7 +58,7 @@
   display: none;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   gap: 8px;
   text-align: center;
   background: none;
@@ -67,7 +67,7 @@
   cursor: pointer;
   font-family: var(--sans);
   color: var(--text-muted);
-  opacity: 0.5;
+  opacity: 0.68;
   transition: opacity 0.15s, border-color 0.15s, color 0.15s;
   padding: 28px 16px;
 }
@@ -109,15 +109,14 @@
     z-index: 40;
   }
 
-  /* 2-instance: narrow strip at the end of the row */
+  /* 2-instance: narrow strip at the end of the row, same ghost style */
   .calc-instances[data-count="2"] .compare-card {
-    width: 72px;
+    width: 80px;
     flex-shrink: 0;
     align-self: stretch;
     min-height: 200px;
-    border-radius: 0 var(--radius) var(--radius) 0;
-    border-left: none;
-    padding: 28px 8px;
+    margin: 18px 18px 18px 0;
+    padding: 16px 8px;
     gap: 6px;
   }
   .calc-instances[data-count="2"] .compare-card .compare-card-sub {
