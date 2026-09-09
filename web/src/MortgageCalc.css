@@ -11,17 +11,14 @@
   align-items: start;
 }
 
-/* 1 column: centre the instance, compare card beside it */
+/* 1 column: block, instance centred — compare card is fixed so out of flow */
 .calc-instances[data-count="1"] {
-  max-width: calc(760px + 200px + 32px); /* instance + card + gap + padding */
-  margin: 0 auto;
-  padding: 0 18px;
-  gap: 16px;
+  display: block;
 }
 .calc-instances[data-count="1"] .calc-instance {
-  flex: 1;
-  min-width: 0;
-  padding: 0 0 120px;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 0 18px 120px;
 }
 
 /* 2 columns: fill viewport, no horizontal scroll */
@@ -103,11 +100,13 @@
   }
 
   .calc-instances[data-count="1"] .compare-card {
-    width: 180px;
-    flex-shrink: 0;
-    min-height: 280px;
-    position: sticky;
-    top: 50px;
+    position: fixed;
+    right: 36px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 160px;
+    min-height: 220px;
+    z-index: 40;
   }
 
   /* 2-instance: narrow strip at the end of the row */
