@@ -45,35 +45,40 @@ body {
 
 /* ─── Shared topbar ───────────────────────────────────────────────── */
 .calc-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 60;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 0;
+  padding: 9px 0;
   border-bottom: 1px solid var(--border);
-  margin-bottom: 32px;
+  margin-bottom: 28px;
+  background: var(--bg);
 }
 .calc-brand {
-  font-size: 0.7rem;
+  font-size: 0.63rem;
   font-weight: 700;
   letter-spacing: 1.2px;
   text-transform: uppercase;
   color: var(--text-muted);
   text-decoration: none;
 }
-.topbar-actions { display: flex; gap: 6px; }
+.topbar-actions { display: flex; gap: 5px; }
 
 .btn-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: 27px;
+  height: 27px;
   background: none;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius);
   color: var(--accent);
   cursor: pointer;
   transition: color 0.12s, background 0.12s, border-color 0.12s;
+  text-decoration: none;
 }
 .btn-icon:hover {
   color: var(--text);

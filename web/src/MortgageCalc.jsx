@@ -332,9 +332,9 @@ export default function MortgageCalc() {
         <span className="calc-brand">2176 Studios</span>
         <div className="topbar-actions">
           <a className="btn-icon" title="Feedback / Support" href="mailto:support@2176studios.com"><IconBubble /></a>
+          <button className="btn-icon" title="Toggle theme" onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}><IconSun /></button>
           <button className="btn-icon" title="Save" onClick={() => { setCopied(false); setModal('save'); }}><IconDisk /></button>
           <button className="btn-icon" title="Share" onClick={handleShare}><IconShare /></button>
-          <button className="btn-icon" title="Toggle theme" onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}><IconSun /></button>
         </div>
       </div>
 
