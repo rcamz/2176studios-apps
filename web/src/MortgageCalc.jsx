@@ -25,13 +25,17 @@ const IconShare = () => (
   </svg>
 );
 
-const IconGlobe = () => (
+const IconSun = () => (
   <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-    <circle cx="8" cy="8" r="6.25"/>
-    <ellipse cx="8" cy="8" rx="2.75" ry="6.25"/>
-    <line x1="1.75" y1="8" x2="14.25" y2="8"/>
-    <line x1="2.5" y1="5" x2="13.5" y2="5"/>
-    <line x1="2.5" y1="11" x2="13.5" y2="11"/>
+    <circle cx="8" cy="8" r="2.75"/>
+    <line x1="8" y1="1.5" x2="8" y2="3"/>
+    <line x1="8" y1="13" x2="8" y2="14.5"/>
+    <line x1="1.5" y1="8" x2="3" y2="8"/>
+    <line x1="13" y1="8" x2="14.5" y2="8"/>
+    <line x1="3.4" y1="3.4" x2="4.5" y2="4.5"/>
+    <line x1="11.5" y1="11.5" x2="12.6" y2="12.6"/>
+    <line x1="12.6" y1="3.4" x2="11.5" y2="4.5"/>
+    <line x1="4.5" y1="11.5" x2="3.4" y2="12.6"/>
   </svg>
 );
 
@@ -138,7 +142,7 @@ export default function MortgageCalc() {
   const [inputs, setInputs] = useState(() => ({ ...DEFAULTS, ...decodeParams(window.location.search) }));
   const [showTable, setShowTable] = useState(false);
   const [showAllRows, setShowAllRows] = useState(false);
-  const [theme, setTheme] = useState('dark');
+  const [theme, setTheme] = useState('light');
   const [modal, setModal] = useState(null); // null | 'save' | 'share'
   const [copied, setCopied] = useState(false);
 
@@ -309,7 +313,7 @@ export default function MortgageCalc() {
         <div className="topbar-actions">
           <button className="btn-icon" title="Save" onClick={() => { setCopied(false); setModal('save'); }}><IconDisk /></button>
           <button className="btn-icon" title="Share" onClick={handleShare}><IconShare /></button>
-          <button className="btn-icon" title="Toggle theme" onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}><IconGlobe /></button>
+          <button className="btn-icon" title="Toggle theme" onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}><IconSun /></button>
         </div>
       </div>
 
