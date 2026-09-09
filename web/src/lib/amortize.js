@@ -13,6 +13,7 @@ export function amortize({
   offsetStart = 0,
   offsetMonthly = 0,
   offsetLumps = [],
+  offsetWithdrawals = [],
   extraRecurring = 0,
   extraLumps = [],
   includeOffset = true,
@@ -48,6 +49,9 @@ export function amortize({
       offset += offsetMonthly;
       for (const lump of offsetLumps) {
         if (lump.month === month) offset += lump.amount;
+      }
+      for (const w of offsetWithdrawals) {
+        if (w.month === month) offset = Math.max(0, offset - w.amount);
       }
     }
 

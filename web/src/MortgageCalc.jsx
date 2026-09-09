@@ -79,6 +79,7 @@ const DEFAULTS = {
   offsetStart: 25000,
   offsetMonthly: 3500,
   offsetLumps: [],
+  offsetWithdrawals: [],
   extraRecurring: 0,
   extraLumps: [],
 };
@@ -103,8 +104,9 @@ function encodeInputs(inp) {
   }
   p.set('os', inp.offsetStart);
   p.set('om', inp.offsetMonthly);
-  if (inp.offsetLumps.length)  p.set('ol', JSON.stringify(inp.offsetLumps.map(l => [l.month, l.amount])));
-  if (inp.extraRecurring)      p.set('xr', inp.extraRecurring);
+  if (inp.offsetLumps.length)       p.set('ol', JSON.stringify(inp.offsetLumps.map(l => [l.month, l.amount])));
+  if (inp.offsetWithdrawals.length) p.set('ow', JSON.stringify(inp.offsetWithdrawals.map(l => [l.month, l.amount])));
+  if (inp.extraRecurring)           p.set('xr', inp.extraRecurring);
   if (inp.extraLumps.length)   p.set('xl', JSON.stringify(inp.extraLumps.map(l => [l.month, l.amount])));
   return p.toString();
 }
@@ -133,6 +135,7 @@ function decodeParams(search) {
     offsetStart:            parseFloat(p.get('os'))   ?? DEFAULTS.offsetStart,
     offsetMonthly:          parseFloat(p.get('om'))   ?? DEFAULTS.offsetMonthly,
     offsetLumps:            p.has('ol') ? parseLumps('ol') : [],
+    offsetWithdrawals:      p.has('ow') ? parseLumps('ow') : [],
     extraRecurring:         parseFloat(p.get('xr'))   || 0,
     extraLumps:             p.has('xl') ? parseLumps('xl') : [],
   };
@@ -183,6 +186,15 @@ export default function MortgageCalc() {
   const removeOffsetLump = (i) =>
     set('offsetLumps', inputs.offsetLumps.filter((_, idx) => idx !== i));
 
+  // Offset withdrawal helpers
+  const addOffsetWithdrawal = () =>
+    set('offsetWithdrawals', [...inputs.offsetWithdrawals, { month: 12, amount: 5000 }]);
+  const updateOffsetWithdrawal = (i, field, val) =>
+    set('offsetWithdrawals', inputs.offsetWithdrawals.map((l, idx) =>
+      idx === i ? { ...l, [field]: field === 'amount' ? parseFloat(val) || 0 : parseInt(val) || 1 } : l));
+  const removeOffsetWithdrawal = (i) =>
+    set('offsetWithdrawals', inputs.offsetWithdrawals.filter((_, idx) => idx !== i));
+
   // Extra lump sum helpers
   const addExtraLump = () =>
     set('extraLumps', [...inputs.extraLumps, { month: 12, amount: 5000 }]);
@@ -210,6 +222,7 @@ export default function MortgageCalc() {
         offsetStart: inputs.offsetStart,
         offsetMonthly: inputs.offsetMonthly,
         offsetLumps: inputs.offsetLumps,
+        offsetWithdrawals: inputs.offsetWithdrawals,
         extraRecurring: inputs.extraRecurring,
         extraLumps: inputs.extraLumps,
         includeOffset: true,
@@ -236,6 +249,7 @@ export default function MortgageCalc() {
           offsetStart: inputs.offsetStart,
           offsetMonthly: inputs.offsetMonthly,
           offsetLumps: inputs.offsetLumps,
+          offsetWithdrawals: inputs.offsetWithdrawals,
           extraRecurring: inputs.extraRecurring,
           extraLumps: inputs.extraLumps,
           includeOffset: true,
@@ -257,7 +271,7 @@ export default function MortgageCalc() {
         });
         // Baseline: same split but no offset/extras on variable portion
         const fixedBase = amortize({ loanAmount: fixedAmt, annualRatePercent: inputs.fixedRatePercent, termYears: inputs.termYears, fixedRatePercent: inputs.fixedRatePercent, fixedPeriodYears: inputs.fixedPeriodYears, revertRatePercent: inputs.revertRatePercent, includeOffset: false });
-        const varBase   = amortize({ loanAmount: varAmt,   annualRatePercent: inputs.splitVariableRatePercent, termYears: inputs.termYears, includeOffset: false });
+        const varBase   = amortize({ loanAmount: varAmt, annualRatePercent: inputs.splitVariableRatePercent, termYears: inputs.termYears, includeOffset: false });
         const baseLen = Math.max(fixedBase.length, varBase.length);
         baseRows = Array.from({ length: baseLen }, (_, i) => {
           const f = fixedBase[i] ?? { payment: 0, interest: 0, principal: 0, balance: 0 };
@@ -477,7 +491,7 @@ export default function MortgageCalc() {
             </div>
 
             <div className="field">
-              <label>Monthly deposit (e.g. salary)</label>
+              <label>Monthly increase (e.g. salary)</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
                 <input type="number" value={inputs.offsetMonthly} onChange={setNum('offsetMonthly')} min="0" step="100" />
@@ -502,6 +516,25 @@ export default function MortgageCalc() {
               </div>
             )}
             <button className="add-lump" onClick={addOffsetLump}>+ Add lump sum deposit</button>
+
+            {inputs.offsetWithdrawals.length > 0 && (
+              <div className="lump-list" style={{ marginTop: 8 }}>
+                {inputs.offsetWithdrawals.map((lump, i) => (
+                  <div key={i} className="lump-row">
+                    <div className="input-wrap has-prefix">
+                      <span className="input-prefix">$</span>
+                      <input type="number" value={lump.amount} onChange={(e) => updateOffsetWithdrawal(i, 'amount', e.target.value)} min="0" step="1000" placeholder="Amount" />
+                    </div>
+                    <div className="input-wrap has-suffix">
+                      <input type="number" value={lump.month} onChange={(e) => updateOffsetWithdrawal(i, 'month', e.target.value)} min="1" max={inputs.termYears * 12} placeholder="Month" />
+                      <span className="input-suffix" style={{ fontSize: '0.75rem' }}>mo</span>
+                    </div>
+                    <button onClick={() => removeOffsetWithdrawal(i)}>×</button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <button className="add-lump" onClick={addOffsetWithdrawal}>+ Add lump sum withdrawal</button>
           </div>
 
           <div className="panel-section">
