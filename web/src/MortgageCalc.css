@@ -101,7 +101,8 @@
 
   .calc-instances[data-count="1"] .compare-card {
     position: fixed;
-    right: 36px;
+    /* 16px to the right of the 640px centred calc; min 16px from viewport edge */
+    right: max(16px, calc(50% - 496px));
     top: 60%;
     transform: translateY(-50%);
     width: 160px;
@@ -109,15 +110,27 @@
     z-index: 40;
   }
 
-  /* 2-instance: same fixed card as single mode, sits to the right of both columns */
+  /* 2-instance: narrow header-level strip — sits as a flex child at the top of the row */
   .calc-instances[data-count="2"] .compare-card {
-    position: fixed;
-    right: 36px;
-    top: 60%;
-    transform: translateY(-50%);
-    width: 160px;
-    min-height: 220px;
-    z-index: 40;
+    flex-shrink: 0;
+    align-self: flex-start;
+    width: 80px;
+    padding: 14px 8px 12px;
+    gap: 4px;
+    border: none;
+    border-left: 1.5px dashed var(--border-strong);
+    border-radius: 0;
+    position: static;
+    transform: none;
+  }
+  .calc-instances[data-count="2"] .compare-card .compare-card-sub {
+    display: none;
+  }
+  .calc-instances[data-count="2"] .compare-card .compare-card-plus {
+    font-size: 1.25rem;
+  }
+  .calc-instances[data-count="2"] .compare-card .compare-card-title {
+    font-size: 0.65rem;
   }
 }
 
@@ -624,8 +637,7 @@ select.field-select {
     flex-direction: column;
     gap: 14px;
     position: fixed;
-    /* sits 16px to the left of the centred 640px calc: 50% - 320px - 16px - 140px */
-    left: calc(50% - 476px);
+    left: 16px;
     top: 50%;
     transform: translateY(-50%);
     width: 140px;
