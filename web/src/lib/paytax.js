@@ -172,3 +172,24 @@ export function byFreq(annual, freq) {
   if (freq === 'weekly')      return annual / 52;
   return annual;
 }
+
+export function toAnnual(amount, freq) {
+  if (freq === 'monthly')     return amount * 12;
+  if (freq === 'fortnightly') return amount * 26;
+  if (freq === 'weekly')      return amount * 52;
+  return amount;
+}
+
+// Binary search: find grossIncome such that calcPayTax result.takeHome ≈ targetAnnualNet
+export function grossFromNet(targetAnnualNet, inputs) {
+  if (targetAnnualNet <= 0) return 0;
+  let lo = targetAnnualNet;
+  let hi = Math.max(targetAnnualNet * 4, 600000);
+  for (let i = 0; i < 60; i++) {
+    const mid = (lo + hi) / 2;
+    const net = calcPayTax({ ...inputs, grossIncome: mid }).takeHome;
+    if (net < targetAnnualNet) lo = mid;
+    else hi = mid;
+  }
+  return (lo + hi) / 2;
+}

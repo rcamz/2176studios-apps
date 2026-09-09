@@ -3,7 +3,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Cell,
 } from 'recharts';
-import { calcPayTax, byFreq } from './lib/paytax.js';
+import { calcPayTax, byFreq, toAnnual, grossFromNet } from './lib/paytax.js';
 import AdUnit from './AdUnit.jsx';
 
 const AD_SLOT_INLINE = 'XXXXXXXXXX';
@@ -12,8 +12,12 @@ const AD_SLOT_CHART  = 'XXXXXXXXXX';
 const fmt = (n) => '$' + Math.round(n).toLocaleString('en-AU');
 const fmtPct = (n) => (n * 100).toFixed(1) + '%';
 
+const FREQ_LABELS = { annual: 'Annual', monthly: 'Monthly', fortnightly: 'Fortnightly', weekly: 'Weekly' };
+
 const DEFAULTS = {
-  grossIncome: 90000,
+  incomeAmount: 90000,
+  entryFreq: 'annual',
+  entryType: 'gross',
   incomeType: 'employee',
   freq: 'annual',
   residency: 'resident',
@@ -25,7 +29,9 @@ const DEFAULTS = {
 
 function encodeInputs(inp) {
   const p = new URLSearchParams();
-  p.set('gi', inp.grossIncome);
+  p.set('ia', inp.incomeAmount);
+  p.set('ef', inp.entryFreq[0]);
+  p.set('et', inp.entryType[0]);
   p.set('it', inp.incomeType[0]);
   p.set('fr', inp.freq[0]);
   p.set('re', inp.residency[0]);
@@ -38,12 +44,31 @@ function encodeInputs(inp) {
 
 function decodeParams(search) {
   const p = new URLSearchParams(search);
-  if (!p.has('gi')) return {};
-  const itMap = { e: 'employee', s: 'self-employed', t: 'sole-trader' };
   const frMap = { a: 'annual', m: 'monthly', f: 'fortnightly', w: 'weekly' };
+  const itMap = { e: 'employee', s: 'self-employed', t: 'sole-trader' };
   const reMap = { r: 'resident', f: 'foreign', h: 'holiday' };
+
+  // Support legacy URLs that used 'gi' for annual gross income
+  if (p.has('gi') && !p.has('ia')) {
+    return {
+      incomeAmount:    parseFloat(p.get('gi')) || DEFAULTS.incomeAmount,
+      entryFreq:       'annual',
+      entryType:       'gross',
+      incomeType:      itMap[p.get('it')] ?? 'employee',
+      freq:            frMap[p.get('fr')] ?? 'annual',
+      residency:       reMap[p.get('re')] ?? 'resident',
+      hasPrivateCover: p.get('pc') === '1',
+      hecsBalance:     parseFloat(p.get('hb')) || 0,
+      sgRate:          parseFloat(p.get('sg')) || 12,
+      salarySacrifice: parseFloat(p.get('ss')) || 0,
+    };
+  }
+
+  if (!p.has('ia')) return {};
   return {
-    grossIncome:     parseFloat(p.get('gi')) || DEFAULTS.grossIncome,
+    incomeAmount:    parseFloat(p.get('ia')) || DEFAULTS.incomeAmount,
+    entryFreq:       frMap[p.get('ef')] ?? 'annual',
+    entryType:       p.get('et') === 'n' ? 'net' : 'gross',
     incomeType:      itMap[p.get('it')] ?? 'employee',
     freq:            frMap[p.get('fr')] ?? 'annual',
     residency:       reMap[p.get('re')] ?? 'resident',
@@ -67,7 +92,14 @@ export default function PayTaxInstance({ instanceKey = '', label, onRemove, them
     window.history.replaceState(null, '', `${window.location.pathname}?${encodeInputs(inputs)}`);
   }, [inputs, instanceKey]);
 
-  const result = useMemo(() => calcPayTax(inputs), [inputs]);
+  // Derive annual gross from what the user entered
+  const annualGross = useMemo(() => {
+    const annual = toAnnual(inputs.incomeAmount, inputs.entryFreq);
+    if (inputs.entryType === 'net') return grossFromNet(annual, inputs);
+    return annual;
+  }, [inputs]);
+
+  const result = useMemo(() => calcPayTax({ ...inputs, grossIncome: annualGross }), [inputs, annualGross]);
 
   const showFreq = inputs.freq;
   const fv = (annual) => fmt(byFreq(annual, showFreq));
@@ -94,6 +126,10 @@ export default function PayTaxInstance({ instanceKey = '', label, onRemove, them
     { name: 'Take-home', value: Math.round(result.takeHome) },
   ];
 
+  const entryFreqLabel = FREQ_LABELS[inputs.entryFreq].toLowerCase();
+  const isNet = inputs.entryType === 'net';
+  const derivedGrossNote = isNet ? `≈ ${fmt(annualGross)} gross / year` : null;
+
   return (
     <div className="calc-instance">
       {isComparison && (
@@ -107,7 +143,7 @@ export default function PayTaxInstance({ instanceKey = '', label, onRemove, them
       {!isComparison ? (
         <div className="calc-heading">
           <h1>Pay / Tax Calculator<br /><span className="calc-heading-sub">Income Tax + Medicare + Super</span></h1>
-          <p>Gross to net take-home pay. Includes income tax (2026–27), Medicare levy, HECS/HELP repayment and employer super.</p>
+          <p>Gross or net to take-home pay. Includes income tax (2026–27), Medicare levy, HECS/HELP repayment and employer super.</p>
           <a className="desktop-cta" href={window.location.href} target="_blank" rel="noreferrer">
             Open desktop site to compare up to 3 scenarios →
           </a>
@@ -122,13 +158,43 @@ export default function PayTaxInstance({ instanceKey = '', label, onRemove, them
         <div className="panel">
           <div className="panel-section">
             <div className="section-title">Income</div>
+
             <div className="field">
-              <label>Annual gross income</label>
-              <div className="input-wrap has-prefix">
-                <span className="input-prefix">$</span>
-                <input type="number" value={inputs.grossIncome || ''} onChange={setNum('grossIncome')} min="0" step="1000" />
+              <label>Pay period</label>
+              <div className="segmented">
+                {[['weekly','Weekly'],['fortnightly','Fortnight'],['monthly','Monthly'],['annual','Annual']].map(([v,l]) => (
+                  <button key={v} className={inputs.entryFreq === v ? 'active' : ''} onClick={() => set('entryFreq', v)}>{l}</button>
+                ))}
               </div>
             </div>
+
+            <div className="field">
+              <label>Enter as</label>
+              <div className="segmented">
+                <button className={!isNet ? 'active' : ''} onClick={() => set('entryType', 'gross')}>Gross</button>
+                <button className={isNet ? 'active' : ''} onClick={() => set('entryType', 'net')}>Net (take-home)</button>
+              </div>
+            </div>
+
+            <div className="field">
+              <label>{FREQ_LABELS[inputs.entryFreq]} {isNet ? 'net take-home' : 'gross income'}</label>
+              <div className="input-wrap has-prefix">
+                <span className="input-prefix">$</span>
+                <input
+                  type="number"
+                  value={inputs.incomeAmount || ''}
+                  onChange={setNum('incomeAmount')}
+                  min="0"
+                  step={inputs.entryFreq === 'annual' ? 1000 : inputs.entryFreq === 'monthly' ? 100 : 50}
+                />
+              </div>
+              {derivedGrossNote && (
+                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                  {derivedGrossNote}
+                </div>
+              )}
+            </div>
+
             <div className="field">
               <label>Income type</label>
               <div className="segmented">
@@ -137,8 +203,9 @@ export default function PayTaxInstance({ instanceKey = '', label, onRemove, them
                 ))}
               </div>
             </div>
+
             <div className="field">
-              <label>Display frequency</label>
+              <label>Display results as</label>
               <div className="segmented">
                 {[['annual','Annual'],['monthly','Monthly'],['fortnightly','Fortnight'],['weekly','Weekly']].map(([v,l]) => (
                   <button key={v} className={inputs.freq === v ? 'active' : ''} onClick={() => set('freq', v)}>{l}</button>
@@ -166,7 +233,7 @@ export default function PayTaxInstance({ instanceKey = '', label, onRemove, them
             </div>
             {!inputs.hasPrivateCover && (
               <p style={{ fontSize: '0.73rem', color: 'var(--text-muted)', marginTop: 4 }}>
-                Medicare Levy Surcharge applies if income {'>'} $100,000
+                Medicare Levy Surcharge applies if income &gt; $100,000
               </p>
             )}
           </div>
@@ -194,7 +261,7 @@ export default function PayTaxInstance({ instanceKey = '', label, onRemove, them
               </div>
             )}
             <div className="field">
-              <label>Salary sacrifice to super (pre-tax)</label>
+              <label>Salary sacrifice to super (pre-tax, annual)</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
                 <input type="number" value={inputs.salarySacrifice || ''} onChange={setNum('salarySacrifice')} min="0" step="500" placeholder="0" />
@@ -207,13 +274,19 @@ export default function PayTaxInstance({ instanceKey = '', label, onRemove, them
         <div className="results-panel">
           <div className="savings-card">
             <div className="savings-label">
-              {inputs.freq === 'annual' ? 'Annual' : inputs.freq.charAt(0).toUpperCase() + inputs.freq.slice(1)} take-home
+              {FREQ_LABELS[inputs.freq]} take-home
             </div>
             <div className="savings-amount">{fv(result.takeHome)}</div>
             <div className="savings-sub">
-              after income tax, Medicare{result.hecsRepayment > 0 ? ', HECS' : ''}{result.mls > 0 ? ' + MLS' : ''}
+              {isNet
+                ? `from ${fmt(inputs.incomeAmount)} ${entryFreqLabel} net · ${fmt(annualGross)} gross / year`
+                : `after income tax, Medicare${result.hecsRepayment > 0 ? ', HECS' : ''}${result.mls > 0 ? ' + MLS' : ''}`}
             </div>
             <div className="savings-meta">
+              <div className="savings-stat">
+                <div className="savings-stat-label">Gross income</div>
+                <div className="savings-stat-value">{fv(annualGross)}</div>
+              </div>
               <div className="savings-stat">
                 <div className="savings-stat-label">Effective rate</div>
                 <div className="savings-stat-value">{fmtPct(result.effectiveTaxRate)}</div>
@@ -231,13 +304,13 @@ export default function PayTaxInstance({ instanceKey = '', label, onRemove, them
             </div>
           </div>
 
-          <div className="stat-row" style={{ gridTemplateColumns: result.hecsRepayment > 0 || result.mls > 0 ? '1fr 1fr 1fr' : '1fr 1fr 1fr' }}>
+          <div className="stat-row">
             <div className="stat-card">
               <div className="stat-card-label">Income tax</div>
               <div className="stat-card-value">{fv(result.incomeTax)}</div>
             </div>
             <div className="stat-card">
-              <div className="stat-card-label">Medicare levy{result.mls > 0 ? ' + MLS' : ''}</div>
+              <div className="stat-card-label">Medicare{result.mls > 0 ? ' + MLS' : ''}</div>
               <div className="stat-card-value">{fv(result.medicareLevy + result.mls)}</div>
             </div>
             <div className="stat-card">
@@ -258,9 +331,9 @@ export default function PayTaxInstance({ instanceKey = '', label, onRemove, them
           </div>
 
           <div className="chart-card">
-            <div className="chart-title">Income breakdown</div>
+            <div className="chart-title">Income breakdown ({FREQ_LABELS[inputs.freq].toLowerCase()})</div>
             <ResponsiveContainer width="100%" height={240}>
-              <BarChart data={chartData} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
+              <BarChart data={chartData.map(d => ({ ...d, value: Math.round(byFreq(d.value, inputs.freq)) }))} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={chartGrid} vertical={false} />
                 <XAxis
                   dataKey="name"
@@ -296,7 +369,7 @@ export default function PayTaxInstance({ instanceKey = '', label, onRemove, them
           )}
 
           <div className="disclaimer">
-            Estimates only — not financial advice. Based on 2026–27 ATO rates (estimated). Figures are annual unless otherwise shown. Does not include state taxes, FBT, or investment income. For personal financial decisions, consult a licensed adviser.
+            Estimates only — not financial advice. Based on 2026–27 ATO rates (estimated). Net-to-gross uses iterative back-calculation — result may vary slightly from employer payroll. Does not include state taxes, FBT, or investment income. Consult a licensed adviser for personal decisions.
           </div>
         </div>
       </div>
