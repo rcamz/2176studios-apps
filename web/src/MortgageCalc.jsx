@@ -35,6 +35,8 @@ const DEFAULTS = {
   fixedRatePercent: 5.8,
   fixedPeriodYears: 2,
   revertRatePercent: 6.5,
+  splitFixedPct: 60,
+  splitVariableRatePercent: 6.2,
   offsetStart: 25000,
   offsetMonthly: 3500,
   offsetLumps: [],
@@ -70,13 +72,17 @@ export default function MortgageCalc() {
 
   const { withRows, baseRows, withSummary, baseSummary, chartData, rateSwitchMonth } =
     useMemo(() => {
-      const cfg = {
+      const isSplit = inputs.rateType === 'split';
+      const fixedAmt = isSplit ? inputs.loanAmount * (inputs.splitFixedPct / 100) : inputs.loanAmount;
+      const varAmt   = isSplit ? inputs.loanAmount * ((100 - inputs.splitFixedPct) / 100) : 0;
+
+      const baseCfg = {
         loanAmount: inputs.loanAmount,
         annualRatePercent: inputs.annualRatePercent,
         termYears: inputs.termYears,
-        fixedRatePercent: inputs.rateType !== 'variable' ? inputs.fixedRatePercent : 0,
-        fixedPeriodYears: inputs.rateType !== 'variable' ? inputs.fixedPeriodYears : 0,
-        revertRatePercent: inputs.rateType !== 'variable' ? inputs.revertRatePercent : 0,
+        fixedRatePercent: inputs.rateType === 'fixed' ? inputs.fixedRatePercent : 0,
+        fixedPeriodYears: inputs.rateType === 'fixed' ? inputs.fixedPeriodYears : 0,
+        revertRatePercent: inputs.rateType === 'fixed' ? inputs.revertRatePercent : 0,
         offsetStart: inputs.offsetStart,
         offsetMonthly: inputs.offsetMonthly,
         offsetLumps: inputs.offsetLumps,
@@ -85,8 +91,59 @@ export default function MortgageCalc() {
         includeOffset: true,
       };
 
-      const withRows = amortize(cfg);
-      const baseRows = amortize({ ...cfg, offsetStart: 0, offsetMonthly: 0, offsetLumps: [], extraRecurring: 0, extraLumps: [], includeOffset: false });
+      let withRows, baseRows;
+
+      if (isSplit) {
+        // Fixed portion — no offset (per AU lender standard)
+        const fixedRows = amortize({
+          loanAmount: fixedAmt,
+          annualRatePercent: inputs.fixedRatePercent,
+          termYears: inputs.termYears,
+          fixedRatePercent: inputs.fixedRatePercent,
+          fixedPeriodYears: inputs.fixedPeriodYears,
+          revertRatePercent: inputs.revertRatePercent,
+          includeOffset: false,
+        });
+        // Variable portion — offset applies here
+        const varRows = amortize({
+          loanAmount: varAmt,
+          annualRatePercent: inputs.splitVariableRatePercent,
+          termYears: inputs.termYears,
+          offsetStart: inputs.offsetStart,
+          offsetMonthly: inputs.offsetMonthly,
+          offsetLumps: inputs.offsetLumps,
+          extraRecurring: inputs.extraRecurring,
+          extraLumps: inputs.extraLumps,
+          includeOffset: true,
+        });
+        // Merge the two schedules
+        const maxLen = Math.max(fixedRows.length, varRows.length);
+        withRows = Array.from({ length: maxLen }, (_, i) => {
+          const f = fixedRows[i] ?? { payment: 0, interest: 0, principal: 0, balance: 0, offset: 0, isRateSwitch: false };
+          const v = varRows[i]   ?? { payment: 0, interest: 0, principal: 0, balance: 0, offset: 0 };
+          return {
+            month: i + 1,
+            payment: f.payment + v.payment,
+            interest: f.interest + v.interest,
+            principal: f.principal + v.principal,
+            balance: f.balance + v.balance,
+            offset: v.offset,
+            isRateSwitch: f.isRateSwitch ?? false,
+          };
+        });
+        // Baseline: same split but no offset/extras on variable portion
+        const fixedBase = amortize({ loanAmount: fixedAmt, annualRatePercent: inputs.fixedRatePercent, termYears: inputs.termYears, fixedRatePercent: inputs.fixedRatePercent, fixedPeriodYears: inputs.fixedPeriodYears, revertRatePercent: inputs.revertRatePercent, includeOffset: false });
+        const varBase   = amortize({ loanAmount: varAmt,   annualRatePercent: inputs.splitVariableRatePercent, termYears: inputs.termYears, includeOffset: false });
+        const baseLen = Math.max(fixedBase.length, varBase.length);
+        baseRows = Array.from({ length: baseLen }, (_, i) => {
+          const f = fixedBase[i] ?? { payment: 0, interest: 0, principal: 0, balance: 0 };
+          const v = varBase[i]   ?? { payment: 0, interest: 0, principal: 0, balance: 0 };
+          return { month: i + 1, payment: f.payment + v.payment, interest: f.interest + v.interest, principal: f.principal + v.principal, balance: f.balance + v.balance, offset: 0 };
+        });
+      } else {
+        withRows = amortize(baseCfg);
+        baseRows = amortize({ ...baseCfg, offsetStart: 0, offsetMonthly: 0, offsetLumps: [], extraRecurring: 0, extraLumps: [], includeOffset: false });
+      }
       const withSummary = summarize(withRows);
       const baseSummary = summarize(baseRows);
 
@@ -173,6 +230,26 @@ export default function MortgageCalc() {
               </div>
             )}
 
+            {inputs.rateType === 'split' && (
+              <div className="field">
+                <label>Split ratio</label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 8, alignItems: 'center' }}>
+                  <div className="input-wrap has-suffix">
+                    <input type="number" value={inputs.splitFixedPct} onChange={(e) => {
+                      const v = Math.min(99, Math.max(1, parseFloat(e.target.value) || 0));
+                      set('splitFixedPct', v);
+                    }} min="1" max="99" step="1" />
+                    <span className="input-suffix">% fixed</span>
+                  </div>
+                  <span style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.8rem' }}>/</span>
+                  <div className="input-wrap has-suffix">
+                    <input type="number" value={100 - inputs.splitFixedPct} readOnly style={{ background: 'var(--surface-alt)', color: 'var(--text-muted)' }} />
+                    <span className="input-suffix">% variable</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {(inputs.rateType === 'fixed' || inputs.rateType === 'split') && (
               <>
                 <div className="field">
@@ -196,6 +273,15 @@ export default function MortgageCalc() {
                     <span className="input-suffix">% p.a.</span>
                   </div>
                 </div>
+                {inputs.rateType === 'split' && (
+                  <div className="field">
+                    <label>Variable portion rate</label>
+                    <div className="input-wrap has-suffix">
+                      <input type="number" value={inputs.splitVariableRatePercent} onChange={setNum('splitVariableRatePercent')} min="0" max="20" step="0.05" />
+                      <span className="input-suffix">% p.a.</span>
+                    </div>
+                  </div>
+                )}
               </>
             )}
           </div>
