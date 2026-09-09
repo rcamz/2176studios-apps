@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ResponsiveContainer,
@@ -46,8 +47,9 @@ const IconSun = () => (
 );
 
 // Paste your AdSense slot IDs here once you create ad units in AdSense > Ads > Ad units
-const AD_SLOT_BANNER = 'XXXXXXXXXX';   // horizontal banner — above calculator
+const AD_SLOT_BANNER = 'XXXXXXXXXX';   // horizontal banner — floating bottom bar
 const AD_SLOT_INLINE = 'XXXXXXXXXX';   // inline unit — below extra repayments
+const AD_SLOT_CHART  = 'XXXXXXXXXX';   // inline unit — above chart
 
 const fmt = (n) =>
   '$' + Math.round(n).toLocaleString('en-AU');
@@ -329,7 +331,7 @@ export default function MortgageCalc() {
   return (
     <div className="calc-wrap">
       <div className="calc-topbar">
-        <span className="calc-brand">2176 Studios<span className="brand-dot" /></span>
+        <Link to="/" className="calc-brand">2176 Studios<span className="brand-dot" /></Link>
         <div className="topbar-actions">
           <a className="btn-icon" title="Feedback / Support" href="mailto:support@2176studios.com"><IconBubble /></a>
           <button className="btn-icon" title="Toggle theme" onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}><IconSun /></button>
@@ -642,6 +644,11 @@ export default function MortgageCalc() {
               {fmt(withRows[rateSwitchMonth]?.payment ?? 0)}/mo when reverting to {inputs.revertRatePercent}% p.a.
             </div>
           )}
+
+          {/* Ad above chart */}
+          <div style={{ margin: '0 0 8px' }}>
+            <AdUnit slotId={AD_SLOT_CHART} format="horizontal" />
+          </div>
 
           {/* Chart */}
           <div className="chart-card">
