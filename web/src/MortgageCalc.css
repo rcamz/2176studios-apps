@@ -1,0 +1,354 @@
+:root {
+  --blue-dark: #0C447C;
+  --blue-mid: #378ADD;
+  --blue-tint: #E6F1FB;
+  --blue-tint2: #cde3f7;
+  --text: #1a1a2e;
+  --text-muted: #5a6a7a;
+  --border: #d0dce8;
+  --surface: #ffffff;
+  --surface-alt: #f7fafd;
+  --green: #1a8c5c;
+  --red: #c0392b;
+  --radius: 10px;
+  --shadow: 0 2px 12px rgba(12,68,124,0.08);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--surface-alt);
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.calc-wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 20px 60px;
+}
+
+/* ─── Header ─── */
+.calc-header {
+  background: var(--blue-dark);
+  color: #fff;
+  border-radius: var(--radius);
+  padding: 22px 28px;
+  margin-bottom: 24px;
+}
+.calc-header h1 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+.calc-header p {
+  margin-top: 4px;
+  font-size: 0.85rem;
+  opacity: 0.75;
+}
+
+/* ─── Two-column layout ─── */
+.calc-body {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+@media (max-width: 860px) {
+  .calc-body { grid-template-columns: 1fr; }
+}
+
+/* ─── Panels ─── */
+.panel {
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.panel-section {
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.panel-section:last-child { border-bottom: none; }
+
+.section-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--blue-mid);
+  margin-bottom: 14px;
+}
+
+/* ─── Form fields ─── */
+.field { margin-bottom: 12px; }
+.field:last-child { margin-bottom: 0; }
+
+.field label {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+
+.input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.input-prefix, .input-suffix {
+  position: absolute;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  pointer-events: none;
+}
+.input-prefix { left: 10px; }
+.input-suffix { right: 10px; }
+
+.input-wrap input,
+.input-wrap select,
+select.field-select,
+input.field-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.92rem;
+  color: var(--text);
+  background: var(--surface);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.input-wrap input:focus,
+.input-wrap select:focus,
+select.field-select:focus,
+input.field-input:focus {
+  border-color: var(--blue-mid);
+  box-shadow: 0 0 0 3px var(--blue-tint);
+}
+.input-wrap.has-prefix input { padding-left: 24px; }
+.input-wrap.has-suffix input { padding-right: 30px; }
+
+/* ─── Segmented control (rate type) ─── */
+.segmented {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.segmented button {
+  flex: 1;
+  padding: 7px 0;
+  border: none;
+  background: var(--surface);
+  font-size: 0.85rem;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: background 0.15s, color 0.15s;
+}
+.segmented button.active {
+  background: var(--blue-dark);
+  color: #fff;
+  font-weight: 600;
+}
+
+/* ─── Lump sum rows ─── */
+.lump-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.lump-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 6px;
+  align-items: center;
+}
+.lump-row input {
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  width: 100%;
+}
+.lump-row button {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 2px 4px;
+}
+.lump-row button:hover { color: var(--red); }
+.add-lump {
+  margin-top: 8px;
+  background: none;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  padding: 6px 10px;
+  cursor: pointer;
+  width: 100%;
+  text-align: center;
+}
+.add-lump:hover { border-color: var(--blue-mid); color: var(--blue-dark); }
+
+/* ─── Results panel ─── */
+.results-panel { display: flex; flex-direction: column; gap: 16px; }
+
+/* ─── Savings headline ─── */
+.savings-card {
+  background: var(--blue-dark);
+  color: #fff;
+  border-radius: var(--radius);
+  padding: 24px 28px;
+  box-shadow: var(--shadow);
+}
+.savings-label {
+  font-size: 0.8rem;
+  opacity: 0.7;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+.savings-amount {
+  font-size: 3rem;
+  font-weight: 800;
+  letter-spacing: -1px;
+  line-height: 1;
+}
+.savings-sub {
+  font-size: 0.9rem;
+  opacity: 0.8;
+  margin-top: 6px;
+}
+.savings-meta {
+  display: flex;
+  gap: 24px;
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255,255,255,0.2);
+}
+.savings-stat { flex: 1; }
+.savings-stat-label { font-size: 0.75rem; opacity: 0.65; }
+.savings-stat-value { font-size: 1.05rem; font-weight: 700; margin-top: 2px; }
+
+/* ─── Stat cards row ─── */
+.stat-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+}
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  box-shadow: var(--shadow);
+}
+.stat-card-label { font-size: 0.75rem; color: var(--text-muted); }
+.stat-card-value { font-size: 1.1rem; font-weight: 700; color: var(--blue-dark); margin-top: 2px; }
+
+/* ─── Chart card ─── */
+.chart-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+.chart-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+/* ─── Rate switch callout ─── */
+.rate-callout {
+  background: #fff8e6;
+  border: 1px solid #f0c040;
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  font-size: 0.85rem;
+  color: #7a5800;
+}
+.rate-callout strong { display: block; margin-bottom: 2px; }
+
+/* ─── Schedule table ─── */
+.schedule-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.schedule-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  user-select: none;
+}
+.schedule-header:hover { background: var(--surface-alt); }
+.schedule-title { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); }
+.schedule-toggle { font-size: 0.8rem; color: var(--blue-mid); }
+
+.schedule-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+.schedule-table th {
+  background: var(--surface-alt);
+  padding: 8px 14px;
+  text-align: right;
+  font-weight: 600;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+.schedule-table th:first-child { text-align: left; }
+.schedule-table td {
+  padding: 7px 14px;
+  text-align: right;
+  border-top: 1px solid var(--border);
+  color: var(--text);
+}
+.schedule-table td:first-child { text-align: left; color: var(--text-muted); }
+.schedule-table tr.rate-switch { background: #fff8e6; }
+.schedule-table tr:hover { background: var(--surface-alt); }
+
+.show-all-btn {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  background: none;
+  border: none;
+  border-top: 1px solid var(--border);
+  color: var(--blue-mid);
+  font-size: 0.82rem;
+  cursor: pointer;
+  text-align: center;
+}
+.show-all-btn:hover { background: var(--blue-tint); }
+
+/* ─── Disclaimer ─── */
+.disclaimer {
+  margin-top: 12px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  padding: 12px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
