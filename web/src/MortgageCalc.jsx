@@ -691,7 +691,7 @@ export default function MortgageCalc() {
                   <table className="schedule-table">
                     <thead>
                       <tr>
-                        <th>Month</th>
+                        <th>Mo</th>
                         <th>Payment</th>
                         <th>Interest</th>
                         <th>Principal</th>
