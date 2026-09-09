@@ -129,6 +129,15 @@ export default function MortgageCalc() {
     setTimeout(() => setCopied(false), 2000);
   }, []);
 
+  const handleShare = useCallback(async () => {
+    if (navigator.share) {
+      await navigator.share({ title: 'Mortgage Repayment + Offset Calculator', url: window.location.href });
+    } else {
+      // Fallback for desktop — open save modal instead
+      setModal('share');
+    }
+  }, []);
+
   // Offset lump sum helpers
   const addOffsetLump = () =>
     set('offsetLumps', [...inputs.offsetLumps, { month: 12, amount: 10000 }]);
@@ -261,7 +270,7 @@ export default function MortgageCalc() {
         <p>Australian home loan calculator with offset account, extra repayments, and fixed-rate periods.</p>
         <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
           {['save', 'share'].map((mode) => (
-            <button key={mode} onClick={() => { setCopied(false); setModal(mode); }} style={{
+            <button key={mode} onClick={() => mode === 'share' ? handleShare() : (setCopied(false), setModal('save'))} style={{
               background: 'rgba(255,255,255,0.15)',
               border: '1px solid rgba(255,255,255,0.3)',
               borderRadius: 7,
