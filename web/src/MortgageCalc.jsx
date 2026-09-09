@@ -4,7 +4,12 @@ import {
   Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
 import { amortize, summarize } from './lib/amortize.js';
+import AdUnit from './AdUnit.jsx';
 import './MortgageCalc.css';
+
+// Paste your AdSense slot IDs here once you create ad units in AdSense > Ads > Ad units
+const AD_SLOT_BANNER = 'XXXXXXXXXX';   // horizontal banner — above calculator
+const AD_SLOT_INLINE = 'XXXXXXXXXX';   // inline unit — between stats and chart
 
 const fmt = (n) =>
   '$' + Math.round(n).toLocaleString('en-AU');
@@ -185,6 +190,8 @@ export default function MortgageCalc() {
         <h1>Mortgage Repayment + Offset Calculator</h1>
         <p>Australian home loan calculator with offset account, extra repayments, and fixed-rate periods.</p>
       </div>
+
+      <AdUnit slotId={AD_SLOT_BANNER} format="horizontal" style={{ marginBottom: 20 }} />
 
       <div className="calc-body">
         {/* ── INPUTS ── */}
@@ -441,6 +448,8 @@ export default function MortgageCalc() {
               <div className="stat-card-value">{withRows[0] ? fmt(withRows[0].payment) : '—'}</div>
             </div>
           </div>
+
+          <AdUnit slotId={AD_SLOT_INLINE} format="rectangle" />
 
           {/* Fixed rate callout */}
           {rateSwitchMonth && (
