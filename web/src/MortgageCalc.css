@@ -92,6 +92,22 @@
   border-color: var(--red);
 }
 
+/* ─── Mobile desktop CTA ──────────────────────────────────────────── */
+.desktop-cta {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 0.78rem;
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+}
+.desktop-cta:hover { text-decoration: underline; }
+
+/* Hide on desktop — Compare button in topbar serves the same purpose */
+@media (min-width: 860px) {
+  .desktop-cta { display: none; }
+}
+
 /* ─── Compare button in topbar ────────────────────────────────────── */
 .btn-compare {
   display: none; /* hidden on mobile */

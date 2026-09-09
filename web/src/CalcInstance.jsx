@@ -295,6 +295,9 @@ export default function CalcInstance({ instanceKey = '', label, onRemove, theme 
         <div className="calc-heading">
           <h1>Mortgage Repayment<br />+ Offset Calculator</h1>
           <p>A free, ad-supported Australian home loan calculator which handles offsets, fixed and split loans, extra repayments and lump sum deposits and withdrawals.</p>
+          <a className="desktop-cta" href={window.location.href} target="_blank" rel="noreferrer">
+            Open desktop site to compare up to 3 loans at once →
+          </a>
         </div>
       ) : (
         <div className="calc-heading calc-heading--compact">
