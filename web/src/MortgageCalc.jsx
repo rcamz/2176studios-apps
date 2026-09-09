@@ -354,14 +354,14 @@ export default function MortgageCalc() {
               <label>Loan amount</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.loanAmount} onChange={setNum('loanAmount')} min="0" step="1000" />
+                <input type="number" value={inputs.loanAmount || ''} onChange={setNum('loanAmount')} min="0" step="1000" />
               </div>
             </div>
 
             <div className="field">
               <label>Loan term</label>
               <div className="input-wrap has-suffix">
-                <input type="number" value={inputs.termYears} onChange={setNum('termYears')} min="1" max="30" step="1" />
+                <input type="number" value={inputs.termYears || ''} onChange={setNum('termYears')} min="1" max="30" step="1" />
                 <span className="input-suffix">yrs</span>
               </div>
             </div>
@@ -385,7 +385,7 @@ export default function MortgageCalc() {
               <div className="field">
                 <label>Interest rate</label>
                 <div className="input-wrap has-suffix">
-                  <input type="number" value={inputs.annualRatePercent} onChange={setNum('annualRatePercent')} min="0" max="20" step="0.05" />
+                  <input type="number" value={inputs.annualRatePercent || ''} onChange={setNum('annualRatePercent')} min="0" max="20" step="0.05" />
                   <span className="input-suffix">% p.a.</span>
                 </div>
               </div>
@@ -466,21 +466,21 @@ export default function MortgageCalc() {
                 <div className="field">
                   <label>Fixed rate</label>
                   <div className="input-wrap has-suffix">
-                    <input type="number" value={inputs.fixedRatePercent} onChange={setNum('fixedRatePercent')} min="0" max="20" step="0.05" />
+                    <input type="number" value={inputs.fixedRatePercent || ''} onChange={setNum('fixedRatePercent')} min="0" max="20" step="0.05" />
                     <span className="input-suffix">% p.a.</span>
                   </div>
                 </div>
                 <div className="field">
                   <label>Fixed period</label>
                   <div className="input-wrap has-suffix">
-                    <input type="number" value={inputs.fixedPeriodYears} onChange={setNum('fixedPeriodYears')} min="1" max="10" step="1" />
+                    <input type="number" value={inputs.fixedPeriodYears || ''} onChange={setNum('fixedPeriodYears')} min="1" max="10" step="1" />
                     <span className="input-suffix">yrs</span>
                   </div>
                 </div>
                 <div className="field">
                   <label>Revert rate (after fixed)</label>
                   <div className="input-wrap has-suffix">
-                    <input type="number" value={inputs.revertRatePercent} onChange={setNum('revertRatePercent')} min="0" max="20" step="0.05" />
+                    <input type="number" value={inputs.revertRatePercent || ''} onChange={setNum('revertRatePercent')} min="0" max="20" step="0.05" />
                     <span className="input-suffix">% p.a.</span>
                   </div>
                 </div>
@@ -488,7 +488,7 @@ export default function MortgageCalc() {
                   <div className="field">
                     <label>Variable portion rate</label>
                     <div className="input-wrap has-suffix">
-                      <input type="number" value={inputs.splitVariableRatePercent} onChange={setNum('splitVariableRatePercent')} min="0" max="20" step="0.05" />
+                      <input type="number" value={inputs.splitVariableRatePercent || ''} onChange={setNum('splitVariableRatePercent')} min="0" max="20" step="0.05" />
                       <span className="input-suffix">% p.a.</span>
                     </div>
                   </div>
@@ -504,7 +504,7 @@ export default function MortgageCalc() {
               <label>Extra per month</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.extraRecurring} onChange={setNum('extraRecurring')} min="0" step="100" />
+                <input type="number" value={inputs.extraRecurring || ''} onChange={setNum('extraRecurring')} min="0" step="100" />
               </div>
             </div>
 
@@ -539,7 +539,7 @@ export default function MortgageCalc() {
               <label>Starting balance</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.offsetStart} onChange={setNum('offsetStart')} min="0" step="1000" />
+                <input type="number" value={inputs.offsetStart || ''} onChange={setNum('offsetStart')} min="0" step="1000" />
               </div>
             </div>
 
@@ -547,7 +547,7 @@ export default function MortgageCalc() {
               <label>Monthly increase (e.g. salary)</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.offsetMonthly} onChange={setNum('offsetMonthly')} min="0" step="100" />
+                <input type="number" value={inputs.offsetMonthly || ''} onChange={setNum('offsetMonthly')} min="0" step="100" />
               </div>
             </div>
 
