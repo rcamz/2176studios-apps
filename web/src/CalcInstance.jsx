@@ -262,7 +262,7 @@ export default function CalcInstance({ instanceKey = '', label, onRemove, theme 
       {/* Page heading — full in single mode, compact in comparison */}
       {!isComparison ? (
         <div className="calc-heading">
-          <h1>Mortgage Repayment<br />+ Offset Calculator</h1>
+          <h1>Mortgage Repayments<br /><span className="calc-heading-sub">Offset + Split + Multi-Scenario</span></h1>
           <p>A free, ad-supported Australian home loan calculator which handles offsets, fixed and split loans, extra repayments and lump sum deposits and withdrawals.</p>
           <a className="desktop-cta" href={window.location.href + (window.location.search ? '&vd=1' : '?vd=1')} target="_blank" rel="noreferrer">
             Open desktop site to compare up to 3 loans at once →

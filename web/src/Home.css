@@ -77,6 +77,13 @@
 .app-card--soon .app-card-name {
   color: var(--text-muted);
 }
+.app-card-sub {
+  display: block;
+  font-size: 0.78em;
+  font-weight: 400;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
 .app-card-desc {
   font-size: 0.75rem;
   color: var(--text-muted);

@@ -67,7 +67,7 @@ export default function MortgageCalc() {
 
   const handleShare = useCallback(async () => {
     if (navigator.share) {
-      await navigator.share({ title: 'Mortgage Repayment + Offset Calculator', url: window.location.href });
+      await navigator.share({ title: 'Mortgage Repayments — Offset + Split + Multi-Scenario', url: window.location.href });
     } else {
       setModal('share');
     }

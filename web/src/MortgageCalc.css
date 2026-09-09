@@ -238,6 +238,13 @@
   line-height: 1.15;
   color: var(--text);
 }
+.calc-heading-sub {
+  display: block;
+  font-size: 0.82em;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: -0.2px;
+}
 .calc-heading p {
   margin-top: 6px;
   font-size: 0.83rem;

@@ -24,7 +24,8 @@ const IconSun = () => (
 
 const APPS = [
   {
-    name: 'Mortgage Repayment + Offset Calculator',
+    name: 'Mortgage Repayments',
+    sub: 'Offset + Split + Multi-Scenario',
     desc: 'Variable, fixed & split loans, offset account, extra repayments, lump sums.',
     href: '/mortgagecalc',
     live: true,
@@ -137,7 +138,10 @@ export default function Home() {
             >
               <div className="app-card-dot" />
               <div className="app-card-body">
-                <div className="app-card-name">{app.name}</div>
+                <div className="app-card-name">
+                  {app.name}
+                  {app.sub && <span className="app-card-sub">{app.sub}</span>}
+                </div>
                 <div className="app-card-desc">{app.desc}</div>
               </div>
               <div className="app-card-status">
