@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
 import MortgageCalc from './MortgageCalc.jsx';
 import PayTaxCalc from './PayTaxCalc.jsx';
 import CGTCalc from './CGTCalc.jsx';
@@ -13,9 +14,16 @@ import SavingsCalc from './SavingsCalc.jsx';
 import HealthCalc from './HealthCalc.jsx';
 import Home from './Home.jsx';
 
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  return null;
+}
+
 export default function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/mortgagecalc" element={<MortgageCalc />} />
