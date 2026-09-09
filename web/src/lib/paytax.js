@@ -121,7 +121,6 @@ export function getMarginalRate(taxable, residency) {
 export function calcPayTax(inputs) {
   const {
     grossIncome = 0,
-    incomeType = 'employee',
     residency = 'resident',
     hasPrivateCover = false,
     hecsBalance = 0,
@@ -146,8 +145,7 @@ export function calcPayTax(inputs) {
   const effectiveTaxRate = grossIncome > 0 ? totalTax / grossIncome : 0;
   const marginalRate = getMarginalRate(taxableIncome, residency);
 
-  // Employer SG paid on top of gross (not from salary) for employees
-  const superAmount = (incomeType === 'employee') ? grossIncome * (sgRate / 100) : 0;
+  const superAmount = grossIncome * (sgRate / 100);
 
   return {
     grossIncome,

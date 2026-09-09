@@ -18,7 +18,6 @@ const DEFAULTS = {
   incomeAmount: 90000,
   entryFreq: 'annual',
   entryType: 'gross',
-  incomeType: 'employee',
   freq: 'annual',
   residency: 'resident',
   hasPrivateCover: false,
@@ -32,7 +31,6 @@ function encodeInputs(inp) {
   p.set('ia', inp.incomeAmount);
   p.set('ef', inp.entryFreq[0]);
   p.set('et', inp.entryType[0]);
-  p.set('it', inp.incomeType[0]);
   p.set('fr', inp.freq[0]);
   p.set('re', inp.residency[0]);
   p.set('pc', inp.hasPrivateCover ? '1' : '0');
@@ -45,7 +43,6 @@ function encodeInputs(inp) {
 function decodeParams(search) {
   const p = new URLSearchParams(search);
   const frMap = { a: 'annual', m: 'monthly', f: 'fortnightly', w: 'weekly' };
-  const itMap = { e: 'employee', s: 'self-employed', t: 'sole-trader' };
   const reMap = { r: 'resident', f: 'foreign', h: 'holiday' };
 
   // Support legacy URLs that used 'gi' for annual gross income
@@ -54,7 +51,6 @@ function decodeParams(search) {
       incomeAmount:    parseFloat(p.get('gi')) || DEFAULTS.incomeAmount,
       entryFreq:       'annual',
       entryType:       'gross',
-      incomeType:      itMap[p.get('it')] ?? 'employee',
       freq:            frMap[p.get('fr')] ?? 'annual',
       residency:       reMap[p.get('re')] ?? 'resident',
       hasPrivateCover: p.get('pc') === '1',
@@ -69,7 +65,6 @@ function decodeParams(search) {
     incomeAmount:    parseFloat(p.get('ia')) || DEFAULTS.incomeAmount,
     entryFreq:       frMap[p.get('ef')] ?? 'annual',
     entryType:       p.get('et') === 'n' ? 'net' : 'gross',
-    incomeType:      itMap[p.get('it')] ?? 'employee',
     freq:            frMap[p.get('fr')] ?? 'annual',
     residency:       reMap[p.get('re')] ?? 'resident',
     hasPrivateCover: p.get('pc') === '1',
@@ -110,9 +105,9 @@ export default function PayTaxInstance({ instanceKey = '', label, onRemove, them
   const tooltipBg    = theme === 'dark' ? '#1D1D22' : '#FAFAF6';
   const tooltipBorder = theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
 
-  const colorGreen = chartAccent;
+  const colorGross = theme === 'dark' ? '#E8E8E2' : '#1A1A1F';
   const colorRed   = theme === 'dark' ? '#E87070' : '#D85A30';
-  const colorNet   = theme === 'dark' ? '#E8E8E2' : '#1A1A1F';
+  const colorNet   = chartAccent;
 
   // Build waterfall data scaled to display frequency
   const wfGross    = Math.round(byFreq(annualGross, inputs.freq));
@@ -123,7 +118,7 @@ export default function PayTaxInstance({ instanceKey = '', label, onRemove, them
   const wfNet      = Math.round(byFreq(result.takeHome, inputs.freq));
 
   const waterfallData = (() => {
-    const entries = [{ name: 'Gross pay', base: 0, value: wfGross, color: colorGreen }];
+    const entries = [{ name: 'Gross pay', base: 0, value: wfGross, color: colorGross }];
     let running = wfGross;
     if (wfTax > 0)      { running -= wfTax;      entries.push({ name: 'Income tax', base: running, value: wfTax,      color: colorRed }); }
     if (wfMedicare > 0) { running -= wfMedicare;  entries.push({ name: 'Medicare',   base: running, value: wfMedicare, color: colorRed }); }
@@ -202,14 +197,6 @@ export default function PayTaxInstance({ instanceKey = '', label, onRemove, them
               )}
             </div>
 
-            <div className="field">
-              <label>Income type</label>
-              <div className="segmented">
-                {[['employee','Employee'],['self-employed','Self-employed'],['sole-trader','Sole trader']].map(([v,l]) => (
-                  <button key={v} className={inputs.incomeType === v ? 'active' : ''} onClick={() => set('incomeType', v)}>{l}</button>
-                ))}
-              </div>
-            </div>
           </div>
 
           <div className="panel-section">
@@ -249,15 +236,13 @@ export default function PayTaxInstance({ instanceKey = '', label, onRemove, them
 
           <div className="panel-section">
             <div className="section-title">Super &amp; Salary Sacrifice</div>
-            {inputs.incomeType === 'employee' && (
-              <div className="field">
-                <label>Employer SG rate</label>
-                <div className="input-wrap has-suffix">
-                  <input type="number" value={inputs.sgRate || ''} onChange={setNum('sgRate')} min="0" max="30" step="0.5" />
-                  <span className="input-suffix">%</span>
-                </div>
+            <div className="field">
+              <label>Employer SG rate</label>
+              <div className="input-wrap has-suffix">
+                <input type="number" value={inputs.sgRate || ''} onChange={setNum('sgRate')} min="0" max="30" step="0.5" />
+                <span className="input-suffix">%</span>
               </div>
-            )}
+            </div>
             <div className="field">
               <label>Salary sacrifice to super (pre-tax, annual)</label>
               <div className="input-wrap has-prefix">
