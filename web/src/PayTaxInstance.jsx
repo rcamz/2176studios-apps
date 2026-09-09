@@ -203,15 +203,6 @@ export default function PayTaxInstance({ instanceKey = '', label, onRemove, them
                 ))}
               </div>
             </div>
-
-            <div className="field">
-              <label>Display results as</label>
-              <div className="segmented">
-                {[['annual','Annual'],['monthly','Monthly'],['fortnightly','Fortnight'],['weekly','Weekly']].map(([v,l]) => (
-                  <button key={v} className={inputs.freq === v ? 'active' : ''} onClick={() => set('freq', v)}>{l}</button>
-                ))}
-              </div>
-            </div>
           </div>
 
           <div className="panel-section">
@@ -272,6 +263,13 @@ export default function PayTaxInstance({ instanceKey = '', label, onRemove, them
         </div>
 
         <div className="results-panel">
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
+            <div className="segmented">
+              {[['annual','Annual'],['monthly','Monthly'],['fortnightly','Fortnight'],['weekly','Weekly']].map(([v,l]) => (
+                <button key={v} className={inputs.freq === v ? 'active' : ''} onClick={() => set('freq', v)}>{l}</button>
+              ))}
+            </div>
+          </div>
           <div className="savings-card">
             <div className="savings-label">
               {FREQ_LABELS[inputs.freq]} take-home
