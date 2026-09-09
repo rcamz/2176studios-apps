@@ -601,6 +601,7 @@ export default function MortgageCalc() {
                   tick={{ fontSize: 10, fill: chartTick, fontFamily: 'JetBrains Mono' }}
                   axisLine={{ stroke: chartGrid }}
                   tickLine={false}
+                  interval={4}
                 />
                 <YAxis
                   tickFormatter={fmtShort}

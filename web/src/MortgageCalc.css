@@ -23,7 +23,7 @@
   background: var(--surface);
   border: none;
   border-right: 1px solid var(--border);
-  color: var(--text-muted);
+  color: var(--accent);
   font-family: var(--sans);
   font-size: 0.82rem;
   font-weight: 600;
