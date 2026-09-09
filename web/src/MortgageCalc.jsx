@@ -329,7 +329,7 @@ export default function MortgageCalc() {
   return (
     <div className="calc-wrap">
       <div className="calc-topbar">
-        <span className="calc-brand">2176 Studios</span>
+        <span className="calc-brand">2176 Studios<span className="brand-dot" /></span>
         <div className="topbar-actions">
           <a className="btn-icon" title="Feedback / Support" href="mailto:support@2176studios.com"><IconBubble /></a>
           <button className="btn-icon" title="Toggle theme" onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}><IconSun /></button>
@@ -409,7 +409,7 @@ export default function MortgageCalc() {
                   <>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 8, alignItems: 'center' }}>
                       <div className="input-wrap has-suffix">
-                        <input type="number" value={inputs.splitFixedPct} onChange={(e) => {
+                        <input type="number" value={inputs.splitFixedPct || ''} onChange={(e) => {
                           const v = Math.min(99, parseFloat(e.target.value) || 0);
                           set('splitFixedPct', v);
                           set('splitFixedAmt', Math.round(inputs.loanAmount * v / 100));
@@ -436,7 +436,7 @@ export default function MortgageCalc() {
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 8, alignItems: 'center' }}>
                       <div className="input-wrap has-prefix">
                         <span className="input-prefix">$</span>
-                        <input type="number" value={inputs.splitFixedAmt} onChange={(e) => {
+                        <input type="number" value={inputs.splitFixedAmt || ''} onChange={(e) => {
                           const v = Math.min(inputs.loanAmount - 1, parseFloat(e.target.value) || 0);
                           set('splitFixedAmt', v);
                           set('splitFixedPct', Math.round(v / inputs.loanAmount * 100));
@@ -514,10 +514,10 @@ export default function MortgageCalc() {
                   <div key={i} className="lump-row">
                     <div className="input-wrap has-prefix">
                       <span className="input-prefix">$</span>
-                      <input type="number" value={lump.amount} onChange={(e) => updateExtraLump(i, 'amount', e.target.value)} min="0" step="1000" placeholder="Amount" />
+                      <input type="number" value={lump.amount || ''} onChange={(e) => updateExtraLump(i, 'amount', e.target.value)} min="0" step="1000" placeholder="Amount" />
                     </div>
                     <div className="input-wrap has-suffix">
-                      <input type="number" value={lump.month} onChange={(e) => updateExtraLump(i, 'month', e.target.value)} min="1" max={inputs.termYears * 12} placeholder="Month" />
+                      <input type="number" value={lump.month || ''} onChange={(e) => updateExtraLump(i, 'month', e.target.value)} min="1" max={inputs.termYears * 12} placeholder="Month" />
                       <span className="input-suffix" style={{ fontSize: '0.75rem' }}>mo</span>
                     </div>
                     <button onClick={() => removeExtraLump(i)}>×</button>
@@ -557,10 +557,10 @@ export default function MortgageCalc() {
                   <div key={i} className="lump-row">
                     <div className="input-wrap has-prefix">
                       <span className="input-prefix">$</span>
-                      <input type="number" value={lump.amount} onChange={(e) => updateOffsetLump(i, 'amount', e.target.value)} min="0" step="1000" placeholder="Amount" />
+                      <input type="number" value={lump.amount || ''} onChange={(e) => updateOffsetLump(i, 'amount', e.target.value)} min="0" step="1000" placeholder="Amount" />
                     </div>
                     <div className="input-wrap has-suffix">
-                      <input type="number" value={lump.month} onChange={(e) => updateOffsetLump(i, 'month', e.target.value)} min="1" max={inputs.termYears * 12} placeholder="Month" />
+                      <input type="number" value={lump.month || ''} onChange={(e) => updateOffsetLump(i, 'month', e.target.value)} min="1" max={inputs.termYears * 12} placeholder="Month" />
                       <span className="input-suffix" style={{ fontSize: '0.75rem' }}>mo</span>
                     </div>
                     <button onClick={() => removeOffsetLump(i)}>×</button>
@@ -576,10 +576,10 @@ export default function MortgageCalc() {
                   <div key={i} className="lump-row">
                     <div className="input-wrap has-prefix">
                       <span className="input-prefix">$</span>
-                      <input type="number" value={lump.amount} onChange={(e) => updateOffsetWithdrawal(i, 'amount', e.target.value)} min="0" step="1000" placeholder="Amount" />
+                      <input type="number" value={lump.amount || ''} onChange={(e) => updateOffsetWithdrawal(i, 'amount', e.target.value)} min="0" step="1000" placeholder="Amount" />
                     </div>
                     <div className="input-wrap has-suffix">
-                      <input type="number" value={lump.month} onChange={(e) => updateOffsetWithdrawal(i, 'month', e.target.value)} min="1" max={inputs.termYears * 12} placeholder="Month" />
+                      <input type="number" value={lump.month || ''} onChange={(e) => updateOffsetWithdrawal(i, 'month', e.target.value)} min="1" max={inputs.termYears * 12} placeholder="Month" />
                       <span className="input-suffix" style={{ fontSize: '0.75rem' }}>mo</span>
                     </div>
                     <button onClick={() => removeOffsetWithdrawal(i)}>×</button>
