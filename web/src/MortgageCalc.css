@@ -4,45 +4,55 @@
 }
 
 /* ─── Instances container ─────────────────────────────────────────── */
-.calc-instances {
-  /* Single mode: centre one instance */
+
+/* 1 column: block, instance centred */
+.calc-instances[data-count="1"] {
+  display: block;
 }
-
-.calc-instances.is-multi {
-  display: flex;
-  gap: 0;
-  overflow-x: auto;
-  align-items: start;
-  scroll-snap-type: x proximity;
-  /* leave room for the floating ad bar */
-  padding-bottom: 120px;
-}
-
-/* Scrollbar styling for comparison mode */
-.calc-instances.is-multi::-webkit-scrollbar { height: 5px; }
-.calc-instances.is-multi::-webkit-scrollbar-track { background: transparent; }
-.calc-instances.is-multi::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
-
-/* ─── Calculator instance ─────────────────────────────────────────── */
-.calc-instance {
-  /* Single mode */
-  max-width: 1160px;
+.calc-instances[data-count="1"] .calc-instance {
+  max-width: 760px;
   margin: 0 auto;
   padding: 0 18px 120px;
 }
 
-.is-multi .calc-instance {
-  max-width: none;
-  margin: 0;
-  flex: 0 0 min(820px, 90vw);
-  padding: 0 18px 0;
+/* 2 columns: fill viewport width, no horizontal scroll */
+.calc-instances[data-count="2"] {
+  display: flex;
+  align-items: start;
+  overflow-x: hidden;
+}
+.calc-instances[data-count="2"] .calc-instance {
+  flex: 1;
+  min-width: 0;
+  padding: 0 18px 120px;
+  border-right: 1px solid var(--border);
+}
+.calc-instances[data-count="2"] .calc-instance:last-child {
+  border-right: none;
+}
+
+/* 3 columns: fit if the viewport allows, scroll horizontally if not */
+.calc-instances[data-count="3"] {
+  display: flex;
+  align-items: start;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+}
+.calc-instances[data-count="3"] .calc-instance {
+  flex: 1;
+  min-width: min(380px, 90vw);
+  padding: 0 18px 120px;
   border-right: 1px solid var(--border);
   scroll-snap-align: start;
 }
-
-.is-multi .calc-instance:last-child {
+.calc-instances[data-count="3"] .calc-instance:last-child {
   border-right: none;
 }
+
+/* Horizontal scrollbar (3 columns only when it appears) */
+.calc-instances[data-count="3"]::-webkit-scrollbar { height: 5px; }
+.calc-instances[data-count="3"]::-webkit-scrollbar-track { background: transparent; }
+.calc-instances[data-count="3"]::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
 
 /* ─── Scenario header (comparison mode only) ──────────────────────── */
 .instance-header {
@@ -191,20 +201,11 @@
   border-color: var(--text);
 }
 
-/* ─── Two-column layout inside each instance ──────────────────────── */
+/* ─── Single-column layout inside each instance ──────────────────── */
 .calc-body {
-  display: grid;
-  grid-template-columns: 340px 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 16px;
-  align-items: start;
-}
-@media (max-width: 820px) {
-  .calc-body { grid-template-columns: 1fr; }
-}
-
-/* In comparison, always use single-column stacked layout on narrow instances */
-.is-multi .calc-body {
-  grid-template-columns: 340px 1fr;
 }
 
 /* ─── Input panel ─────────────────────────────────────────────────── */
@@ -583,15 +584,6 @@ select.field-select {
   margin-bottom: 0;
 }
 
-/* Single mode needs bottom padding for floating bar */
-.calc-instance:not(.is-multi .calc-instance) {
-  padding-bottom: 120px;
-}
-
-/* Comparison mode: add bottom padding to last instance via wrapper */
-.calc-instances.is-multi {
-  padding-bottom: 120px;
-}
 
 /* ─── Modal ───────────────────────────────────────────────────────── */
 .modal-overlay {

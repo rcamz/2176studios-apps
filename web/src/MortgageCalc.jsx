@@ -81,7 +81,7 @@ export default function MortgageCalc() {
         </div>
       </div>
 
-      <div className={`calc-instances${isMulti ? ' is-multi' : ''}`} ref={instancesRef}>
+      <div className="calc-instances" data-count={instances.length} ref={instancesRef}>
         {instances.map((inst) => (
           <CalcInstance
             key={inst.id}
