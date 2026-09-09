@@ -244,7 +244,7 @@ select.field-select {
 .add-lump:hover { border-color: var(--accent); color: var(--accent); }
 
 /* ─── Results panel ───────────────────────────────────────────────── */
-.results-panel { display: flex; flex-direction: column; gap: 12px; }
+.results-panel { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 
 /* ─── Savings block ───────────────────────────────────────────────── */
 .savings-card {
