@@ -110,9 +110,13 @@ export default function MortgageCalc() {
   const [inputs, setInputs] = useState(() => ({ ...DEFAULTS, ...decodeParams(window.location.search) }));
   const [showTable, setShowTable] = useState(false);
   const [showAllRows, setShowAllRows] = useState(false);
-
+  const [theme, setTheme] = useState('dark');
   const [modal, setModal] = useState(null); // null | 'save' | 'share'
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
 
   const set = (key, val) => setInputs((s) => ({ ...s, [key]: val }));
   const setNum = (key) => (e) => set(key, parseFloat(e.target.value) || 0);
@@ -263,27 +267,28 @@ export default function MortgageCalc() {
 
   const tableRows = showAllRows ? withRows : withRows.slice(0, 24);
 
+  const chartAccent = theme === 'dark' ? '#C9F23A' : '#4B7B00';
+  const chartGhost  = theme === 'dark' ? 'rgba(240,239,233,0.18)' : 'rgba(13,13,16,0.18)';
+  const chartGrid   = theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)';
+  const chartTick   = theme === 'dark' ? 'rgba(240,239,233,0.35)' : 'rgba(13,13,16,0.4)';
+  const tooltipBg   = theme === 'dark' ? '#1D1D22' : '#FAFAF6';
+  const tooltipBorder = theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+
   return (
     <div className="calc-wrap">
-      <div className="calc-header">
-        <h1>Mortgage Repayment + Offset Calculator</h1>
-        <p>Australian home loan calculator with offset account, extra repayments, and fixed-rate periods.</p>
-        <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
-          {['save', 'share'].map((mode) => (
-            <button key={mode} onClick={() => mode === 'share' ? handleShare() : (setCopied(false), setModal('save'))} style={{
-              background: 'rgba(255,255,255,0.15)',
-              border: '1px solid rgba(255,255,255,0.3)',
-              borderRadius: 7,
-              color: '#fff',
-              fontSize: '0.82rem',
-              fontWeight: 600,
-              padding: '7px 16px',
-              cursor: 'pointer',
-              whiteSpace: 'nowrap',
-            }}>
-              {mode === 'save' ? '⬇ Save' : '⤴ Share'}
-            </button>
-          ))}
+      <div className="calc-topbar">
+        <span className="calc-brand">2176 Studios</span>
+        <button className="theme-toggle" onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}>
+          {theme === 'dark' ? '☀ Light' : '☾ Dark'}
+        </button>
+      </div>
+
+      <div className="calc-heading">
+        <h1>Mortgage Repayment<br />+ Offset Calculator</h1>
+        <p>Australian home loan — offset, fixed rates, extra repayments, split loans.</p>
+        <div className="calc-heading-actions">
+          <button className="btn-outline" onClick={() => { setCopied(false); setModal('save'); }}>⬇ Save</button>
+          <button className="btn-outline" onClick={handleShare}>⤴ Share</button>
         </div>
       </div>
 
@@ -431,7 +436,7 @@ export default function MortgageCalc() {
 
           <div className="panel-section">
             <div className="section-title">Offset account</div>
-            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 12 }}>
+            <p className="offset-note">
               Offset applies to variable portion only — standard for AU lenders.
             </p>
 
@@ -561,34 +566,38 @@ export default function MortgageCalc() {
             <div className="chart-title">Loan balance over time</div>
             <ResponsiveContainer width="100%" height={260}>
               <LineChart data={chartData} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e0e8f0" />
+                <CartesianGrid strokeDasharray="3 3" stroke={chartGrid} />
                 <XAxis
                   dataKey="year"
                   tickFormatter={(v) => `Yr ${v}`}
-                  tick={{ fontSize: 11, fill: '#5a6a7a' }}
+                  tick={{ fontSize: 10, fill: chartTick, fontFamily: 'JetBrains Mono' }}
+                  axisLine={{ stroke: chartGrid }}
+                  tickLine={false}
                 />
                 <YAxis
                   tickFormatter={fmtShort}
-                  tick={{ fontSize: 11, fill: '#5a6a7a' }}
-                  width={56}
+                  tick={{ fontSize: 10, fill: chartTick, fontFamily: 'JetBrains Mono' }}
+                  width={52}
+                  axisLine={false}
+                  tickLine={false}
                 />
                 <Tooltip
                   formatter={(v, name) => [fmt(v), name]}
                   labelFormatter={(l) => `Year ${l}`}
-                  contentStyle={{ fontSize: 12, borderRadius: 6, border: '1px solid #d0dce8' }}
+                  contentStyle={{ fontSize: 11, borderRadius: 3, border: `1px solid ${tooltipBorder}`, background: tooltipBg, color: 'var(--text)', fontFamily: 'Plus Jakarta Sans' }}
                 />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
                 <Line
                   type="monotone"
                   dataKey="With offset"
-                  stroke="#0C447C"
-                  strokeWidth={2.5}
+                  stroke={chartAccent}
+                  strokeWidth={2}
                   dot={false}
                 />
                 <Line
                   type="monotone"
                   dataKey="No offset"
-                  stroke="#378ADD"
+                  stroke={chartGhost}
                   strokeWidth={1.5}
                   strokeDasharray="5 4"
                   dot={false}
