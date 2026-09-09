@@ -26,13 +26,6 @@ const IconSun = () => (
   </svg>
 );
 
-const IconPlus = () => (
-  <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round">
-    <line x1="7" y1="1.5" x2="7" y2="12.5"/>
-    <line x1="1.5" y1="7" x2="12.5" y2="7"/>
-  </svg>
-);
-
 const LABELS = { '': 'Scenario A', b: 'Scenario B', c: 'Scenario C' };
 let _nextId = 1;
 
@@ -53,7 +46,6 @@ export default function MortgageCalc() {
     const nextKey = ['b', 'c'].find(k => !usedKeys.has(k));
     if (!nextKey) return;
     setInstances(prev => [...prev, { id: _nextId++, key: nextKey }]);
-    // Scroll right after render so the new instance is visible
     setTimeout(() => {
       if (instancesRef.current) {
         instancesRef.current.scrollTo({ left: instancesRef.current.scrollWidth, behavior: 'smooth' });
@@ -70,12 +62,6 @@ export default function MortgageCalc() {
       <div className="calc-topbar">
         <Link to="/" className="calc-brand">2176 Studios<span className="brand-dot" /></Link>
         <div className="topbar-actions">
-          {instances.length < 3 && (
-            <button className="btn-compare" onClick={addInstance} title="Add a comparison scenario">
-              <IconPlus />
-              <span>Compare</span>
-            </button>
-          )}
           <a className="btn-icon" title="Feedback / Support" href="mailto:support@2176studios.com"><IconBubble /></a>
           <button className="btn-icon" title="Toggle theme" onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}><IconSun /></button>
         </div>
@@ -92,6 +78,15 @@ export default function MortgageCalc() {
             isComparison={isMulti}
           />
         ))}
+
+        {/* Ghosted compare card — desktop only, hidden on mobile */}
+        {instances.length < 3 && (
+          <button className="compare-card" onClick={addInstance}>
+            <span className="compare-card-plus">+</span>
+            <span className="compare-card-title">Compare</span>
+            <span className="compare-card-sub">Add a new scenario for side by side comparison</span>
+          </button>
+        )}
       </div>
 
       <div className="ad-bar-float">

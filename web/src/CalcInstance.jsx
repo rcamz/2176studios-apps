@@ -284,9 +284,13 @@ export default function CalcInstance({ instanceKey = '', label, onRemove, theme 
       {isComparison && (
         <div className="instance-header">
           <span className="instance-label">{label}</span>
-          {onRemove && (
-            <button className="instance-remove" onClick={onRemove} title="Remove scenario">×</button>
-          )}
+          {/* Always rendered so both headers stay the same height */}
+          <button
+            className="instance-remove"
+            onClick={onRemove || undefined}
+            title="Remove scenario"
+            style={!onRemove ? { visibility: 'hidden', pointerEvents: 'none' } : {}}
+          >×</button>
         </div>
       )}
 
