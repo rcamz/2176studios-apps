@@ -41,7 +41,7 @@ const IconSun = () => (
 
 // Paste your AdSense slot IDs here once you create ad units in AdSense > Ads > Ad units
 const AD_SLOT_BANNER = 'XXXXXXXXXX';   // horizontal banner — above calculator
-const AD_SLOT_INLINE = 'XXXXXXXXXX';   // inline unit — between stats and chart
+const AD_SLOT_INLINE = 'XXXXXXXXXX';   // inline unit — below extra repayments
 
 const fmt = (n) =>
   '$' + Math.round(n).toLocaleString('en-AU');
@@ -505,6 +505,7 @@ export default function MortgageCalc() {
               </div>
             )}
             <button className="add-lump" onClick={addExtraLump}>+ Add lump sum repayment</button>
+            <AdUnit slotId={AD_SLOT_INLINE} format="horizontal" style={{ marginTop: 12 }} />
           </div>
 
           <div className="panel-section">
@@ -611,8 +612,6 @@ export default function MortgageCalc() {
               <div className="stat-card-value">{withRows[0] ? fmt(withRows[0].payment) : '—'}</div>
             </div>
           </div>
-
-          <AdUnit slotId={AD_SLOT_INLINE} format="rectangle" />
 
           {/* Fixed rate callout */}
           {rateSwitchMonth && (
