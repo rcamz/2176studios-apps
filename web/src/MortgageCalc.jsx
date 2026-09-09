@@ -333,7 +333,7 @@ export default function MortgageCalc() {
 
       <div className="calc-heading">
         <h1>Mortgage Repayment<br />+ Offset Calculator</h1>
-        <p>Australian home loan — offset, fixed rates, extra repayments, split loans.</p>
+        <p>A free, ad-supported Australian home loan calculator which handles offsets, fixed and split loans, extra repayments and lump sum deposits and withdrawals.</p>
       </div>
 
       <div className="calc-body">
@@ -477,6 +477,37 @@ export default function MortgageCalc() {
           </div>
 
           <div className="panel-section">
+            <div className="section-title">Extra repayments</div>
+
+            <div className="field">
+              <label>Extra per month</label>
+              <div className="input-wrap has-prefix">
+                <span className="input-prefix">$</span>
+                <input type="number" value={inputs.extraRecurring} onChange={setNum('extraRecurring')} min="0" step="100" />
+              </div>
+            </div>
+
+            {inputs.extraLumps.length > 0 && (
+              <div className="lump-list">
+                {inputs.extraLumps.map((lump, i) => (
+                  <div key={i} className="lump-row">
+                    <div className="input-wrap has-prefix">
+                      <span className="input-prefix">$</span>
+                      <input type="number" value={lump.amount} onChange={(e) => updateExtraLump(i, 'amount', e.target.value)} min="0" step="1000" placeholder="Amount" />
+                    </div>
+                    <div className="input-wrap has-suffix">
+                      <input type="number" value={lump.month} onChange={(e) => updateExtraLump(i, 'month', e.target.value)} min="1" max={inputs.termYears * 12} placeholder="Month" />
+                      <span className="input-suffix" style={{ fontSize: '0.75rem' }}>mo</span>
+                    </div>
+                    <button onClick={() => removeExtraLump(i)}>×</button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <button className="add-lump" onClick={addExtraLump}>+ Add lump sum repayment</button>
+          </div>
+
+          <div className="panel-section">
             <div className="section-title">Offset account</div>
             <p className="offset-note">
               Offset applies to variable portion only — standard for AU lenders.
@@ -537,36 +568,6 @@ export default function MortgageCalc() {
             <button className="add-lump" onClick={addOffsetWithdrawal}>+ Add lump sum withdrawal</button>
           </div>
 
-          <div className="panel-section">
-            <div className="section-title">Extra repayments</div>
-
-            <div className="field">
-              <label>Extra per month</label>
-              <div className="input-wrap has-prefix">
-                <span className="input-prefix">$</span>
-                <input type="number" value={inputs.extraRecurring} onChange={setNum('extraRecurring')} min="0" step="100" />
-              </div>
-            </div>
-
-            {inputs.extraLumps.length > 0 && (
-              <div className="lump-list">
-                {inputs.extraLumps.map((lump, i) => (
-                  <div key={i} className="lump-row">
-                    <div className="input-wrap has-prefix">
-                      <span className="input-prefix">$</span>
-                      <input type="number" value={lump.amount} onChange={(e) => updateExtraLump(i, 'amount', e.target.value)} min="0" step="1000" placeholder="Amount" />
-                    </div>
-                    <div className="input-wrap has-suffix">
-                      <input type="number" value={lump.month} onChange={(e) => updateExtraLump(i, 'month', e.target.value)} min="1" max={inputs.termYears * 12} placeholder="Month" />
-                      <span className="input-suffix" style={{ fontSize: '0.75rem' }}>mo</span>
-                    </div>
-                    <button onClick={() => removeExtraLump(i)}>×</button>
-                  </div>
-                ))}
-              </div>
-            )}
-            <button className="add-lump" onClick={addExtraLump}>+ Add lump sum repayment</button>
-          </div>
         </div>
 
         {/* ── RESULTS ── */}
