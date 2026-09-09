@@ -52,7 +52,7 @@ body {
 .calc-wrap {
   max-width: 1160px;
   margin: 0 auto;
-  padding: 0 18px 56px;
+  padding: 0 18px 120px;
 }
 
 /* ─── Top bar ────────────────────────────────────────────────────── */
@@ -526,6 +526,18 @@ select.field-select {
   letter-spacing: 0.6px;
   text-transform: uppercase;
   font-weight: 600;
+}
+
+/* ─── Floating bottom ad bar ─────────────────────────────────────── */
+.ad-bar-float {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  padding: 8px 18px;
 }
 
 /* ─── Disclaimer ──────────────────────────────────────────────────── */

@@ -318,8 +318,6 @@ export default function MortgageCalc() {
         <p>Australian home loan — offset, fixed rates, extra repayments, split loans.</p>
       </div>
 
-      <AdUnit slotId={AD_SLOT_BANNER} format="horizontal" style={{ marginBottom: 20 }} />
-
       <div className="calc-body">
         {/* ── INPUTS ── */}
         <div className="panel">
@@ -690,6 +688,11 @@ export default function MortgageCalc() {
             Estimates only — not financial advice. Interest calculated monthly (lenders use daily). Offset assumed 100% effective on variable portion only. Does not include lender fees, LMI, or rate changes beyond fixed-period revert.
           </div>
         </div>
+      </div>
+
+      {/* ── Floating bottom ad bar ── */}
+      <div className="ad-bar-float">
+        <AdUnit slotId={AD_SLOT_BANNER} format="horizontal" />
       </div>
 
       {/* ── Save / Share modal ── */}
