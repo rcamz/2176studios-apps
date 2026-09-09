@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ResponsiveContainer,
@@ -51,13 +51,87 @@ const DEFAULTS = {
   extraLumps: [],
 };
 
+// Short param names keep shared URLs compact
+function encodeInputs(inp) {
+  const p = new URLSearchParams();
+  p.set('loan', inp.loanAmount);
+  p.set('term', inp.termYears);
+  p.set('rate', inp.annualRatePercent);
+  p.set('rt',   inp.rateType[0]);                   // v / f / s
+  if (inp.rateType !== 'variable') {
+    p.set('fr', inp.fixedRatePercent);
+    p.set('fp', inp.fixedPeriodYears);
+    p.set('rr', inp.revertRatePercent);
+  }
+  if (inp.rateType === 'split') {
+    p.set('sm', inp.splitMode[0]);                   // p / d
+    p.set('sp', inp.splitFixedPct);
+    p.set('sa', inp.splitFixedAmt);
+    p.set('vr', inp.splitVariableRatePercent);
+  }
+  p.set('os', inp.offsetStart);
+  p.set('om', inp.offsetMonthly);
+  if (inp.offsetLumps.length)  p.set('ol', JSON.stringify(inp.offsetLumps.map(l => [l.month, l.amount])));
+  if (inp.extraRecurring)      p.set('xr', inp.extraRecurring);
+  if (inp.extraLumps.length)   p.set('xl', JSON.stringify(inp.extraLumps.map(l => [l.month, l.amount])));
+  return p.toString();
+}
+
+function decodeParams(search) {
+  const p = new URLSearchParams(search);
+  if (!p.has('loan')) return {};
+  const rt = { v: 'variable', f: 'fixed', s: 'split' }[p.get('rt')] ?? 'variable';
+  const sm = { p: 'pct', d: 'dollar' }[p.get('sm')] ?? 'pct';
+  const parseLumps = (key) => {
+    try { return (JSON.parse(p.get(key)) ?? []).map(([month, amount]) => ({ month, amount })); }
+    catch { return []; }
+  };
+  return {
+    loanAmount:             parseFloat(p.get('loan')) || DEFAULTS.loanAmount,
+    termYears:              parseFloat(p.get('term')) || DEFAULTS.termYears,
+    annualRatePercent:      parseFloat(p.get('rate')) || DEFAULTS.annualRatePercent,
+    rateType:               rt,
+    fixedRatePercent:       parseFloat(p.get('fr'))   || DEFAULTS.fixedRatePercent,
+    fixedPeriodYears:       parseFloat(p.get('fp'))   || DEFAULTS.fixedPeriodYears,
+    revertRatePercent:      parseFloat(p.get('rr'))   || DEFAULTS.revertRatePercent,
+    splitMode:              sm,
+    splitFixedPct:          parseFloat(p.get('sp'))   || DEFAULTS.splitFixedPct,
+    splitFixedAmt:          parseFloat(p.get('sa'))   || DEFAULTS.splitFixedAmt,
+    splitVariableRatePercent: parseFloat(p.get('vr')) || DEFAULTS.splitVariableRatePercent,
+    offsetStart:            parseFloat(p.get('os'))   ?? DEFAULTS.offsetStart,
+    offsetMonthly:          parseFloat(p.get('om'))   ?? DEFAULTS.offsetMonthly,
+    offsetLumps:            p.has('ol') ? parseLumps('ol') : [],
+    extraRecurring:         parseFloat(p.get('xr'))   || 0,
+    extraLumps:             p.has('xl') ? parseLumps('xl') : [],
+  };
+}
+
 export default function MortgageCalc() {
-  const [inputs, setInputs] = useState(DEFAULTS);
+  const [inputs, setInputs] = useState(() => ({ ...DEFAULTS, ...decodeParams(window.location.search) }));
   const [showTable, setShowTable] = useState(false);
   const [showAllRows, setShowAllRows] = useState(false);
 
+  const [copied, setCopied] = useState(false);
+
   const set = (key, val) => setInputs((s) => ({ ...s, [key]: val }));
   const setNum = (key) => (e) => set(key, parseFloat(e.target.value) || 0);
+
+  // Keep URL in sync with inputs so the page is always shareable
+  useEffect(() => {
+    const qs = encodeInputs(inputs);
+    window.history.replaceState(null, '', `${window.location.pathname}?${qs}`);
+  }, [inputs]);
+
+  const handleShare = useCallback(async () => {
+    const url = window.location.href;
+    if (navigator.share) {
+      await navigator.share({ title: 'Mortgage Calculator', url });
+    } else {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  }, []);
 
   // Offset lump sum helpers
   const addOffsetLump = () =>
@@ -187,8 +261,27 @@ export default function MortgageCalc() {
   return (
     <div className="calc-wrap">
       <div className="calc-header">
-        <h1>Mortgage Repayment + Offset Calculator</h1>
-        <p>Australian home loan calculator with offset account, extra repayments, and fixed-rate periods.</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+          <div>
+            <h1>Mortgage Repayment + Offset Calculator</h1>
+            <p>Australian home loan calculator with offset account, extra repayments, and fixed-rate periods.</p>
+          </div>
+          <button onClick={handleShare} style={{
+            flexShrink: 0,
+            background: 'rgba(255,255,255,0.15)',
+            border: '1px solid rgba(255,255,255,0.3)',
+            borderRadius: 7,
+            color: '#fff',
+            fontSize: '0.82rem',
+            fontWeight: 600,
+            padding: '7px 14px',
+            cursor: 'pointer',
+            whiteSpace: 'nowrap',
+            transition: 'background 0.15s',
+          }}>
+            {copied ? '✓ Copied!' : '⤴ Share'}
+          </button>
+        </div>
       </div>
 
       <AdUnit slotId={AD_SLOT_BANNER} format="horizontal" style={{ marginBottom: 20 }} />
