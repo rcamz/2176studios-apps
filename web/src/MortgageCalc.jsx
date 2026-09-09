@@ -188,7 +188,7 @@ export default function MortgageCalc() {
     set('offsetLumps', [...inputs.offsetLumps, { month: 12, amount: 10000 }]);
   const updateOffsetLump = (i, field, val) =>
     set('offsetLumps', inputs.offsetLumps.map((l, idx) =>
-      idx === i ? { ...l, [field]: field === 'amount' ? parseFloat(val) || 0 : parseInt(val) || 1 } : l));
+      idx === i ? { ...l, [field]: field === 'amount' ? parseFloat(val) || 0 : parseInt(val) || 0 } : l));
   const removeOffsetLump = (i) =>
     set('offsetLumps', inputs.offsetLumps.filter((_, idx) => idx !== i));
 
@@ -197,7 +197,7 @@ export default function MortgageCalc() {
     set('offsetWithdrawals', [...inputs.offsetWithdrawals, { month: 12, amount: 5000 }]);
   const updateOffsetWithdrawal = (i, field, val) =>
     set('offsetWithdrawals', inputs.offsetWithdrawals.map((l, idx) =>
-      idx === i ? { ...l, [field]: field === 'amount' ? parseFloat(val) || 0 : parseInt(val) || 1 } : l));
+      idx === i ? { ...l, [field]: field === 'amount' ? parseFloat(val) || 0 : parseInt(val) || 0 } : l));
   const removeOffsetWithdrawal = (i) =>
     set('offsetWithdrawals', inputs.offsetWithdrawals.filter((_, idx) => idx !== i));
 
@@ -206,7 +206,7 @@ export default function MortgageCalc() {
     set('extraLumps', [...inputs.extraLumps, { month: 12, amount: 5000 }]);
   const updateExtraLump = (i, field, val) =>
     set('extraLumps', inputs.extraLumps.map((l, idx) =>
-      idx === i ? { ...l, [field]: field === 'amount' ? parseFloat(val) || 0 : parseInt(val) || 1 } : l));
+      idx === i ? { ...l, [field]: field === 'amount' ? parseFloat(val) || 0 : parseInt(val) || 0 } : l));
   const removeExtraLump = (i) =>
     set('extraLumps', inputs.extraLumps.filter((_, idx) => idx !== i));
 
@@ -410,10 +410,14 @@ export default function MortgageCalc() {
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 8, alignItems: 'center' }}>
                       <div className="input-wrap has-suffix">
                         <input type="number" value={inputs.splitFixedPct} onChange={(e) => {
-                          const v = Math.min(99, Math.max(1, parseFloat(e.target.value) || 0));
+                          const v = Math.min(99, parseFloat(e.target.value) || 0);
                           set('splitFixedPct', v);
                           set('splitFixedAmt', Math.round(inputs.loanAmount * v / 100));
-                        }} min="1" max="99" step="1" />
+                        }} onBlur={() => {
+                          const v = Math.min(99, Math.max(1, inputs.splitFixedPct));
+                          set('splitFixedPct', v);
+                          set('splitFixedAmt', Math.round(inputs.loanAmount * v / 100));
+                        }} max="99" step="1" />
                         <span className="input-suffix">% fixed</span>
                       </div>
                       <span style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.8rem' }}>/</span>
@@ -433,10 +437,14 @@ export default function MortgageCalc() {
                       <div className="input-wrap has-prefix">
                         <span className="input-prefix">$</span>
                         <input type="number" value={inputs.splitFixedAmt} onChange={(e) => {
-                          const v = Math.min(inputs.loanAmount - 1, Math.max(1, parseFloat(e.target.value) || 0));
+                          const v = Math.min(inputs.loanAmount - 1, parseFloat(e.target.value) || 0);
                           set('splitFixedAmt', v);
                           set('splitFixedPct', Math.round(v / inputs.loanAmount * 100));
-                        }} min="1" step="1000" />
+                        }} onBlur={() => {
+                          const v = Math.min(inputs.loanAmount - 1, Math.max(1, inputs.splitFixedAmt));
+                          set('splitFixedAmt', v);
+                          set('splitFixedPct', Math.round(v / inputs.loanAmount * 100));
+                        }} step="1000" />
                       </div>
                       <span style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.8rem' }}>/</span>
                       <div className="input-wrap has-prefix">
