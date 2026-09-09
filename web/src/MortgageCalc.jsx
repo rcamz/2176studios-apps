@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import CalcInstance from './CalcInstance.jsx';
 import AdUnit from './AdUnit.jsx';
@@ -27,17 +27,51 @@ const IconSun = () => (
   </svg>
 );
 
+const IconDisk = () => (
+  <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="1.5" y="1.5" width="13" height="13" rx="1.5"/>
+    <rect x="4.5" y="1.5" width="7" height="4.5" rx="0.5"/>
+    <rect x="3.5" y="8.5" width="9" height="5.5" rx="0.5"/>
+  </svg>
+);
+
+const IconShare = () => (
+  <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+    <circle cx="3" cy="8" r="1.75"/>
+    <circle cx="13" cy="3" r="1.75"/>
+    <circle cx="13" cy="13" r="1.75"/>
+    <line x1="4.7" y1="7.1" x2="11.3" y2="3.9"/>
+    <line x1="4.7" y1="8.9" x2="11.3" y2="12.1"/>
+  </svg>
+);
+
 const LABELS = { '': 'Scenario A', b: 'Scenario B', c: 'Scenario C' };
 let _nextId = 1;
 
 export default function MortgageCalc() {
   const [theme, setTheme] = useState('light');
   const [instances, setInstances] = useState(() => [{ id: _nextId++, key: '' }]);
+  const [modal, setModal] = useState(null);
+  const [copied, setCopied] = useState(false);
   const instancesRef = useRef(null);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
+
+  const copyUrl = useCallback(async () => {
+    await navigator.clipboard.writeText(window.location.href);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }, []);
+
+  const handleShare = useCallback(async () => {
+    if (navigator.share) {
+      await navigator.share({ title: 'Mortgage Repayment + Offset Calculator', url: window.location.href });
+    } else {
+      setModal('share');
+    }
+  }, []);
 
   const isMulti = instances.length > 1;
 
@@ -65,6 +99,8 @@ export default function MortgageCalc() {
         <div className="topbar-actions">
           <a className="btn-icon" title="Feedback / Support" href="mailto:support@2176studios.com"><IconBubble /></a>
           <button className="btn-icon" title="Toggle theme" onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}><IconSun /></button>
+          <button className="btn-icon" title="Save calculation" onClick={() => { setCopied(false); setModal('save'); }}><IconDisk /></button>
+          <button className="btn-icon" title="Share calculation" onClick={handleShare}><IconShare /></button>
         </div>
       </div>
 
@@ -103,6 +139,29 @@ export default function MortgageCalc() {
       <div className={`ad-bar-float${!isMulti ? ' ad-bar-desktop-hide' : ''}`}>
         <AdUnit slotId={AD_SLOT_BANNER} format="horizontal" />
       </div>
+
+      {modal && (
+        <div className="modal-overlay" onClick={() => setModal(null)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setModal(null)}>×</button>
+            {modal === 'share' && <div className="modal-icon">⤴</div>}
+            <h2 className="modal-title">
+              {modal === 'save' ? 'Save your calculation' : 'Share your calculation'}
+            </h2>
+            <p className="modal-desc">
+              {modal === 'save'
+                ? 'Copy this link. Open it any time to return to exactly these inputs and results.'
+                : 'Copy this link and send it. Anyone who opens it will see the same inputs and results instantly.'}
+            </p>
+            <div className="modal-url-wrap">
+              <input className="modal-url" readOnly value={window.location.href} onFocus={(e) => e.target.select()} />
+            </div>
+            <button className="modal-copy" onClick={copyUrl}>
+              {copied ? '✓ Copied!' : 'Copy link'}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

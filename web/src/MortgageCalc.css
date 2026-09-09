@@ -148,16 +148,7 @@
   padding: 14px 0 0;
   margin-bottom: 20px;
 }
-.instance-header-actions {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-.btn-icon--xs {
-  width: 22px;
-  height: 22px;
-  font-size: 0.8rem;
-}
+
 
 .instance-label {
   font-size: 0.63rem;
@@ -239,18 +230,6 @@
 /* ─── Page heading ────────────────────────────────────────────────── */
 .calc-heading {
   margin-bottom: 28px;
-}
-.heading-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-}
-.heading-actions {
-  display: flex;
-  gap: 8px;
-  flex-shrink: 0;
-  padding-top: 4px;
 }
 .calc-heading h1 {
   font-size: clamp(1.3rem, 3vw, 1.75rem);

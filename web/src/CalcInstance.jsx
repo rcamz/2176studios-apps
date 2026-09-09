@@ -1,28 +1,10 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
 import { amortize, summarize } from './lib/amortize.js';
 import AdUnit from './AdUnit.jsx';
-
-const IconDisk = () => (
-  <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="1.5" y="1.5" width="13" height="13" rx="1.5"/>
-    <rect x="4.5" y="1.5" width="7" height="4.5" rx="0.5"/>
-    <rect x="3.5" y="8.5" width="9" height="5.5" rx="0.5"/>
-  </svg>
-);
-
-const IconShare = () => (
-  <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-    <circle cx="3" cy="8" r="1.75"/>
-    <circle cx="13" cy="3" r="1.75"/>
-    <circle cx="13" cy="13" r="1.75"/>
-    <line x1="4.7" y1="7.1" x2="11.3" y2="3.9"/>
-    <line x1="4.7" y1="8.9" x2="11.3" y2="12.1"/>
-  </svg>
-);
 
 const AD_SLOT_INLINE = 'XXXXXXXXXX';
 const AD_SLOT_CHART  = 'XXXXXXXXXX';
@@ -129,8 +111,6 @@ export default function CalcInstance({ instanceKey = '', label, onRemove, theme 
   );
   const [showTable, setShowTable] = useState(false);
   const [showAllRows, setShowAllRows] = useState(false);
-  const [modal, setModal] = useState(null);
-  const [copied, setCopied] = useState(false);
 
   const set = (key, val) => setInputs((s) => ({ ...s, [key]: val }));
   const setNum = (key) => (e) => set(key, parseFloat(e.target.value) || 0);
@@ -141,20 +121,6 @@ export default function CalcInstance({ instanceKey = '', label, onRemove, theme 
     const qs = encodeInputs(inputs);
     window.history.replaceState(null, '', `${window.location.pathname}?${qs}`);
   }, [inputs, instanceKey]);
-
-  const copyUrl = useCallback(async () => {
-    await navigator.clipboard.writeText(window.location.href);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }, []);
-
-  const handleShare = useCallback(async () => {
-    if (navigator.share) {
-      await navigator.share({ title: 'Mortgage Repayment + Offset Calculator', url: window.location.href });
-    } else {
-      setModal('share');
-    }
-  }, []);
 
   const addOffsetLump = () =>
     set('offsetLumps', [...inputs.offsetLumps, { month: 12, amount: 10000 }]);
@@ -284,29 +250,19 @@ export default function CalcInstance({ instanceKey = '', label, onRemove, theme 
       {isComparison && (
         <div className="instance-header">
           <span className="instance-label">{label}</span>
-          <div className="instance-header-actions">
-            <button className="btn-icon btn-icon--xs" title="Save" onClick={() => { setCopied(false); setModal('save'); }}><IconDisk /></button>
-            <button className="btn-icon btn-icon--xs" title="Share" onClick={handleShare}><IconShare /></button>
-            <button
-              className="instance-remove"
-              onClick={onRemove || undefined}
-              title="Remove scenario"
-              style={!onRemove ? { visibility: 'hidden', pointerEvents: 'none' } : {}}
-            >×</button>
-          </div>
+          <button
+            className="instance-remove"
+            onClick={onRemove || undefined}
+            title="Remove scenario"
+            style={!onRemove ? { visibility: 'hidden', pointerEvents: 'none' } : {}}
+          >×</button>
         </div>
       )}
 
       {/* Page heading — full in single mode, compact in comparison */}
       {!isComparison ? (
         <div className="calc-heading">
-          <div className="heading-row">
-            <h1>Mortgage Repayment<br />+ Offset Calculator</h1>
-            <div className="heading-actions">
-              <button className="btn-outline" onClick={() => { setCopied(false); setModal('save'); }}><IconDisk /> Save</button>
-              <button className="btn-outline" onClick={handleShare}><IconShare /> Share</button>
-            </div>
-          </div>
+          <h1>Mortgage Repayment<br />+ Offset Calculator</h1>
           <p>A free, ad-supported Australian home loan calculator which handles offsets, fixed and split loans, extra repayments and lump sum deposits and withdrawals.</p>
           <a className="desktop-cta" href={window.location.href + (window.location.search ? '&vd=1' : '?vd=1')} target="_blank" rel="noreferrer">
             Open desktop site to compare up to 3 loans at once →
@@ -637,15 +593,6 @@ export default function CalcInstance({ instanceKey = '', label, onRemove, theme 
             </ResponsiveContainer>
           </div>
 
-          <div className="chart-actions">
-            <button className="btn-action" onClick={() => { setCopied(false); setModal('save'); }}>
-              <IconDisk /> Save
-            </button>
-            <button className="btn-action" onClick={handleShare}>
-              <IconShare /> Share
-            </button>
-          </div>
-
           <div className="schedule-card">
             <div className="schedule-header" onClick={() => setShowTable((v) => !v)}>
               <span className="schedule-title">Repayment schedule</span>
@@ -691,28 +638,6 @@ export default function CalcInstance({ instanceKey = '', label, onRemove, theme 
         </div>
       </div>
 
-      {modal && (
-        <div className="modal-overlay" onClick={() => setModal(null)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setModal(null)}>×</button>
-            {modal === 'share' && <div className="modal-icon">⤴</div>}
-            <h2 className="modal-title">
-              {modal === 'save' ? 'Save your calculation' : 'Share your calculation'}
-            </h2>
-            <p className="modal-desc">
-              {modal === 'save'
-                ? 'Copy this link. Open it any time to return to exactly these inputs and results.'
-                : 'Copy this link and send it. Anyone who opens it will see the same inputs and results instantly.'}
-            </p>
-            <div className="modal-url-wrap">
-              <input className="modal-url" readOnly value={window.location.href} onFocus={(e) => e.target.select()} />
-            </div>
-            <button className="modal-copy" onClick={copyUrl}>
-              {copied ? '✓ Copied!' : 'Copy link'}
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
