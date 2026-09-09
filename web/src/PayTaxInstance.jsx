@@ -114,31 +114,46 @@ export default function PayTaxInstance({ instanceKey = '', label, onRemove, them
   const tooltipBg    = theme === 'dark' ? '#1D1D22' : '#FAFAF6';
   const tooltipBorder = theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
 
-  const colorGross = theme === 'dark' ? '#E8E8E2' : '#1A1A1F';
+  const colorBase  = theme === 'dark' ? '#E8E8E2' : '#1A1A1F';
+  const colorSuper = theme === 'dark' ? '#A8D440' : '#7EAB30';
+  const colorBonus = theme === 'dark' ? '#9E98E8' : '#7F77DD';
   const colorRed   = theme === 'dark' ? '#E87070' : '#D85A30';
   const colorNet   = chartAccent;
 
-  const colorBonus = theme === 'dark' ? '#9E98E8' : '#7F77DD';
-
-  // Build waterfall data scaled to display frequency
+  // Build 3-segment stacked waterfall scaled to display frequency
+  // Bar 1: base (dark) + bonus (purple) + super (light green) stacked
+  // Bar 2: super reduction (light green, drops from total package)
+  // Bar 3+: tax reductions (red)
+  // Last: net pay (green)
   const wfBase     = Math.round(byFreq(annualGross - annualBonus, inputs.freq));
   const wfBonus    = Math.round(byFreq(annualBonus, inputs.freq));
-  const wfGross    = wfBase + wfBonus;
+  const wfSuper    = Math.round(byFreq(result.superAmount, inputs.freq));
   const wfTax      = Math.round(byFreq(result.incomeTax, inputs.freq));
   const wfMedicare = Math.round(byFreq(result.medicareLevy, inputs.freq));
   const wfMLS      = Math.round(byFreq(result.mls, inputs.freq));
   const wfHECS     = Math.round(byFreq(result.hecsRepayment, inputs.freq));
   const wfNet      = Math.round(byFreq(result.takeHome, inputs.freq));
 
+  // Each entry: spacer (transparent), s1/s2/s3 (visible segments bottom→top), c1/c2/c3 (colours)
   const waterfallData = (() => {
-    const entries = [{ name: 'Base pay', base: 0, value: wfBase, color: colorGross }];
-    if (wfBonus > 0) entries.push({ name: 'Bonus', base: wfBase, value: wfBonus, color: colorBonus });
-    let running = wfGross;
-    if (wfTax > 0)      { running -= wfTax;      entries.push({ name: 'Income tax', base: running, value: wfTax,      color: colorRed }); }
-    if (wfMedicare > 0) { running -= wfMedicare;  entries.push({ name: 'Medicare',   base: running, value: wfMedicare, color: colorRed }); }
-    if (wfMLS > 0)      { running -= wfMLS;       entries.push({ name: 'MLS',        base: running, value: wfMLS,      color: colorRed }); }
-    if (wfHECS > 0)     { running -= wfHECS;      entries.push({ name: 'HECS',       base: running, value: wfHECS,     color: colorRed }); }
-    entries.push({ name: 'Net pay', base: 0, value: wfNet, color: colorNet });
+    const T = 'transparent';
+    const entries = [{
+      name: 'Total package',
+      spacer: 0,
+      s1: wfBase,  c1: colorBase,
+      s2: wfBonus, c2: colorBonus,
+      s3: wfSuper, c3: colorSuper,
+    }];
+    let running = wfBase + wfBonus + wfSuper;
+    if (wfSuper > 0) {
+      running -= wfSuper;
+      entries.push({ name: 'Super (fund)', spacer: running, s1: wfSuper, c1: colorSuper, s2: 0, c2: T, s3: 0, c3: T });
+    }
+    if (wfTax > 0)      { running -= wfTax;      entries.push({ name: 'Income tax', spacer: running, s1: wfTax,      c1: colorRed, s2: 0, c2: T, s3: 0, c3: T }); }
+    if (wfMedicare > 0) { running -= wfMedicare;  entries.push({ name: 'Medicare',   spacer: running, s1: wfMedicare, c1: colorRed, s2: 0, c2: T, s3: 0, c3: T }); }
+    if (wfMLS > 0)      { running -= wfMLS;       entries.push({ name: 'MLS',        spacer: running, s1: wfMLS,      c1: colorRed, s2: 0, c2: T, s3: 0, c3: T }); }
+    if (wfHECS > 0)     { running -= wfHECS;      entries.push({ name: 'HECS',       spacer: running, s1: wfHECS,     c1: colorRed, s2: 0, c2: T, s3: 0, c3: T }); }
+    entries.push({ name: 'Net pay', spacer: 0, s1: wfNet, c1: colorNet, s2: 0, c2: T, s3: 0, c3: T });
     return entries;
   })();
 
@@ -390,22 +405,31 @@ export default function PayTaxInstance({ instanceKey = '', label, onRemove, them
                 <Tooltip
                   content={({ active, payload, label }) => {
                     if (!active || !payload) return null;
-                    const entry = payload.find(p => p.dataKey === 'value');
-                    if (!entry) return null;
+                    const d = waterfallData.find(e => e.name === label);
+                    if (!d) return null;
+                    const total = (d.s1 || 0) + (d.s2 || 0) + (d.s3 || 0);
+                    const topColor = d.s3 > 0 ? d.c3 : d.s2 > 0 ? d.c2 : d.c1;
                     return (
                       <div style={{ fontSize: 11, borderRadius: 3, border: `1px solid ${tooltipBorder}`, background: tooltipBg, color: 'var(--text)', padding: '6px 10px', fontFamily: 'Plus Jakarta Sans' }}>
                         <div style={{ marginBottom: 2, fontWeight: 600 }}>{label}</div>
-                        <div style={{ color: entry.payload.color }}>{fmt(entry.value)}</div>
+                        <div style={{ color: topColor }}>{fmt(total)}</div>
                       </div>
                     );
                   }}
                 />
-                {/* Invisible spacer lifts each reduction bar to its correct position */}
-                <Bar dataKey="base" stackId="wf" fill="transparent" legendType="none" />
-                <Bar dataKey="value" stackId="wf" radius={[3, 3, 0, 0]} legendType="none">
-                  {waterfallData.map((entry) => (
-                    <Cell key={entry.name} fill={entry.color} />
-                  ))}
+                {/* spacer: transparent bar that lifts reduction bars to correct Y position */}
+                <Bar dataKey="spacer" stackId="wf" fill="transparent" legendType="none" />
+                {/* s1: base pay (dark) / super reduction (light green) / taxes (red) / net (green) */}
+                <Bar dataKey="s1" stackId="wf" legendType="none">
+                  {waterfallData.map(d => <Cell key={d.name} fill={d.c1} />)}
+                </Bar>
+                {/* s2: bonus (purple), only non-zero on the first bar */}
+                <Bar dataKey="s2" stackId="wf" legendType="none">
+                  {waterfallData.map(d => <Cell key={d.name} fill={d.c2} />)}
+                </Bar>
+                {/* s3: super (light green), only non-zero on the first bar */}
+                <Bar dataKey="s3" stackId="wf" legendType="none">
+                  {waterfallData.map(d => <Cell key={d.name} fill={d.c3} />)}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
