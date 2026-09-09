@@ -257,28 +257,24 @@ export default function MortgageCalc() {
   return (
     <div className="calc-wrap">
       <div className="calc-header">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
-          <div>
-            <h1>Mortgage Repayment + Offset Calculator</h1>
-            <p>Australian home loan calculator with offset account, extra repayments, and fixed-rate periods.</p>
-          </div>
-          <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-            {['save', 'share'].map((mode) => (
-              <button key={mode} onClick={() => { setCopied(false); setModal(mode); }} style={{
-                background: 'rgba(255,255,255,0.15)',
-                border: '1px solid rgba(255,255,255,0.3)',
-                borderRadius: 7,
-                color: '#fff',
-                fontSize: '0.82rem',
-                fontWeight: 600,
-                padding: '7px 14px',
-                cursor: 'pointer',
-                whiteSpace: 'nowrap',
-              }}>
-                {mode === 'save' ? '⬇ Save' : '⤴ Share'}
-              </button>
-            ))}
-          </div>
+        <h1>Mortgage Repayment + Offset Calculator</h1>
+        <p>Australian home loan calculator with offset account, extra repayments, and fixed-rate periods.</p>
+        <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+          {['save', 'share'].map((mode) => (
+            <button key={mode} onClick={() => { setCopied(false); setModal(mode); }} style={{
+              background: 'rgba(255,255,255,0.15)',
+              border: '1px solid rgba(255,255,255,0.3)',
+              borderRadius: 7,
+              color: '#fff',
+              fontSize: '0.82rem',
+              fontWeight: 600,
+              padding: '7px 16px',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+            }}>
+              {mode === 'save' ? '⬇ Save' : '⤴ Share'}
+            </button>
+          ))}
         </div>
       </div>
 
