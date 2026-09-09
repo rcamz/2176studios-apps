@@ -284,20 +284,29 @@ export default function CalcInstance({ instanceKey = '', label, onRemove, theme 
       {isComparison && (
         <div className="instance-header">
           <span className="instance-label">{label}</span>
-          {/* Always rendered so both headers stay the same height */}
-          <button
-            className="instance-remove"
-            onClick={onRemove || undefined}
-            title="Remove scenario"
-            style={!onRemove ? { visibility: 'hidden', pointerEvents: 'none' } : {}}
-          >×</button>
+          <div className="instance-header-actions">
+            <button className="btn-icon btn-icon--xs" title="Save" onClick={() => { setCopied(false); setModal('save'); }}><IconDisk /></button>
+            <button className="btn-icon btn-icon--xs" title="Share" onClick={handleShare}><IconShare /></button>
+            <button
+              className="instance-remove"
+              onClick={onRemove || undefined}
+              title="Remove scenario"
+              style={!onRemove ? { visibility: 'hidden', pointerEvents: 'none' } : {}}
+            >×</button>
+          </div>
         </div>
       )}
 
       {/* Page heading — full in single mode, compact in comparison */}
       {!isComparison ? (
         <div className="calc-heading">
-          <h1>Mortgage Repayment<br />+ Offset Calculator</h1>
+          <div className="heading-row">
+            <h1>Mortgage Repayment<br />+ Offset Calculator</h1>
+            <div className="heading-actions">
+              <button className="btn-outline" onClick={() => { setCopied(false); setModal('save'); }}><IconDisk /> Save</button>
+              <button className="btn-outline" onClick={handleShare}><IconShare /> Share</button>
+            </div>
+          </div>
           <p>A free, ad-supported Australian home loan calculator which handles offsets, fixed and split loans, extra repayments and lump sum deposits and withdrawals.</p>
           <a className="desktop-cta" href={window.location.href + (window.location.search ? '&vd=1' : '?vd=1')} target="_blank" rel="noreferrer">
             Open desktop site to compare up to 3 loans at once →

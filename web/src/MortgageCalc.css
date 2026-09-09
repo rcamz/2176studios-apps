@@ -110,27 +110,33 @@
     z-index: 40;
   }
 
-  /* 2-instance: narrow header-level strip — sits as a flex child at the top of the row */
+  /* 2-instance: fixed narrow strip, vertically centred, flush to right edge */
   .calc-instances[data-count="2"] .compare-card {
-    flex-shrink: 0;
-    align-self: flex-start;
+    position: fixed;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
     width: 80px;
-    padding: 14px 8px 12px;
-    gap: 4px;
+    z-index: 40;
+    padding: 28px 8px;
+    gap: 6px;
     border: none;
     border-left: 1.5px dashed var(--border-strong);
     border-radius: 0;
-    position: static;
-    transform: none;
   }
   .calc-instances[data-count="2"] .compare-card .compare-card-sub {
     display: none;
   }
   .calc-instances[data-count="2"] .compare-card .compare-card-plus {
-    font-size: 1.25rem;
+    font-size: 1.5rem;
   }
   .calc-instances[data-count="2"] .compare-card .compare-card-title {
     font-size: 0.65rem;
+  }
+
+  /* Reserve space on the right so 2-instance columns don't sit behind the card */
+  .calc-instances[data-count="2"] {
+    padding-right: 80px;
   }
 }
 
@@ -141,6 +147,16 @@
   justify-content: space-between;
   padding: 14px 0 0;
   margin-bottom: 20px;
+}
+.instance-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.btn-icon--xs {
+  width: 22px;
+  height: 22px;
+  font-size: 0.8rem;
 }
 
 .instance-label {
@@ -224,6 +240,18 @@
 .calc-heading {
   margin-bottom: 28px;
 }
+.heading-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.heading-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  padding-top: 4px;
+}
 .calc-heading h1 {
   font-size: clamp(1.3rem, 3vw, 1.75rem);
   font-weight: 700;
@@ -249,6 +277,9 @@
 
 /* ─── Action buttons (Save / Share) ──────────────────────────────── */
 .btn-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   background: transparent;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius);
