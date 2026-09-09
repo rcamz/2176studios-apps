@@ -110,21 +110,28 @@ export default function PayTaxInstance({ instanceKey = '', label, onRemove, them
   const tooltipBg    = theme === 'dark' ? '#1D1D22' : '#FAFAF6';
   const tooltipBorder = theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
 
-  const pieColors = {
-    'Income tax':   theme === 'dark' ? '#E87070' : '#D85A30',
-    'Medicare':     theme === 'dark' ? '#9E98E8' : '#7F77DD',
-    'HECS':         theme === 'dark' ? '#D9931E' : '#BA7517',
-    'MLS':          theme === 'dark' ? '#E87099' : '#D4537E',
-    'Take-home':    chartAccent,
-  };
+  const colorGreen = chartAccent;
+  const colorRed   = theme === 'dark' ? '#E87070' : '#D85A30';
+  const colorNet   = theme === 'dark' ? '#E8E8E2' : '#1A1A1F';
 
-  const chartData = [
-    { name: 'Income tax', value: Math.round(result.incomeTax) },
-    ...(result.medicareLevy > 0 ? [{ name: 'Medicare', value: Math.round(result.medicareLevy) }] : []),
-    ...(result.mls > 0 ? [{ name: 'MLS', value: Math.round(result.mls) }] : []),
-    ...(result.hecsRepayment > 0 ? [{ name: 'HECS', value: Math.round(result.hecsRepayment) }] : []),
-    { name: 'Take-home', value: Math.round(result.takeHome) },
-  ];
+  // Build waterfall data scaled to display frequency
+  const wfGross    = Math.round(byFreq(annualGross, inputs.freq));
+  const wfTax      = Math.round(byFreq(result.incomeTax, inputs.freq));
+  const wfMedicare = Math.round(byFreq(result.medicareLevy, inputs.freq));
+  const wfMLS      = Math.round(byFreq(result.mls, inputs.freq));
+  const wfHECS     = Math.round(byFreq(result.hecsRepayment, inputs.freq));
+  const wfNet      = Math.round(byFreq(result.takeHome, inputs.freq));
+
+  const waterfallData = (() => {
+    const entries = [{ name: 'Gross pay', base: 0, value: wfGross, color: colorGreen }];
+    let running = wfGross;
+    if (wfTax > 0)      { running -= wfTax;      entries.push({ name: 'Income tax', base: running, value: wfTax,      color: colorRed }); }
+    if (wfMedicare > 0) { running -= wfMedicare;  entries.push({ name: 'Medicare',   base: running, value: wfMedicare, color: colorRed }); }
+    if (wfMLS > 0)      { running -= wfMLS;       entries.push({ name: 'MLS',        base: running, value: wfMLS,      color: colorRed }); }
+    if (wfHECS > 0)     { running -= wfHECS;      entries.push({ name: 'HECS',       base: running, value: wfHECS,     color: colorRed }); }
+    entries.push({ name: 'Net pay', base: 0, value: wfNet, color: colorNet });
+    return entries;
+  })();
 
   const entryFreqLabel = FREQ_LABELS[inputs.entryFreq].toLowerCase();
   const isNet = inputs.entryType === 'net';
@@ -329,9 +336,9 @@ export default function PayTaxInstance({ instanceKey = '', label, onRemove, them
           </div>
 
           <div className="chart-card">
-            <div className="chart-title">Income breakdown ({FREQ_LABELS[inputs.freq].toLowerCase()})</div>
-            <ResponsiveContainer width="100%" height={240}>
-              <BarChart data={chartData.map(d => ({ ...d, value: Math.round(byFreq(d.value, inputs.freq)) }))} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
+            <div className="chart-title">Income waterfall ({FREQ_LABELS[inputs.freq].toLowerCase()})</div>
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={waterfallData} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={chartGrid} vertical={false} />
                 <XAxis
                   dataKey="name"
@@ -347,12 +354,23 @@ export default function PayTaxInstance({ instanceKey = '', label, onRemove, them
                   tickLine={false}
                 />
                 <Tooltip
-                  formatter={(v, name) => [fmt(v), name]}
-                  contentStyle={{ fontSize: 11, borderRadius: 3, border: `1px solid ${tooltipBorder}`, background: tooltipBg, color: 'var(--text)', fontFamily: 'Plus Jakarta Sans' }}
+                  content={({ active, payload, label }) => {
+                    if (!active || !payload) return null;
+                    const entry = payload.find(p => p.dataKey === 'value');
+                    if (!entry) return null;
+                    return (
+                      <div style={{ fontSize: 11, borderRadius: 3, border: `1px solid ${tooltipBorder}`, background: tooltipBg, color: 'var(--text)', padding: '6px 10px', fontFamily: 'Plus Jakarta Sans' }}>
+                        <div style={{ marginBottom: 2, fontWeight: 600 }}>{label}</div>
+                        <div style={{ color: entry.payload.color }}>{fmt(entry.value)}</div>
+                      </div>
+                    );
+                  }}
                 />
-                <Bar dataKey="value" radius={[3, 3, 0, 0]}>
-                  {chartData.map((entry) => (
-                    <Cell key={entry.name} fill={pieColors[entry.name] ?? chartAccent} />
+                {/* Invisible spacer lifts each reduction bar to its correct position */}
+                <Bar dataKey="base" stackId="wf" fill="transparent" legendType="none" />
+                <Bar dataKey="value" stackId="wf" radius={[3, 3, 0, 0]} legendType="none">
+                  {waterfallData.map((entry) => (
+                    <Cell key={entry.name} fill={entry.color} />
                   ))}
                 </Bar>
               </BarChart>
