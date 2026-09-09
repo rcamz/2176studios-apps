@@ -111,6 +111,7 @@ export default function MortgageCalc() {
   const [showTable, setShowTable] = useState(false);
   const [showAllRows, setShowAllRows] = useState(false);
 
+  const [modal, setModal] = useState(null); // null | 'save' | 'share'
   const [copied, setCopied] = useState(false);
 
   const set = (key, val) => setInputs((s) => ({ ...s, [key]: val }));
@@ -122,15 +123,10 @@ export default function MortgageCalc() {
     window.history.replaceState(null, '', `${window.location.pathname}?${qs}`);
   }, [inputs]);
 
-  const handleShare = useCallback(async () => {
-    const url = window.location.href;
-    if (navigator.share) {
-      await navigator.share({ title: 'Mortgage Calculator', url });
-    } else {
-      await navigator.clipboard.writeText(url);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
+  const copyUrl = useCallback(async () => {
+    await navigator.clipboard.writeText(window.location.href);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   }, []);
 
   // Offset lump sum helpers
@@ -266,21 +262,23 @@ export default function MortgageCalc() {
             <h1>Mortgage Repayment + Offset Calculator</h1>
             <p>Australian home loan calculator with offset account, extra repayments, and fixed-rate periods.</p>
           </div>
-          <button onClick={handleShare} style={{
-            flexShrink: 0,
-            background: 'rgba(255,255,255,0.15)',
-            border: '1px solid rgba(255,255,255,0.3)',
-            borderRadius: 7,
-            color: '#fff',
-            fontSize: '0.82rem',
-            fontWeight: 600,
-            padding: '7px 14px',
-            cursor: 'pointer',
-            whiteSpace: 'nowrap',
-            transition: 'background 0.15s',
-          }}>
-            {copied ? '✓ Copied!' : '⤴ Share'}
-          </button>
+          <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+            {['save', 'share'].map((mode) => (
+              <button key={mode} onClick={() => { setCopied(false); setModal(mode); }} style={{
+                background: 'rgba(255,255,255,0.15)',
+                border: '1px solid rgba(255,255,255,0.3)',
+                borderRadius: 7,
+                color: '#fff',
+                fontSize: '0.82rem',
+                fontWeight: 600,
+                padding: '7px 14px',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+              }}>
+                {mode === 'save' ? '⬇ Save' : '⤴ Share'}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -643,6 +641,35 @@ export default function MortgageCalc() {
           </div>
         </div>
       </div>
+
+      {/* ── Save / Share modal ── */}
+      {modal && (
+        <div className="modal-overlay" onClick={() => setModal(null)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setModal(null)}>×</button>
+            <div className="modal-icon">{modal === 'save' ? '⬇' : '⤴'}</div>
+            <h2 className="modal-title">
+              {modal === 'save' ? 'Save your calculation' : 'Share your calculation'}
+            </h2>
+            <p className="modal-desc">
+              {modal === 'save'
+                ? 'Copy this link and bookmark it. Open it any time to return to exactly these inputs and results.'
+                : 'Copy this link and send it. Anyone who opens it will see the same inputs and results instantly.'}
+            </p>
+            <div className="modal-url-wrap">
+              <input
+                className="modal-url"
+                readOnly
+                value={window.location.href}
+                onFocus={(e) => e.target.select()}
+              />
+            </div>
+            <button className="modal-copy" onClick={copyUrl}>
+              {copied ? '✓ Copied!' : 'Copy link'}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
