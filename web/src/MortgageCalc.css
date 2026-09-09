@@ -71,20 +71,57 @@ body {
   text-transform: uppercase;
   color: var(--text-muted);
 }
-.theme-toggle {
+.topbar-actions { display: flex; gap: 6px; }
+
+.btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
   background: none;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius);
   color: var(--text-muted);
-  font-family: var(--sans);
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.4px;
-  padding: 5px 10px;
   cursor: pointer;
-  transition: color 0.15s, border-color 0.15s;
+  transition: color 0.12s, background 0.12s, border-color 0.12s;
 }
-.theme-toggle:hover { color: var(--text); border-color: var(--border-strong); }
+.btn-icon:hover {
+  color: var(--text);
+  background: var(--surface-2);
+  border-color: var(--border-strong);
+}
+
+/* ─── Below-chart action buttons ─────────────────────────────────── */
+.chart-actions {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.btn-action {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 11px 0;
+  background: var(--surface);
+  border: none;
+  border-right: 1px solid var(--border);
+  color: var(--text-muted);
+  font-family: var(--sans);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+.btn-action:last-child { border-right: none; }
+.btn-action:hover {
+  background: var(--text);
+  color: var(--bg);
+}
 
 /* ─── Page heading ────────────────────────────────────────────────── */
 .calc-heading {

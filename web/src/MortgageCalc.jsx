@@ -7,6 +7,34 @@ import { amortize, summarize } from './lib/amortize.js';
 import AdUnit from './AdUnit.jsx';
 import './MortgageCalc.css';
 
+const IconDisk = () => (
+  <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="1.5" y="1.5" width="13" height="13" rx="1.5"/>
+    <rect x="4.5" y="1.5" width="7" height="4.5" rx="0.5"/>
+    <rect x="3.5" y="8.5" width="9" height="5.5" rx="0.5"/>
+  </svg>
+);
+
+const IconShare = () => (
+  <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+    <circle cx="3" cy="8" r="1.75"/>
+    <circle cx="13" cy="3" r="1.75"/>
+    <circle cx="13" cy="13" r="1.75"/>
+    <line x1="4.7" y1="7.1" x2="11.3" y2="3.9"/>
+    <line x1="4.7" y1="8.9" x2="11.3" y2="12.1"/>
+  </svg>
+);
+
+const IconGlobe = () => (
+  <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+    <circle cx="8" cy="8" r="6.25"/>
+    <ellipse cx="8" cy="8" rx="2.75" ry="6.25"/>
+    <line x1="1.75" y1="8" x2="14.25" y2="8"/>
+    <line x1="2.5" y1="5" x2="13.5" y2="5"/>
+    <line x1="2.5" y1="11" x2="13.5" y2="11"/>
+  </svg>
+);
+
 // Paste your AdSense slot IDs here once you create ad units in AdSense > Ads > Ad units
 const AD_SLOT_BANNER = 'XXXXXXXXXX';   // horizontal banner — above calculator
 const AD_SLOT_INLINE = 'XXXXXXXXXX';   // inline unit — between stats and chart
@@ -278,18 +306,16 @@ export default function MortgageCalc() {
     <div className="calc-wrap">
       <div className="calc-topbar">
         <span className="calc-brand">2176 Studios</span>
-        <button className="theme-toggle" onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}>
-          {theme === 'dark' ? '☀ Light' : '☾ Dark'}
-        </button>
+        <div className="topbar-actions">
+          <button className="btn-icon" title="Save" onClick={() => { setCopied(false); setModal('save'); }}><IconDisk /></button>
+          <button className="btn-icon" title="Share" onClick={handleShare}><IconShare /></button>
+          <button className="btn-icon" title="Toggle theme" onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}><IconGlobe /></button>
+        </div>
       </div>
 
       <div className="calc-heading">
         <h1>Mortgage Repayment<br />+ Offset Calculator</h1>
         <p>Australian home loan — offset, fixed rates, extra repayments, split loans.</p>
-        <div className="calc-heading-actions">
-          <button className="btn-outline" onClick={() => { setCopied(false); setModal('save'); }}>⬇ Save</button>
-          <button className="btn-outline" onClick={handleShare}>⤴ Share</button>
-        </div>
       </div>
 
       <AdUnit slotId={AD_SLOT_BANNER} format="horizontal" style={{ marginBottom: 20 }} />
@@ -604,6 +630,16 @@ export default function MortgageCalc() {
                 />
               </LineChart>
             </ResponsiveContainer>
+          </div>
+
+          {/* Save / Share below chart */}
+          <div className="chart-actions">
+            <button className="btn-action" onClick={() => { setCopied(false); setModal('save'); }}>
+              <IconDisk /> Save
+            </button>
+            <button className="btn-action" onClick={handleShare}>
+              <IconShare /> Share
+            </button>
           </div>
 
           {/* Repayment schedule */}
