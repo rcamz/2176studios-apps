@@ -18,6 +18,8 @@ const DEFAULTS = {
   incomeAmount: 90000,
   entryFreq: 'annual',
   entryType: 'gross',
+  bonusAmount: 0,
+  bonusFreq: 'annual',
   freq: 'annual',
   residency: 'resident',
   hasPrivateCover: false,
@@ -31,6 +33,8 @@ function encodeInputs(inp) {
   p.set('ia', inp.incomeAmount);
   p.set('ef', inp.entryFreq[0]);
   p.set('et', inp.entryType[0]);
+  p.set('ba', inp.bonusAmount);
+  p.set('bf', inp.bonusFreq[0]);
   p.set('fr', inp.freq[0]);
   p.set('re', inp.residency[0]);
   p.set('pc', inp.hasPrivateCover ? '1' : '0');
@@ -57,6 +61,8 @@ function decodeParams(search) {
       hecsBalance:     parseFloat(p.get('hb')) || 0,
       sgRate:          parseFloat(p.get('sg')) || 12,
       salarySacrifice: parseFloat(p.get('ss')) || 0,
+      bonusAmount:     0,
+      bonusFreq:       'annual',
     };
   }
 
@@ -65,6 +71,8 @@ function decodeParams(search) {
     incomeAmount:    parseFloat(p.get('ia')) || DEFAULTS.incomeAmount,
     entryFreq:       frMap[p.get('ef')] ?? 'annual',
     entryType:       p.get('et') === 'n' ? 'net' : 'gross',
+    bonusAmount:     parseFloat(p.get('ba')) || 0,
+    bonusFreq:       frMap[p.get('bf')] ?? 'annual',
     freq:            frMap[p.get('fr')] ?? 'annual',
     residency:       reMap[p.get('re')] ?? 'resident',
     hasPrivateCover: p.get('pc') === '1',
@@ -87,11 +95,12 @@ export default function PayTaxInstance({ instanceKey = '', label, onRemove, them
     window.history.replaceState(null, '', `${window.location.pathname}?${encodeInputs(inputs)}`);
   }, [inputs, instanceKey]);
 
-  // Derive annual gross from what the user entered
+  // Derive annual gross from what the user entered (base salary only, then add bonus)
+  const annualBonus = toAnnual(inputs.bonusAmount || 0, inputs.bonusFreq);
   const annualGross = useMemo(() => {
     const annual = toAnnual(inputs.incomeAmount, inputs.entryFreq);
-    if (inputs.entryType === 'net') return grossFromNet(annual, inputs);
-    return annual;
+    const base = inputs.entryType === 'net' ? grossFromNet(annual, inputs) : annual;
+    return base + toAnnual(inputs.bonusAmount || 0, inputs.bonusFreq);
   }, [inputs]);
 
   const result = useMemo(() => calcPayTax({ ...inputs, grossIncome: annualGross }), [inputs, annualGross]);
@@ -109,8 +118,12 @@ export default function PayTaxInstance({ instanceKey = '', label, onRemove, them
   const colorRed   = theme === 'dark' ? '#E87070' : '#D85A30';
   const colorNet   = chartAccent;
 
+  const colorBonus = theme === 'dark' ? '#9E98E8' : '#7F77DD';
+
   // Build waterfall data scaled to display frequency
-  const wfGross    = Math.round(byFreq(annualGross, inputs.freq));
+  const wfBase     = Math.round(byFreq(annualGross - annualBonus, inputs.freq));
+  const wfBonus    = Math.round(byFreq(annualBonus, inputs.freq));
+  const wfGross    = wfBase + wfBonus;
   const wfTax      = Math.round(byFreq(result.incomeTax, inputs.freq));
   const wfMedicare = Math.round(byFreq(result.medicareLevy, inputs.freq));
   const wfMLS      = Math.round(byFreq(result.mls, inputs.freq));
@@ -118,7 +131,8 @@ export default function PayTaxInstance({ instanceKey = '', label, onRemove, them
   const wfNet      = Math.round(byFreq(result.takeHome, inputs.freq));
 
   const waterfallData = (() => {
-    const entries = [{ name: 'Gross pay', base: 0, value: wfGross, color: colorGross }];
+    const entries = [{ name: 'Base pay', base: 0, value: wfBase, color: colorGross }];
+    if (wfBonus > 0) entries.push({ name: 'Bonus', base: wfBase, value: wfBonus, color: colorBonus });
     let running = wfGross;
     if (wfTax > 0)      { running -= wfTax;      entries.push({ name: 'Income tax', base: running, value: wfTax,      color: colorRed }); }
     if (wfMedicare > 0) { running -= wfMedicare;  entries.push({ name: 'Medicare',   base: running, value: wfMedicare, color: colorRed }); }
@@ -196,6 +210,34 @@ export default function PayTaxInstance({ instanceKey = '', label, onRemove, them
                 </div>
               )}
             </div>
+
+            <div className="field">
+              <label>Bonus / commission (gross)</label>
+              <div className="input-wrap has-prefix">
+                <span className="input-prefix">$</span>
+                <input
+                  type="number"
+                  value={inputs.bonusAmount || ''}
+                  onChange={setNum('bonusAmount')}
+                  min="0"
+                  step="100"
+                  placeholder="0 if none"
+                />
+              </div>
+            </div>
+            {(inputs.bonusAmount > 0) && (
+              <div className="field">
+                <label>Bonus frequency</label>
+                <div className="segmented">
+                  {[['weekly','Weekly'],['fortnightly','Fortnight'],['monthly','Monthly'],['annual','Annual']].map(([v,l]) => (
+                    <button key={v} className={inputs.bonusFreq === v ? 'active' : ''} onClick={() => set('bonusFreq', v)}>{l}</button>
+                  ))}
+                </div>
+                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                  = {fmt(annualBonus)}/yr gross
+                </div>
+              </div>
+            )}
 
           </div>
 
@@ -313,6 +355,13 @@ export default function PayTaxInstance({ instanceKey = '', label, onRemove, them
             <div className="rate-callout">
               <strong>Low Income Tax Offset applied: {fmt(result.lito)}</strong>
               Your gross income tax of {fmt(result.incomeTax + result.lito)} was reduced by your LITO entitlement.
+            </div>
+          )}
+
+          {annualBonus > 0 && (
+            <div className="rate-callout">
+              <strong>Bonus / commission: {fmt(annualBonus)}/yr</strong>
+              Taxed as ordinary income at your marginal rate ({fmtPct(result.marginalRate)}). After-tax bonus: {fmt(annualBonus * (1 - result.marginalRate))}/yr.
             </div>
           )}
 
