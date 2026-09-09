@@ -1,8 +1,115 @@
 /* ─── Page shell ─────────────────────────────────────────────────── */
-.calc-wrap {
+.calc-page {
+  min-height: 100vh;
+}
+
+/* ─── Instances container ─────────────────────────────────────────── */
+.calc-instances {
+  /* Single mode: centre one instance */
+}
+
+.calc-instances.is-multi {
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
+  align-items: start;
+  scroll-snap-type: x proximity;
+  /* leave room for the floating ad bar */
+  padding-bottom: 120px;
+}
+
+/* Scrollbar styling for comparison mode */
+.calc-instances.is-multi::-webkit-scrollbar { height: 5px; }
+.calc-instances.is-multi::-webkit-scrollbar-track { background: transparent; }
+.calc-instances.is-multi::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
+
+/* ─── Calculator instance ─────────────────────────────────────────── */
+.calc-instance {
+  /* Single mode */
   max-width: 1160px;
   margin: 0 auto;
   padding: 0 18px 120px;
+}
+
+.is-multi .calc-instance {
+  max-width: none;
+  margin: 0;
+  flex: 0 0 min(820px, 90vw);
+  padding: 0 18px 0;
+  border-right: 1px solid var(--border);
+  scroll-snap-align: start;
+}
+
+.is-multi .calc-instance:last-child {
+  border-right: none;
+}
+
+/* ─── Scenario header (comparison mode only) ──────────────────────── */
+.instance-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0 0;
+  margin-bottom: 20px;
+}
+
+.instance-label {
+  font-size: 0.63rem;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.instance-remove {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  font-size: 1rem;
+  line-height: 1;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.12s, border-color 0.12s;
+}
+
+.instance-remove:hover {
+  color: var(--red);
+  border-color: var(--red);
+}
+
+/* ─── Compare button in topbar ────────────────────────────────────── */
+.btn-compare {
+  display: none; /* hidden on mobile */
+  align-items: center;
+  gap: 6px;
+  padding: 0 11px;
+  height: 27px;
+  background: none;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  color: var(--accent);
+  font-family: var(--sans);
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+  transition: background 0.12s, color 0.12s;
+}
+
+.btn-compare:hover {
+  background: var(--accent);
+  color: var(--accent-on);
+  border-color: var(--accent);
+}
+
+@media (min-width: 860px) {
+  .btn-compare { display: flex; }
 }
 
 /* ─── Below-chart action buttons ─────────────────────────────────── */
@@ -52,10 +159,15 @@
   font-size: 0.83rem;
   color: var(--text-muted);
 }
-.calc-heading-actions {
-  display: flex;
-  gap: 8px;
-  margin-top: 14px;
+
+.calc-heading--compact {
+  margin-bottom: 16px;
+}
+.calc-heading--compact h2 {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  color: var(--text);
 }
 
 /* ─── Action buttons (Save / Share) ──────────────────────────────── */
@@ -79,7 +191,7 @@
   border-color: var(--text);
 }
 
-/* ─── Two-column layout ───────────────────────────────────────────── */
+/* ─── Two-column layout inside each instance ──────────────────────── */
 .calc-body {
   display: grid;
   grid-template-columns: 340px 1fr;
@@ -88,6 +200,11 @@
 }
 @media (max-width: 820px) {
   .calc-body { grid-template-columns: 1fr; }
+}
+
+/* In comparison, always use single-column stacked layout on narrow instances */
+.is-multi .calc-body {
+  grid-template-columns: 340px 1fr;
 }
 
 /* ─── Input panel ─────────────────────────────────────────────────── */
@@ -462,6 +579,18 @@ select.field-select {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
+  /* Extra bottom gap for floating bar in single mode */
+  margin-bottom: 0;
+}
+
+/* Single mode needs bottom padding for floating bar */
+.calc-instance:not(.is-multi .calc-instance) {
+  padding-bottom: 120px;
+}
+
+/* Comparison mode: add bottom padding to last instance via wrapper */
+.calc-instances.is-multi {
+  padding-bottom: 120px;
 }
 
 /* ─── Modal ───────────────────────────────────────────────────────── */

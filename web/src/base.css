@@ -51,7 +51,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 9px 0;
+  padding: 9px 18px;
   border-bottom: 1px solid var(--border);
   margin-bottom: 28px;
   background: var(--bg);
