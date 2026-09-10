@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-09-10T07:15:33.972Z",
-  "generatedFrom": "d06d20c",
+  "generatedAt": "2026-09-10T11:47:49.699Z",
+  "generatedFrom": "31464ea",
   "files": {
     "web/src/Home.jsx": {
-      "lastCommit": "59d5cda",
-      "lastDate": "2026-09-10T06:27:56+00:00",
-      "lastSubject": "Per-route metadata driving both the web head and the Play listings",
-      "commits": 8
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T11:47:49.699Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 9
     },
     "web/src/Home.css": {
       "lastCommit": "2ab3af8",
@@ -15,40 +15,40 @@
       "commits": 3
     },
     "web/src/CalcInstance.jsx": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T07:15:33.972Z",
-      "lastSubject": "Uncommitted at snapshot time",
-      "commits": 10
-    },
-    "web/src/MortgageCalc.jsx": {
-      "lastCommit": "a838019",
-      "lastDate": "2026-09-10T07:02:43+00:00",
-      "lastSubject": "Accessible shared dialog and focus styles",
+      "lastCommit": "31464ea",
+      "lastDate": "2026-09-10T07:16:30+00:00",
+      "lastSubject": "Make all twelve calculators accessible",
       "commits": 35
     },
-    "web/src/PayTaxInstance.jsx": {
+    "web/src/MortgageCalc.jsx": {
       "lastCommit": "pending",
-      "lastDate": "2026-09-10T07:15:33.972Z",
+      "lastDate": "2026-09-10T11:47:49.699Z",
       "lastSubject": "Uncommitted at snapshot time",
+      "commits": 36
+    },
+    "web/src/PayTaxInstance.jsx": {
+      "lastCommit": "31464ea",
+      "lastDate": "2026-09-10T07:16:30+00:00",
+      "lastSubject": "Make all twelve calculators accessible",
       "commits": 10
     },
     "web/src/PayTaxCalc.jsx": {
-      "lastCommit": "a838019",
-      "lastDate": "2026-09-10T07:02:43+00:00",
-      "lastSubject": "Accessible shared dialog and focus styles",
-      "commits": 36
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T11:47:49.699Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 6
     },
     "web/src/BorrowingPowerInstance.jsx": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T07:15:33.972Z",
-      "lastSubject": "Uncommitted at snapshot time",
+      "lastCommit": "31464ea",
+      "lastDate": "2026-09-10T07:16:30+00:00",
+      "lastSubject": "Make all twelve calculators accessible",
       "commits": 4
     },
     "web/src/BorrowingPowerCalc.jsx": {
-      "lastCommit": "a838019",
-      "lastDate": "2026-09-10T07:02:43+00:00",
-      "lastSubject": "Accessible shared dialog and focus styles",
-      "commits": 4
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T11:47:49.699Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 5
     },
     "core/src/borrowingpower.js": {
       "lastCommit": "fa6255c",
@@ -57,16 +57,16 @@
       "commits": 4
     },
     "web/src/RentVBuyInstance.jsx": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T07:15:33.972Z",
-      "lastSubject": "Uncommitted at snapshot time",
+      "lastCommit": "31464ea",
+      "lastDate": "2026-09-10T07:16:30+00:00",
+      "lastSubject": "Make all twelve calculators accessible",
       "commits": 4
     },
     "web/src/RentVBuyCalc.jsx": {
-      "lastCommit": "a838019",
-      "lastDate": "2026-09-10T07:02:43+00:00",
-      "lastSubject": "Accessible shared dialog and focus styles",
-      "commits": 4
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T11:47:49.699Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 5
     },
     "core/src/rentvbuy.js": {
       "lastCommit": "fa6255c",
@@ -75,16 +75,16 @@
       "commits": 4
     },
     "web/src/CGTInstance.jsx": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T07:15:33.972Z",
-      "lastSubject": "Uncommitted at snapshot time",
+      "lastCommit": "31464ea",
+      "lastDate": "2026-09-10T07:16:30+00:00",
+      "lastSubject": "Make all twelve calculators accessible",
       "commits": 4
     },
     "web/src/CGTCalc.jsx": {
-      "lastCommit": "a838019",
-      "lastDate": "2026-09-10T07:02:43+00:00",
-      "lastSubject": "Accessible shared dialog and focus styles",
-      "commits": 36
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T11:47:49.699Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 5
     },
     "core/src/cgt.js": {
       "lastCommit": "fa6255c",
@@ -93,16 +93,16 @@
       "commits": 4
     },
     "web/src/RedundancyInstance.jsx": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T07:15:33.972Z",
-      "lastSubject": "Uncommitted at snapshot time",
+      "lastCommit": "31464ea",
+      "lastDate": "2026-09-10T07:16:30+00:00",
+      "lastSubject": "Make all twelve calculators accessible",
       "commits": 4
     },
     "web/src/RedundancyCalc.jsx": {
-      "lastCommit": "a838019",
-      "lastDate": "2026-09-10T07:02:43+00:00",
-      "lastSubject": "Accessible shared dialog and focus styles",
-      "commits": 4
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T11:47:49.699Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 5
     },
     "core/src/redundancy.js": {
       "lastCommit": "fa6255c",
@@ -111,16 +111,16 @@
       "commits": 4
     },
     "web/src/SalarySacrificeInstance.jsx": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T07:15:33.972Z",
-      "lastSubject": "Uncommitted at snapshot time",
+      "lastCommit": "31464ea",
+      "lastDate": "2026-09-10T07:16:30+00:00",
+      "lastSubject": "Make all twelve calculators accessible",
       "commits": 4
     },
     "web/src/SalarySacrificeCalc.jsx": {
-      "lastCommit": "a838019",
-      "lastDate": "2026-09-10T07:02:43+00:00",
-      "lastSubject": "Accessible shared dialog and focus styles",
-      "commits": 4
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T11:47:49.699Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 5
     },
     "core/src/salarysacrifice.js": {
       "lastCommit": "fa6255c",
@@ -129,16 +129,16 @@
       "commits": 4
     },
     "web/src/FHSSSInstance.jsx": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T07:15:33.972Z",
-      "lastSubject": "Uncommitted at snapshot time",
+      "lastCommit": "31464ea",
+      "lastDate": "2026-09-10T07:16:30+00:00",
+      "lastSubject": "Make all twelve calculators accessible",
       "commits": 4
     },
     "web/src/FHSSSCalc.jsx": {
-      "lastCommit": "a838019",
-      "lastDate": "2026-09-10T07:02:43+00:00",
-      "lastSubject": "Accessible shared dialog and focus styles",
-      "commits": 4
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T11:47:49.699Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 5
     },
     "core/src/fhsss.js": {
       "lastCommit": "fa6255c",
@@ -147,16 +147,16 @@
       "commits": 4
     },
     "web/src/RetirementInstance.jsx": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T07:15:33.972Z",
-      "lastSubject": "Uncommitted at snapshot time",
+      "lastCommit": "31464ea",
+      "lastDate": "2026-09-10T07:16:30+00:00",
+      "lastSubject": "Make all twelve calculators accessible",
       "commits": 4
     },
     "web/src/RetirementCalc.jsx": {
-      "lastCommit": "a838019",
-      "lastDate": "2026-09-10T07:02:43+00:00",
-      "lastSubject": "Accessible shared dialog and focus styles",
-      "commits": 4
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T11:47:49.699Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 5
     },
     "core/src/retirement.js": {
       "lastCommit": "fa6255c",
@@ -165,16 +165,16 @@
       "commits": 4
     },
     "web/src/NovatedLeaseInstance.jsx": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T07:15:33.972Z",
-      "lastSubject": "Uncommitted at snapshot time",
+      "lastCommit": "31464ea",
+      "lastDate": "2026-09-10T07:16:30+00:00",
+      "lastSubject": "Make all twelve calculators accessible",
       "commits": 4
     },
     "web/src/NovatedLeaseCalc.jsx": {
-      "lastCommit": "a838019",
-      "lastDate": "2026-09-10T07:02:43+00:00",
-      "lastSubject": "Accessible shared dialog and focus styles",
-      "commits": 4
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T11:47:49.699Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 5
     },
     "core/src/novatedlease.js": {
       "lastCommit": "fa6255c",
@@ -183,16 +183,16 @@
       "commits": 4
     },
     "web/src/SavingsInstance.jsx": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T07:15:33.972Z",
-      "lastSubject": "Uncommitted at snapshot time",
+      "lastCommit": "31464ea",
+      "lastDate": "2026-09-10T07:16:30+00:00",
+      "lastSubject": "Make all twelve calculators accessible",
       "commits": 4
     },
     "web/src/SavingsCalc.jsx": {
-      "lastCommit": "a838019",
-      "lastDate": "2026-09-10T07:02:43+00:00",
-      "lastSubject": "Accessible shared dialog and focus styles",
-      "commits": 4
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T11:47:49.699Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 5
     },
     "core/src/savings.js": {
       "lastCommit": "fa6255c",
@@ -201,22 +201,34 @@
       "commits": 4
     },
     "web/src/HealthInstance.jsx": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T07:15:33.972Z",
-      "lastSubject": "Uncommitted at snapshot time",
+      "lastCommit": "31464ea",
+      "lastDate": "2026-09-10T07:16:30+00:00",
+      "lastSubject": "Make all twelve calculators accessible",
       "commits": 5
     },
     "web/src/HealthCalc.jsx": {
-      "lastCommit": "a838019",
-      "lastDate": "2026-09-10T07:02:43+00:00",
-      "lastSubject": "Accessible shared dialog and focus styles",
-      "commits": 4
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T11:47:49.699Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 5
     },
     "core/src/health.js": {
       "lastCommit": "fa6255c",
       "lastDate": "2026-09-10T05:53:33+00:00",
       "lastSubject": "Rebuild core as the portable calculation package",
       "commits": 5
+    },
+    "web/src/About.jsx": {
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T11:47:49.699Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 1
+    },
+    "web/src/About.css": {
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T11:47:49.699Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 1
     },
     "core/src/rates": {
       "lastCommit": "fa6255c",
@@ -272,17 +284,23 @@
       "lastSubject": "Rewrite tax engine against verified FY2026-27 rates",
       "commits": 1
     },
+    "web/src/SiteFooter.jsx": {
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T11:47:49.699Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 1
+    },
     "web/src/calc-shared.css": {
-      "lastCommit": "766abde",
-      "lastDate": "2026-09-10T04:01:19+00:00",
-      "lastSubject": "Add the show-the-workings panel, starting with Pay/Tax",
-      "commits": 27
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T11:47:49.699Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 5
     },
     "web/src/base.css": {
-      "lastCommit": "a838019",
-      "lastDate": "2026-09-10T07:02:43+00:00",
-      "lastSubject": "Accessible shared dialog and focus styles",
-      "commits": 6
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T11:47:49.699Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 7
     }
   }
 }

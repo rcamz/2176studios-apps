@@ -16,8 +16,9 @@ const today = new Date().toISOString().slice(0, 10);
 
 const urls = APP_ROUTES.map((r) => {
   const loc = SITE_ORIGIN + (r.href === '/' ? '/' : r.href);
-  // The index is the entry point; the calculators are the content.
-  const priority = r.href === '/' ? '1.0' : '0.8';
+  // The index is the entry point; the calculators are the content; the
+  // about/privacy page is neither, and should not compete with them.
+  const priority = r.href === '/' ? '1.0' : r.standalone ? '0.8' : '0.3';
   return `  <url>\n    <loc>${loc}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>${priority}</priority>\n  </url>`;
 }).join('\n');
 

@@ -1,0 +1,119 @@
+/* About / Contact / Privacy — one page, three anchors. */
+
+.about-wrap {
+  min-height: 100vh;
+}
+.about-body {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 0 18px;
+}
+
+.about-h1 {
+  font-size: clamp(1.3rem, 4vw, 1.8rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 18px;
+}
+
+/* ─── Jump links ──────────────────────────────────────────────────── */
+.about-jump {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 34px;
+}
+.about-jump a {
+  font-size: 0.7rem;
+  font-family: var(--mono);
+  color: var(--text-muted);
+  text-decoration: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 5px 11px;
+  transition: border-color 0.12s, color 0.12s;
+}
+.about-jump a:hover { border-color: var(--border-strong); color: var(--text); }
+
+/* ─── Sections ────────────────────────────────────────────────────── */
+.about-section {
+  /* The topbar is sticky, so an anchor jump would otherwise land the heading
+     underneath it. */
+  scroll-margin-top: 66px;
+  padding-top: 8px;
+  margin-bottom: 44px;
+}
+.about-h2 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  padding-bottom: 9px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.about-h3 {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: 26px 0 9px;
+}
+.about-section p {
+  font-size: 0.82rem;
+  line-height: 1.75;
+  margin-bottom: 13px;
+}
+.about-section a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.about-lede {
+  font-size: 0.92rem !important;
+  font-weight: 600;
+  line-height: 1.65 !important;
+  padding: 13px 15px;
+  background: var(--accent-dim);
+  border-left: 2px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  margin-bottom: 20px !important;
+}
+.about-list {
+  list-style: none;
+  margin: 0 0 13px;
+  padding: 0;
+}
+.about-list li {
+  font-size: 0.82rem;
+  line-height: 1.7;
+  padding: 11px 0 11px 15px;
+  border-left: 2px solid var(--border);
+  margin-bottom: 8px;
+}
+.about-email {
+  font-family: var(--mono);
+  font-size: 0.95rem !important;
+  padding: 13px 15px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  margin: 4px 0 18px !important;
+  text-align: center;
+}
+.about-note,
+.about-updated {
+  font-size: 0.72rem !important;
+  color: var(--text-muted);
+}
+.about-updated {
+  font-family: var(--mono);
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  margin-top: 22px;
+}
+.about-back {
+  font-size: 0.78rem;
+  margin-bottom: 8px;
+}
+.about-back a { color: var(--text-muted); text-decoration: none; }
+.about-back a:hover { color: var(--text); text-decoration: underline; }

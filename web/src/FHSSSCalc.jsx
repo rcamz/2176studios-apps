@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import FHSSSInstance from './FHSSSInstance.jsx';
 import AdUnit from './AdUnit.jsx';
 import { VersionFooter } from './VersionFooter.jsx';
+import SiteFooter from './SiteFooter.jsx';
 import PageHead from './PageHead.jsx';
 import ShareModal from './ShareModal.jsx';
 import './FHSSSCalc.css';
@@ -49,6 +50,7 @@ export default function FHSSSCalc() {
       <div className="ad-bar-float ad-bar-desktop-hide">
         <AdUnit slotId={AD_SLOT_BANNER} format="horizontal" />
       </div>
+      <SiteFooter />
       <VersionFooter calcId="fhsss" />
 
       <ShareModal mode={modal} onClose={() => setModal(null)} />

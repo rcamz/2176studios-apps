@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import RedundancyInstance from './RedundancyInstance.jsx';
 import AdUnit from './AdUnit.jsx';
 import { VersionFooter } from './VersionFooter.jsx';
+import SiteFooter from './SiteFooter.jsx';
 import PageHead from './PageHead.jsx';
 import ShareModal from './ShareModal.jsx';
 import './RedundancyCalc.css';
@@ -49,6 +50,7 @@ export default function RedundancyCalc() {
       <div className="ad-bar-float ad-bar-desktop-hide">
         <AdUnit slotId={AD_SLOT_BANNER} format="horizontal" />
       </div>
+      <SiteFooter />
       <VersionFooter calcId="redundancy" />
 
       <ShareModal mode={modal} onClose={() => setModal(null)} />

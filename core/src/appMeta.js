@@ -87,6 +87,29 @@ export const APP_META = {
     play: null,
   },
 
+  // Not a calculator. It exists so every page — and every Play listing — has a
+  // single stable place to point at for contact and privacy.
+  about: {
+    // ── Web ──
+    title: `About, Contact & Privacy${TITLE_SUFFIX}`,
+    description:
+      'Who builds these Australian calculators, how to reach support, and the ' +
+      'privacy policy: no accounts, no tracking, and your figures never leave your device.',
+    ogTitle: 'About 2176 Studios — Contact & Privacy Policy',
+    ogDescription:
+      'Free Australian financial calculators with no sign-up. Who makes them, how to ' +
+      'contact support at support@2176studios.com, and the full privacy policy.',
+    keywords: [
+      '2176 studios',
+      'contact support',
+      'privacy policy',
+      'about 2176 studios',
+      'australian financial calculators',
+    ],
+    // A policy page, not a shippable app.
+    play: null,
+  },
+
   mortgage: {
     // ── Web ──
     title: `Mortgage Repayment & Offset Calculator${TITLE_SUFFIX}`,

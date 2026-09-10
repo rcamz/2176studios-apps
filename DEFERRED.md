@@ -131,3 +131,26 @@ because fixing it properly needs a design change rather than markup.
 
 Worth doing before the Android wrappers freeze the markup: items 1 and 2 are
 small design decisions, and item 3 is a contained piece of shared behaviour.
+
+---
+
+## 6. Privacy policy — commitments that must stay true
+
+`/about#privacy` is the privacy URL for all twelve Play listings, and Google
+rejects a listing whose policy contradicts its Data safety form. The policy as
+written makes four claims that are true of the code today and must be re-checked
+before each Play submission:
+
+| Claim | What would break it |
+|---|---|
+| No cookies, no local storage, nothing written to the device | Adding `localStorage` for a remembered theme or a saved scenario |
+| Calculations never leave the device | Any server-side calculation, error reporting, or telemetry SDK |
+| No analytics of our own | Adding GA4, Plausible, Firebase Analytics or Crashlytics |
+| The apps request no permissions beyond internet access | A wrapper that asks for storage, location or identifiers |
+
+The third parties disclosed are AdSense, Google Fonts and Cloudflare Pages.
+Adding a fourth means editing the policy in the same commit.
+
+`web/src/SiteFooter.test.jsx` asserts the disclosures are present, not that they
+are still accurate — only a person can check that.
+

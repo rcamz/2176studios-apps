@@ -781,43 +781,18 @@ select.field-select {
   line-height: 1.5;
 }
 
-/* ─── Version footer ──────────────────────────────────────────────────── */
-.version-footer {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  /* The floating ad bar is fixed to the bottom on mobile and is 107px tall:
-     90px unit + 8px padding top and bottom + 1px border. Anything less than
-     that here puts the version text behind it, invisible. */
-  padding: 18px 18px 132px;
-  font-size: 0.68rem;
-  color: var(--text-muted);
-  border-top: 1px solid var(--border);
-  margin-top: 32px;
-}
+/* ─── Version footer, calculator pages only ───────────────────────────── */
+/* The general styling lives in base.css — the stamp now appears on the About
+   page too. What is specific to a calculator page is the floating ad bar: it
+   is fixed to the bottom on mobile and 107px tall (90px unit + 8px padding top
+   and bottom + 1px border). Anything less than that here puts the footer
+   behind it, invisible. */
+.calc-page .version-footer { padding-bottom: 132px; }
+
 /* The bar is hidden at this width in single-instance mode, so the reservation
    is no longer needed. */
 @media (min-width: 980px) {
-  .version-footer { padding-bottom: 28px; }
-}
-.version-badge {
-  font-family: var(--mono);
-  font-weight: 500;
-  color: var(--accent);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-sm);
-  padding: 1px 6px;
-}
-.version-sep { opacity: 0.4; }
-.version-commit { font-family: var(--mono); }
-.version-dirty {
-  font-family: var(--mono);
-  color: var(--red);
-  border: 1px solid var(--red);
-  border-radius: var(--radius-sm);
-  padding: 1px 5px;
+  .calc-page .version-footer { padding-bottom: 28px; }
 }
 
 /* ─── Workings panel ──────────────────────────────────────────────────── */

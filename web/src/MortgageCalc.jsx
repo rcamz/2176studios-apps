@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import CalcInstance from './CalcInstance.jsx';
 import AdUnit from './AdUnit.jsx';
 import { VersionFooter } from './VersionFooter.jsx';
+import SiteFooter from './SiteFooter.jsx';
 import PageHead from './PageHead.jsx';
 import ShareModal from './ShareModal.jsx';
 import './MortgageCalc.css';
@@ -149,6 +150,7 @@ export default function MortgageCalc() {
         <AdUnit slotId={AD_SLOT_BANNER} format="horizontal" />
       </div>
 
+      <SiteFooter />
       <VersionFooter calcId="mortgage" />
 
       <ShareModal mode={modal} onClose={() => setModal(null)} />

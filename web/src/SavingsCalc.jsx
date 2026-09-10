@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import SavingsInstance from './SavingsInstance.jsx';
 import AdUnit from './AdUnit.jsx';
 import { VersionFooter } from './VersionFooter.jsx';
+import SiteFooter from './SiteFooter.jsx';
 import PageHead from './PageHead.jsx';
 import ShareModal from './ShareModal.jsx';
 import './SavingsCalc.css';
@@ -49,6 +50,7 @@ export default function SavingsCalc() {
       <div className="ad-bar-float ad-bar-desktop-hide">
         <AdUnit slotId={AD_SLOT_BANNER} format="horizontal" />
       </div>
+      <SiteFooter />
       <VersionFooter calcId="savings" />
 
       <ShareModal mode={modal} onClose={() => setModal(null)} />

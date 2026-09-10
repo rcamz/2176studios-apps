@@ -18,6 +18,9 @@ export const APP_ROUTES = [
   { id: 'novatedlease',    href: '/novatedleasecalc',     name: 'Novated Lease',          standalone: true },
   { id: 'savings',         href: '/savingscalc',          name: 'Savings',                standalone: true },
   { id: 'health',          href: '/healthcalc',           name: 'Health',                 standalone: true },
+  // Not an app. Every standalone build links to it, and Google Play needs a
+  // privacy URL per listing — /about#privacy is that URL for all twelve.
+  { id: 'about',           href: '/about',                name: 'About, Contact & Privacy', standalone: false },
 ];
 
 export const SITE_ORIGIN = 'https://2176studios.com';

@@ -18,13 +18,14 @@ export const CALC_PATHS = [
   'web/src/NovatedLeaseInstance.jsx', 'web/src/NovatedLeaseCalc.jsx', 'core/src/novatedlease.js',
   'web/src/SavingsInstance.jsx', 'web/src/SavingsCalc.jsx', 'core/src/savings.js',
   'web/src/HealthInstance.jsx', 'web/src/HealthCalc.jsx', 'core/src/health.js',
+  'web/src/About.jsx', 'web/src/About.css',
 ];
 
 export const SHARED_PATHS = [
   'core/src/rates', 'core/src/paytax.js', 'core/src/amortize.js',
   'core/src/stampduty.js', 'core/src/lmi.js', 'core/src/format.js',
   'core/src/workings.js', 'core/src/vectors',
-  'web/src/lib/urlState.js',
+  'web/src/lib/urlState.js', 'web/src/SiteFooter.jsx',
   'web/src/calc-shared.css', 'web/src/base.css',
 ];
 

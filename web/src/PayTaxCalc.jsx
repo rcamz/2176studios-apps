@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import PayTaxInstance from './PayTaxInstance.jsx';
 import AdUnit from './AdUnit.jsx';
 import { VersionFooter } from './VersionFooter.jsx';
+import SiteFooter from './SiteFooter.jsx';
 import PageHead from './PageHead.jsx';
 import ShareModal from './ShareModal.jsx';
 import './PayTaxCalc.css';
@@ -133,6 +134,7 @@ export default function PayTaxCalc() {
         <AdUnit slotId={AD_SLOT_BANNER} format="horizontal" />
       </div>
 
+      <SiteFooter />
       <VersionFooter calcId="paytax" />
 
       <ShareModal mode={modal} onClose={() => setModal(null)} />

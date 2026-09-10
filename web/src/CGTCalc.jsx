@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import CGTInstance from './CGTInstance.jsx';
 import AdUnit from './AdUnit.jsx';
 import { VersionFooter } from './VersionFooter.jsx';
+import SiteFooter from './SiteFooter.jsx';
 import PageHead from './PageHead.jsx';
 import ShareModal from './ShareModal.jsx';
 import './CGTCalc.css';
@@ -78,6 +79,7 @@ export default function CGTCalc() {
         <AdUnit slotId={AD_SLOT_BANNER} format="horizontal" />
       </div>
 
+      <SiteFooter />
       <VersionFooter calcId="cgt" />
 
       <ShareModal mode={modal} onClose={() => setModal(null)} />

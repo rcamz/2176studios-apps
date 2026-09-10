@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { VersionStocktake } from './VersionFooter.jsx';
+import SiteFooter from './SiteFooter.jsx';
 import PageHead from './PageHead.jsx';
 import './Home.css';
 
@@ -197,6 +198,7 @@ export default function Home() {
         })}
       </div>
 
+      <SiteFooter />
       <VersionStocktake />
     </div>
   );

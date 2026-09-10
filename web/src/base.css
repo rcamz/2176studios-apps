@@ -165,3 +165,66 @@ select:focus-visible {
 .skip-link:focus {
   left: 0;
 }
+
+/* ─── Version footer ──────────────────────────────────────────────────── */
+.version-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 18px 18px 28px;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border);
+  margin-top: 32px;
+}
+.version-badge {
+  font-family: var(--mono);
+  font-weight: 500;
+  color: var(--accent);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 1px 6px;
+}
+.version-sep { opacity: 0.4; }
+.version-commit { font-family: var(--mono); }
+.version-dirty {
+  font-family: var(--mono);
+  color: var(--red);
+  border: 1px solid var(--red);
+  border-radius: var(--radius-sm);
+  padding: 1px 5px;
+}
+
+/* ─── Site footer ─────────────────────────────────────────────────────── */
+/* About | Contact | Privacy, on every page directly above the version stamp. */
+.site-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 15px 18px 0;
+  font-size: 0.72rem;
+  border-top: 1px solid var(--border);
+  margin-top: 32px;
+}
+.site-footer-link {
+  color: var(--text-muted);
+  text-decoration: none;
+  padding: 2px 2px;
+  transition: color 0.12s;
+}
+.site-footer-link:hover { color: var(--text); text-decoration: underline; }
+.site-footer-sep { color: var(--text-muted); opacity: 0.35; user-select: none; }
+
+/* The version stamp sits immediately below, so the pair reads as one footer
+   with a single rule above it rather than two stacked boxes. */
+.site-footer + .version-footer,
+.site-footer + .stocktake {
+  border-top: none;
+  margin-top: 0;
+  padding-top: 9px;
+}
+.site-footer + .stocktake { margin-left: auto; margin-right: auto; }

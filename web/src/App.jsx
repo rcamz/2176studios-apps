@@ -13,10 +13,23 @@ import RentVBuyCalc from './RentVBuyCalc.jsx';
 import SavingsCalc from './SavingsCalc.jsx';
 import HealthCalc from './HealthCalc.jsx';
 import Home from './Home.jsx';
+import About from './About.jsx';
 
+// Restores the top of the page on navigation, except when the link carried a
+// hash — the footer's About / Contact / Privacy links all point at anchors on
+// one page, and scrolling to the top would land on the wrong section. The
+// element does not exist until the new route has rendered, so this runs after
+// paint and falls back to the top if the id is not found.
 function ScrollToTop() {
-  const { pathname } = useLocation();
-  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  const { pathname, hash } = useLocation();
+
+  useEffect(() => {
+    if (!hash) { window.scrollTo(0, 0); return; }
+    const el = document.getElementById(hash.slice(1));
+    if (el) el.scrollIntoView();
+    else window.scrollTo(0, 0);
+  }, [pathname, hash]);
+
   return null;
 }
 
@@ -38,6 +51,7 @@ export default function App() {
         <Route path="/rentvbuycalc" element={<RentVBuyCalc />} />
         <Route path="/savingscalc" element={<SavingsCalc />} />
         <Route path="/healthcalc" element={<HealthCalc />} />
+        <Route path="/about" element={<About />} />
       </Routes>
     </BrowserRouter>
   );
