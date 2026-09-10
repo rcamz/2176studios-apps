@@ -4,6 +4,7 @@ import PayTaxInstance from './PayTaxInstance.jsx';
 import AdUnit from './AdUnit.jsx';
 import { VersionFooter } from './VersionFooter.jsx';
 import PageHead from './PageHead.jsx';
+import ShareModal from './ShareModal.jsx';
 import './PayTaxCalc.css';
 
 const AD_SLOT_BANNER  = 'XXXXXXXXXX';
@@ -54,18 +55,12 @@ export default function PayTaxCalc() {
   const [theme, setTheme] = useState('light');
   const [instances, setInstances] = useState(() => [{ id: _nextId++, key: '', seed: null }]);
   const [modal, setModal] = useState(null);
-  const [copied, setCopied] = useState(false);
   const instancesRef = useRef(null);
   // Latest inputs per instance, so a new scenario can start from an existing one.
   const stateRef = useRef({});
 
   useEffect(() => { document.documentElement.setAttribute('data-theme', theme); }, [theme]);
 
-  const copyUrl = useCallback(async () => {
-    await navigator.clipboard.writeText(window.location.href);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }, []);
 
   const handleShare = useCallback(async () => {
     if (navigator.share) {
@@ -99,7 +94,7 @@ export default function PayTaxCalc() {
         <div className="topbar-actions">
           <a className="btn-icon" title="Feedback / Support" href="mailto:support@2176studios.com"><IconBubble /></a>
           <button className="btn-icon" title="Toggle theme" onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}><IconSun /></button>
-          <button className="btn-icon" title="Save calculation" onClick={() => { setCopied(false); setModal('save'); }}><IconDisk /></button>
+          <button className="btn-icon" title="Save calculation" onClick={() => setModal('save')}><IconDisk /></button>
           <button className="btn-icon" title="Share calculation" onClick={handleShare}><IconShare /></button>
         </div>
       </div>
@@ -140,20 +135,7 @@ export default function PayTaxCalc() {
 
       <VersionFooter calcId="paytax" />
 
-      {modal && (
-        <div className="modal-overlay" onClick={() => setModal(null)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setModal(null)}>×</button>
-            {modal === 'share' && <div className="modal-icon">⤴</div>}
-            <h2 className="modal-title">{modal === 'save' ? 'Save your calculation' : 'Share your calculation'}</h2>
-            <p className="modal-desc">{modal === 'save' ? 'Copy this link. Open it any time to return to exactly these inputs and results.' : 'Copy this link and send it. Anyone who opens it will see the same inputs and results instantly.'}</p>
-            <div className="modal-url-wrap">
-              <input className="modal-url" readOnly value={window.location.href} onFocus={(e) => e.target.select()} />
-            </div>
-            <button className="modal-copy" onClick={copyUrl}>{copied ? '✓ Copied!' : 'Copy link'}</button>
-          </div>
-        </div>
-      )}
+      <ShareModal mode={modal} onClose={() => setModal(null)} />
     </div>
   );
 }
