@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useDocumentHead } from './useDocumentHead.js';
-import { APP_META } from '../../core/src/appMeta.js';
+import { HEAD_META } from 'virtual:app-routes';
 import { routeFor, SITE_ORIGIN } from '../../core/src/appRoutes.js';
 
 // Applies one route's metadata to the document head. Renders nothing.
@@ -8,7 +8,7 @@ import { routeFor, SITE_ORIGIN } from '../../core/src/appRoutes.js';
 // The same APP_META entry drives the Play Store listing, so the web title and
 // the store title cannot drift apart.
 export default function PageHead({ calcId }) {
-  const meta = APP_META[calcId];
+  const meta = HEAD_META[calcId];
   const route = routeFor(calcId);
 
   const structuredData = useMemo(() => {

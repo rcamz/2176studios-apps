@@ -4,6 +4,7 @@ import RedundancyInstance from './RedundancyInstance.jsx';
 import AdUnit from './AdUnit.jsx';
 import { VersionFooter } from './VersionFooter.jsx';
 import SiteFooter from './SiteFooter.jsx';
+import { IS_STANDALONE, canonicalShareUrl } from './lib/appTarget.js';
 import PageHead from './PageHead.jsx';
 import ShareModal from './ShareModal.jsx';
 import './RedundancyCalc.css';
@@ -24,7 +25,7 @@ export default function RedundancyCalc() {
 
 
   const handleShare = useCallback(async () => {
-    if (navigator.share) await navigator.share({ title: 'Redundancy Pay Calculator — 2176 Studios', url: window.location.href });
+    if (navigator.share) await navigator.share({ title: 'Redundancy Pay Calculator — 2176 Studios', url: canonicalShareUrl() });
     else setModal('share');
   }, []);
 
@@ -32,7 +33,9 @@ export default function RedundancyCalc() {
     <div className="calc-page">
       <PageHead calcId="redundancy" />
       <div className="calc-topbar">
-        <Link to="/" className="calc-brand">2176 Studios<span className="brand-dot" /></Link>
+        {IS_STANDALONE
+            ? <span className="calc-brand">2176 Studios<span className="brand-dot" /></span>
+            : <Link to="/" className="calc-brand">2176 Studios<span className="brand-dot" /></Link>}
         <div className="topbar-actions">
           <a className="btn-icon" title="Feedback" href="mailto:support@2176studios.com"><IconBubble /></a>
           <button className="btn-icon" title="Toggle theme" onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}><IconSun /></button>

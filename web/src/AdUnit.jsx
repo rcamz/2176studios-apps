@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { IS_STANDALONE } from './lib/appTarget.js';
 
 const PUBLISHER_ID = 'ca-pub-9072302221360810';
 
@@ -10,11 +11,17 @@ const SIZES = {
 };
 
 export default function AdUnit({ slotId, format = 'auto', style = {} }) {
+  if (IS_STANDALONE) return null;
+  // eslint-disable-next-line react-hooks/rules-of-hooks -- the line above is a
+  // compile-time constant, so this is not a conditional hook in any build.
   const ref = useRef(false);
+  // AdSense is a web product; its script is stripped from the packaged app's
+  // index.html and putting its markup in an app violates the AdSense policy.
+  // App ads will be AdMob, drawn natively outside the WebView, not here.
   const isPlaceholder = slotId === 'XXXXXXXXXX';
 
   useEffect(() => {
-    if (isPlaceholder || ref.current) return;
+    if (IS_STANDALONE || isPlaceholder || ref.current) return;
     ref.current = true;
     try {
       (window.adsbygoogle = window.adsbygoogle || []).push({});

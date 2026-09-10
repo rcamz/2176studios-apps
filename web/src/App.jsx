@@ -1,19 +1,6 @@
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
-import MortgageCalc from './MortgageCalc.jsx';
-import PayTaxCalc from './PayTaxCalc.jsx';
-import CGTCalc from './CGTCalc.jsx';
-import RedundancyCalc from './RedundancyCalc.jsx';
-import SalarySacrificeCalc from './SalarySacrificeCalc.jsx';
-import FHSSSCalc from './FHSSSCalc.jsx';
-import RetirementCalc from './RetirementCalc.jsx';
-import BorrowingPowerCalc from './BorrowingPowerCalc.jsx';
-import NovatedLeaseCalc from './NovatedLeaseCalc.jsx';
-import RentVBuyCalc from './RentVBuyCalc.jsx';
-import SavingsCalc from './SavingsCalc.jsx';
-import HealthCalc from './HealthCalc.jsx';
-import Home from './Home.jsx';
-import About from './About.jsx';
+import { ROUTES, TARGET } from 'virtual:app-routes';
 
 // Restores the top of the page on navigation, except when the link carried a
 // hash — the footer's About / Contact / Privacy links all point at anchors on
@@ -38,20 +25,12 @@ export default function App() {
     <BrowserRouter>
       <ScrollToTop />
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/mortgagecalc" element={<MortgageCalc />} />
-        <Route path="/paytaxcalc" element={<PayTaxCalc />} />
-        <Route path="/cgtcalc" element={<CGTCalc />} />
-        <Route path="/redundancycalc" element={<RedundancyCalc />} />
-        <Route path="/salarysacrificecalc" element={<SalarySacrificeCalc />} />
-        <Route path="/fhssscalc" element={<FHSSSCalc />} />
-        <Route path="/retirementcalc" element={<RetirementCalc />} />
-        <Route path="/borrowingpowercalc" element={<BorrowingPowerCalc />} />
-        <Route path="/novatedleasecalc" element={<NovatedLeaseCalc />} />
-        <Route path="/rentvbuycalc" element={<RentVBuyCalc />} />
-        <Route path="/savingscalc" element={<SavingsCalc />} />
-        <Route path="/healthcalc" element={<HealthCalc />} />
-        <Route path="/about" element={<About />} />
+        {ROUTES.map(({ path, Component }) => (
+          <Route key={path} path={path} element={<Component />} />
+        ))}
+        {/* A standalone app has no index to fall back to, and a WebView can
+            be handed a deep link for a route this build does not contain. */}
+        {TARGET && <Route path="*" element={<Navigate to="/" replace />} />}
       </Routes>
     </BrowserRouter>
   );

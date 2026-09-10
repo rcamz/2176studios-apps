@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-09-10T12:20:49.787Z",
-  "generatedFrom": "fadbc1d",
+  "generatedAt": "2026-09-10T12:55:22.871Z",
+  "generatedFrom": "edba551",
   "files": {
     "web/src/Home.jsx": {
       "lastCommit": "8edc6d0",
@@ -21,10 +21,10 @@
       "commits": 35
     },
     "web/src/MortgageCalc.jsx": {
-      "lastCommit": "8edc6d0",
-      "lastDate": "2026-09-10T11:49:21+00:00",
-      "lastSubject": "Add an About, Contact and Privacy page linked from every footer",
-      "commits": 36
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T12:55:22.871Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 37
     },
     "web/src/PayTaxInstance.jsx": {
       "lastCommit": "31464ea",
@@ -33,10 +33,10 @@
       "commits": 10
     },
     "web/src/PayTaxCalc.jsx": {
-      "lastCommit": "8edc6d0",
-      "lastDate": "2026-09-10T11:49:21+00:00",
-      "lastSubject": "Add an About, Contact and Privacy page linked from every footer",
-      "commits": 37
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T12:55:22.871Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 7
     },
     "web/src/BorrowingPowerInstance.jsx": {
       "lastCommit": "31464ea",
@@ -45,10 +45,10 @@
       "commits": 4
     },
     "web/src/BorrowingPowerCalc.jsx": {
-      "lastCommit": "8edc6d0",
-      "lastDate": "2026-09-10T11:49:21+00:00",
-      "lastSubject": "Add an About, Contact and Privacy page linked from every footer",
-      "commits": 5
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T12:55:22.871Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 6
     },
     "core/src/borrowingpower.js": {
       "lastCommit": "fa6255c",
@@ -63,10 +63,10 @@
       "commits": 4
     },
     "web/src/RentVBuyCalc.jsx": {
-      "lastCommit": "8edc6d0",
-      "lastDate": "2026-09-10T11:49:21+00:00",
-      "lastSubject": "Add an About, Contact and Privacy page linked from every footer",
-      "commits": 5
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T12:55:22.871Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 6
     },
     "core/src/rentvbuy.js": {
       "lastCommit": "fa6255c",
@@ -81,10 +81,10 @@
       "commits": 4
     },
     "web/src/CGTCalc.jsx": {
-      "lastCommit": "8edc6d0",
-      "lastDate": "2026-09-10T11:49:21+00:00",
-      "lastSubject": "Add an About, Contact and Privacy page linked from every footer",
-      "commits": 37
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T12:55:22.871Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 6
     },
     "core/src/cgt.js": {
       "lastCommit": "fa6255c",
@@ -99,10 +99,10 @@
       "commits": 4
     },
     "web/src/RedundancyCalc.jsx": {
-      "lastCommit": "8edc6d0",
-      "lastDate": "2026-09-10T11:49:21+00:00",
-      "lastSubject": "Add an About, Contact and Privacy page linked from every footer",
-      "commits": 5
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T12:55:22.871Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 6
     },
     "core/src/redundancy.js": {
       "lastCommit": "fa6255c",
@@ -117,10 +117,10 @@
       "commits": 4
     },
     "web/src/SalarySacrificeCalc.jsx": {
-      "lastCommit": "8edc6d0",
-      "lastDate": "2026-09-10T11:49:21+00:00",
-      "lastSubject": "Add an About, Contact and Privacy page linked from every footer",
-      "commits": 5
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T12:55:22.871Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 6
     },
     "core/src/salarysacrifice.js": {
       "lastCommit": "fa6255c",
@@ -135,10 +135,10 @@
       "commits": 4
     },
     "web/src/FHSSSCalc.jsx": {
-      "lastCommit": "8edc6d0",
-      "lastDate": "2026-09-10T11:49:21+00:00",
-      "lastSubject": "Add an About, Contact and Privacy page linked from every footer",
-      "commits": 5
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T12:55:22.871Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 6
     },
     "core/src/fhsss.js": {
       "lastCommit": "fa6255c",
@@ -153,10 +153,10 @@
       "commits": 4
     },
     "web/src/RetirementCalc.jsx": {
-      "lastCommit": "8edc6d0",
-      "lastDate": "2026-09-10T11:49:21+00:00",
-      "lastSubject": "Add an About, Contact and Privacy page linked from every footer",
-      "commits": 5
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T12:55:22.871Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 6
     },
     "core/src/retirement.js": {
       "lastCommit": "fa6255c",
@@ -171,10 +171,10 @@
       "commits": 4
     },
     "web/src/NovatedLeaseCalc.jsx": {
-      "lastCommit": "8edc6d0",
-      "lastDate": "2026-09-10T11:49:21+00:00",
-      "lastSubject": "Add an About, Contact and Privacy page linked from every footer",
-      "commits": 5
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T12:55:22.871Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 6
     },
     "core/src/novatedlease.js": {
       "lastCommit": "fa6255c",
@@ -189,10 +189,10 @@
       "commits": 4
     },
     "web/src/SavingsCalc.jsx": {
-      "lastCommit": "8edc6d0",
-      "lastDate": "2026-09-10T11:49:21+00:00",
-      "lastSubject": "Add an About, Contact and Privacy page linked from every footer",
-      "commits": 5
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T12:55:22.871Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 6
     },
     "core/src/savings.js": {
       "lastCommit": "fa6255c",
@@ -201,22 +201,22 @@
       "commits": 4
     },
     "web/src/HealthInstance.jsx": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T12:20:49.787Z",
-      "lastSubject": "Uncommitted at snapshot time",
+      "lastCommit": "edba551",
+      "lastDate": "2026-09-10T12:21:06+00:00",
+      "lastSubject": "Remove the WHO Asian-adjusted BMI view, and add app-ads.txt",
       "commits": 6
     },
     "web/src/HealthCalc.jsx": {
-      "lastCommit": "8edc6d0",
-      "lastDate": "2026-09-10T11:49:21+00:00",
-      "lastSubject": "Add an About, Contact and Privacy page linked from every footer",
-      "commits": 5
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T12:55:22.871Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 6
     },
     "core/src/health.js": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T12:20:49.787Z",
-      "lastSubject": "Uncommitted at snapshot time",
-      "commits": 2
+      "lastCommit": "edba551",
+      "lastDate": "2026-09-10T12:21:06+00:00",
+      "lastSubject": "Remove the WHO Asian-adjusted BMI view, and add app-ads.txt",
+      "commits": 6
     },
     "web/src/About.jsx": {
       "lastCommit": "a953858",
@@ -231,9 +231,9 @@
       "commits": 1
     },
     "core/src/rates": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T12:20:49.787Z",
-      "lastSubject": "Uncommitted at snapshot time",
+      "lastCommit": "edba551",
+      "lastDate": "2026-09-10T12:21:06+00:00",
+      "lastSubject": "Remove the WHO Asian-adjusted BMI view, and add app-ads.txt",
       "commits": 2
     },
     "core/src/paytax.js": {
@@ -285,10 +285,10 @@
       "commits": 1
     },
     "web/src/SiteFooter.jsx": {
-      "lastCommit": "a953858",
-      "lastDate": "2026-09-10T12:01:38+00:00",
-      "lastSubject": "Add a Buy Me a Coffee link to the footer and the About page",
-      "commits": 2
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T12:55:22.871Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 3
     },
     "core/src/appRoutes.js": {
       "lastCommit": "fadbc1d",
@@ -297,9 +297,9 @@
       "commits": 4
     },
     "core/src/appMeta.js": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T12:20:49.787Z",
-      "lastSubject": "Uncommitted at snapshot time",
+      "lastCommit": "edba551",
+      "lastDate": "2026-09-10T12:21:06+00:00",
+      "lastSubject": "Remove the WHO Asian-adjusted BMI view, and add app-ads.txt",
       "commits": 3
     },
     "web/src/calc-shared.css": {

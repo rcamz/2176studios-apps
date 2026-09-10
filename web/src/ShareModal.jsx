@@ -1,4 +1,5 @@
 import { useEffect, useRef, useCallback, useId, useState } from 'react';
+import { canonicalShareUrl } from './lib/appTarget.js';
 
 // Save/share dialog, shared by every calculator.
 //
@@ -13,7 +14,9 @@ export default function ShareModal({ mode, onClose, shareTitle }) {
   const descId = useId();
   const [copied, setCopied] = useCopied();
 
-  const url = typeof window !== 'undefined' ? window.location.href : '';
+  // Not window.location.href: inside the packaged app that is a localhost
+  // WebView address, and every link shared from the app would be dead.
+  const url = canonicalShareUrl();
 
   const copy = useCallback(async () => {
     try {

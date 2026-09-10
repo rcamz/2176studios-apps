@@ -1,6 +1,7 @@
 import { Fragment } from 'react';
 import { Link } from 'react-router-dom';
 import { SUPPORT_URL } from '../../core/src/appRoutes.js';
+import { IS_STANDALONE } from './lib/appTarget.js';
 
 // About, contact and privacy, on every page just above the version stamp.
 //
@@ -15,9 +16,10 @@ const LINKS = [
 
 // Google Play treats a link out to an external payment page as a policy
 // question, and the answer differs for donations, digital goods and charities.
-// Rather than find out at review time, the Android builds set
-// VITE_HIDE_SUPPORT=1 and ship without it. The web site always shows it.
-const SHOW_SUPPORT = import.meta.env?.VITE_HIDE_SUPPORT !== '1';
+// Rather than find out at review time, no packaged app ships it — that is now
+// automatic rather than a flag someone has to remember. VITE_HIDE_SUPPORT
+// still forces it off for a web preview.
+const SHOW_SUPPORT = !IS_STANDALONE && import.meta.env?.VITE_HIDE_SUPPORT !== '1';
 
 export default function SiteFooter() {
   return (

@@ -1,0 +1,11 @@
+{
+  "appId": "com.studios2176.health",
+  "appName": "Health Calculator",
+  "webDir": "../../web/dist-health",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}

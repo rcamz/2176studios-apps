@@ -167,3 +167,19 @@ Until it is checked, the Android builds hide the link: `SiteFooter.jsx` reads
 `VITE_HIDE_SUPPORT`, so the wrapper build sets `VITE_HIDE_SUPPORT=1` and ships
 without it. The web site always shows it. If the policy turns out to permit it,
 delete the flag; if not, the apps are already compliant.
+
+---
+
+## 7. Standalone app packaging — open items
+
+From building the Health app at v0.8 (10 Sep 2026). See `apps/README.md`.
+
+| # | Item | Cost of leaving it |
+|---|---|---|
+| 1 | **Rate registry is not tree-shaken.** `ratesFor()` resolves every domain from one index, so the Health app carries novated lease FBT scalars, stamp duty schedules and Age Pension thresholds it never reads | ~40KB per app. Needs per-domain resolution |
+| 2 | **Fonts load from fonts.googleapis.com** | First launch offline falls back to the system sans stack. Bundling the two faces makes the app genuinely offline |
+| 3 | **No release signing config.** Debug builds only | Blocks any upload. Needs a keystore plus Play App Signing enrolment |
+| 4 | **No screenshots.** Play requires at least two phone screenshots | Blocks submission |
+| 5 | **Icons are generated placeholders** | Fine for testing, thin for a listing |
+| 6 | **Health is a stricter review category than finance** | The calorie hard block is protective and worth citing in the review notes |
+
