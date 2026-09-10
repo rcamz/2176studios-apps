@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useId } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ResponsiveContainer,
@@ -113,6 +113,7 @@ function decodeParams(search) {
 }
 
 export default function NovatedLeaseInstance({ instanceKey = '', label, onRemove, theme = 'light', isComparison = false }) {
+  const uid = useId();
   const [inputs, setInputs] = useState(() =>
     instanceKey === '' ? { ...DEFAULTS, ...decodeParams(window.location.search) } : { ...DEFAULTS }
   );
@@ -145,7 +146,7 @@ export default function NovatedLeaseInstance({ instanceKey = '', label, onRemove
       {isComparison && (
         <div className="instance-header">
           <span className="instance-label">{label}</span>
-          <button className="instance-remove" onClick={onRemove || undefined} title="Remove scenario"
+          <button type="button" className="instance-remove" onClick={onRemove || undefined} title="Remove scenario" aria-label={`Remove ${label || 'scenario'}`}
             style={!onRemove ? { visibility: 'hidden', pointerEvents: 'none' } : {}}>×</button>
         </div>
       )}
@@ -166,10 +167,10 @@ export default function NovatedLeaseInstance({ instanceKey = '', label, onRemove
           <div className="panel-section">
             <div className="section-title">Vehicle</div>
             <div className="field">
-              <label>What kind of car</label>
-              <div className="segmented">
+              <label id={`${uid}-vehicle-type-label`}>What kind of car</label>
+              <div className="segmented" role="radiogroup" aria-labelledby={`${uid}-vehicle-type-label`}>
                 {[['bev','Electric'],['phev','Plug-in hybrid'],['ice','Petrol / diesel'],['fcev','Hydrogen']].map(([v,l]) => (
-                  <button key={v} className={inputs.vehicleType === v ? 'active' : ''} onClick={() => set('vehicleType', v)}>{l}</button>
+                  <button key={v} type="button" role="radio" aria-checked={inputs.vehicleType === v} className={inputs.vehicleType === v ? 'active' : ''} onClick={() => set('vehicleType', v)}>{l}</button>
                 ))}
               </div>
             </div>
@@ -182,52 +183,52 @@ export default function NovatedLeaseInstance({ instanceKey = '', label, onRemove
                   and both are strict.
                 </p>
                 <div className="field">
-                  <label>Was the car in exempt use, or available for use, before 1 April 2025?</label>
-                  <div className="segmented">
-                    <button className={inputs.phevExemptUseBeforeCutoff ? 'active' : ''} onClick={() => set('phevExemptUseBeforeCutoff', true)}>Yes</button>
-                    <button className={!inputs.phevExemptUseBeforeCutoff ? 'active' : ''} onClick={() => set('phevExemptUseBeforeCutoff', false)}>No</button>
+                  <label id={`${uid}-phev-use-label`}>Was the car in exempt use, or available for use, before 1 April 2025?</label>
+                  <div className="segmented" role="radiogroup" aria-labelledby={`${uid}-phev-use-label`}>
+                    <button type="button" role="radio" aria-checked={inputs.phevExemptUseBeforeCutoff} className={inputs.phevExemptUseBeforeCutoff ? 'active' : ''} onClick={() => set('phevExemptUseBeforeCutoff', true)}>Yes</button>
+                    <button type="button" role="radio" aria-checked={!inputs.phevExemptUseBeforeCutoff} className={!inputs.phevExemptUseBeforeCutoff ? 'active' : ''} onClick={() => set('phevExemptUseBeforeCutoff', false)}>No</button>
                   </div>
                 </div>
                 <div className="field">
-                  <label>Is a financially binding pre-existing commitment continuing, unchanged?</label>
-                  <div className="segmented">
-                    <button className={inputs.phevBindingCommitmentUnchanged ? 'active' : ''} onClick={() => set('phevBindingCommitmentUnchanged', true)}>Yes</button>
-                    <button className={!inputs.phevBindingCommitmentUnchanged ? 'active' : ''} onClick={() => set('phevBindingCommitmentUnchanged', false)}>No</button>
+                  <label id={`${uid}-phev-binding-label`}>Is a financially binding pre-existing commitment continuing, unchanged?</label>
+                  <div className="segmented" role="radiogroup" aria-labelledby={`${uid}-phev-binding-label`}>
+                    <button type="button" role="radio" aria-checked={inputs.phevBindingCommitmentUnchanged} className={inputs.phevBindingCommitmentUnchanged ? 'active' : ''} onClick={() => set('phevBindingCommitmentUnchanged', true)}>Yes</button>
+                    <button type="button" role="radio" aria-checked={!inputs.phevBindingCommitmentUnchanged} className={!inputs.phevBindingCommitmentUnchanged ? 'active' : ''} onClick={() => set('phevBindingCommitmentUnchanged', false)}>No</button>
                   </div>
                 </div>
               </>
             )}
 
             <div className="field">
-              <label>Drive-away price (including GST and on-road costs)</label>
+              <label htmlFor={`${uid}-drive-away`}>Drive-away price (including GST and on-road costs)</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.driveAwayPrice || ''} onChange={setNum('driveAwayPrice')} min="0" step="1000" />
+                <input id={`${uid}-drive-away`} inputMode="decimal" type="number" value={inputs.driveAwayPrice || ''} onChange={setNum('driveAwayPrice')} min="0" step="1000" />
               </div>
             </div>
             <div className="field">
-              <label>Of which stamp duty, registration and CTP</label>
+              <label htmlFor={`${uid}-on-road`}>Of which stamp duty, registration and CTP</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.onRoadCosts || ''} onChange={setNum('onRoadCosts')} min="0" step="100" />
+                <input id={`${uid}-on-road`} inputMode="decimal" aria-describedby={`${uid}-on-road-help`} type="number" value={inputs.onRoadCosts || ''} onChange={setNum('onRoadCosts')} min="0" step="100" />
               </div>
-              <p className="offset-note">
+              <p className="offset-note" id={`${uid}-on-road-help`}>
                 Carries no claimable GST, sits outside the FBT base value, and is excluded from the residual —
                 which is why the residual is smaller than a percentage of the drive-away price.
               </p>
             </div>
             <div className="field">
-              <label>Lease term</label>
-              <div className="segmented">
+              <label id={`${uid}-term-label`}>Lease term</label>
+              <div className="segmented" role="radiogroup" aria-labelledby={`${uid}-term-label`}>
                 {[1,2,3,4,5].map(t => (
-                  <button key={t} className={inputs.termYears === t ? 'active' : ''} onClick={() => set('termYears', t)}>{t}yr</button>
+                  <button key={t} type="button" role="radio" aria-checked={inputs.termYears === t} aria-label={`${t} year${t === 1 ? '' : 's'}`} className={inputs.termYears === t ? 'active' : ''} onClick={() => set('termYears', t)}>{t}yr</button>
                 ))}
               </div>
             </div>
             <div className="field">
-              <label>Lease start date</label>
-              <input type="date" className="field-input" value={inputs.startDate} onChange={e => set('startDate', e.target.value)} />
-              <p className="offset-note">
+              <label htmlFor={`${uid}-start-date`}>Lease start date</label>
+              <input id={`${uid}-start-date`} aria-describedby={`${uid}-start-date-help`} type="date" className="field-input" value={inputs.startDate} onChange={e => set('startDate', e.target.value)} />
+              <p className="offset-note" id={`${uid}-start-date-help`}>
                 The FBT treatment is fixed at commencement, and the electric vehicle rate steps down on 1 April 2027
                 and again on 1 April 2029.
               </p>
@@ -237,50 +238,53 @@ export default function NovatedLeaseInstance({ instanceKey = '', label, onRemove
           <div className="panel-section">
             <div className="section-title">The package</div>
             <div className="field">
-              <label>Finance rate</label>
+              <label htmlFor={`${uid}-finance-rate`}>Finance rate</label>
               <div className="input-wrap has-suffix">
-                <input type="number" value={inputs.financeRate || ''} onChange={setNum('financeRate')} min="0" max="20" step="0.25" />
+                <input id={`${uid}-finance-rate`} inputMode="decimal" type="number" value={inputs.financeRate || ''} onChange={setNum('financeRate')} min="0" max="20" step="0.25" />
                 <span className="input-suffix">% p.a.</span>
               </div>
             </div>
             <div className="field">
-              <label>Annual running costs, including GST (fuel or charging, rego, insurance, tyres, servicing)</label>
+              <label htmlFor={`${uid}-running-costs`}>Annual running costs, including GST (fuel or charging, rego, insurance, tyres, servicing)</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.runningCosts || ''} onChange={setNum('runningCosts')} min="0" step="500" />
+                <input id={`${uid}-running-costs`} inputMode="decimal" type="number" value={inputs.runningCosts || ''} onChange={setNum('runningCosts')} min="0" step="500" />
               </div>
             </div>
             <div className="field">
-              <label>Employer or provider administration fee</label>
+              <label htmlFor={`${uid}-admin-fee`}>Employer or provider administration fee</label>
               <div className="input-wrap has-suffix">
-                <input type="number" value={inputs.adminFee || ''} onChange={setNum('adminFee')} min="0" step="50" />
+                <input id={`${uid}-admin-fee`} inputMode="decimal" aria-describedby={`${uid}-admin-fee-help`} type="number" value={inputs.adminFee || ''} onChange={setNum('adminFee')} min="0" step="50" />
                 <span className="input-suffix">$ / yr</span>
               </div>
-              <p className="offset-note">Typically $300–800 a year. Charged whether or not you use the car.</p>
+              <p className="offset-note" id={`${uid}-admin-fee-help`}>Typically $300–800 a year. Charged whether or not you use the car.</p>
             </div>
             <div className="field">
-              <label>Does the employer claim the GST credit on running costs?</label>
-              <div className="segmented">
-                <button className={inputs.employerClaimsGstOnRunningCosts ? 'active' : ''} onClick={() => set('employerClaimsGstOnRunningCosts', true)}>Yes</button>
-                <button className={!inputs.employerClaimsGstOnRunningCosts ? 'active' : ''} onClick={() => set('employerClaimsGstOnRunningCosts', false)}>No</button>
+              <label id={`${uid}-gst-credit-label`}>Does the employer claim the GST credit on running costs?</label>
+              <div className="segmented" role="radiogroup" aria-labelledby={`${uid}-gst-credit-label`}>
+                <button type="button" role="radio" aria-checked={inputs.employerClaimsGstOnRunningCosts} className={inputs.employerClaimsGstOnRunningCosts ? 'active' : ''} onClick={() => set('employerClaimsGstOnRunningCosts', true)}>Yes</button>
+                <button type="button" role="radio" aria-checked={!inputs.employerClaimsGstOnRunningCosts} className={!inputs.employerClaimsGstOnRunningCosts ? 'active' : ''} onClick={() => set('employerClaimsGstOnRunningCosts', false)}>No</button>
               </div>
             </div>
             <div className="field">
-              <label>How is FBT handled?</label>
-              <div className="segmented">
-                <button className={inputs.useECM ? 'active' : ''} onClick={() => set('useECM', true)}>Employee contribution</button>
-                <button className={!inputs.useECM ? 'active' : ''} onClick={() => set('useECM', false)}>Pay the FBT</button>
+              <label id={`${uid}-fbt-label`}>How is FBT handled?</label>
+              <div className="segmented" role="radiogroup" aria-labelledby={`${uid}-fbt-label`} aria-describedby={`${uid}-fbt-help`}>
+                <button type="button" role="radio" aria-checked={inputs.useECM} className={inputs.useECM ? 'active' : ''} onClick={() => set('useECM', true)}>Employee contribution</button>
+                <button type="button" role="radio" aria-checked={!inputs.useECM} className={!inputs.useECM ? 'active' : ''} onClick={() => set('useECM', false)}>Pay the FBT</button>
               </div>
-              <p className="offset-note">
+              <p className="offset-note" id={`${uid}-fbt-help`}>
                 A post-tax contribution equal to the taxable value reduces FBT to nil — it must be paid before
                 31 March. You cannot pay full FBT <em>and</em> claim the contribution reduction; the choice here is
                 genuinely one or the other.
               </p>
             </div>
             <div className="field">
-              <label>Residual value at end of term</label>
+              <label id={`${uid}-residual-label`}>Residual value at end of term</label>
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 4 }}>
                 <button
+                  type="button"
+                  aria-expanded={showResidualOverride}
+                  aria-controls={`${uid}-residual`}
                   onClick={() => { setShowResidualOverride(!showResidualOverride); if (showResidualOverride) set('residualOverride', null); }}
                   style={{ fontSize: '0.72rem', color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
                   {showResidualOverride
@@ -291,10 +295,10 @@ export default function NovatedLeaseInstance({ instanceKey = '', label, onRemove
               {showResidualOverride && (
                 <div className="input-wrap has-prefix">
                   <span className="input-prefix">$</span>
-                  <input type="number" value={inputs.residualOverride ?? Math.round(result.residual.minimumExGst)} onChange={e => set('residualOverride', parseFloat(e.target.value) || 0)} min="0" step="1000" />
+                  <input id={`${uid}-residual`} inputMode="decimal" aria-labelledby={`${uid}-residual-label`} aria-describedby={`${uid}-residual-help`} type="number" value={inputs.residualOverride ?? Math.round(result.residual.minimumExGst)} onChange={e => set('residualOverride', parseFloat(e.target.value) || 0)} min="0" step="1000" />
                 </div>
               )}
-              <p className="offset-note">
+              <p className="offset-note" id={`${uid}-residual-help`}>
                 A <strong>minimum</strong>, not a fixed figure — the ATO allows a lower percentage for high-kilometre
                 drivers. GST is added on payout, so you will actually hand over {fmt(result.residual.includingGst)}.
               </p>
@@ -304,42 +308,42 @@ export default function NovatedLeaseInstance({ instanceKey = '', label, onRemove
           <div className="panel-section">
             <div className="section-title">Your salary</div>
             <div className="field">
-              <label>Gross annual salary</label>
+              <label htmlFor={`${uid}-gross-salary`}>Gross annual salary</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.grossSalary || ''} onChange={setNum('grossSalary')} min="0" step="1000" />
+                <input id={`${uid}-gross-salary`} inputMode="decimal" type="number" value={inputs.grossSalary || ''} onChange={setNum('grossSalary')} min="0" step="1000" />
               </div>
             </div>
             <div className="field">
-              <label>Employer SG rate</label>
+              <label htmlFor={`${uid}-sg-rate`}>Employer SG rate</label>
               <div className="input-wrap has-suffix">
-                <input type="number" value={inputs.sgRate || ''} onChange={setNum('sgRate')} min="0" max="20" step="0.5" />
+                <input id={`${uid}-sg-rate`} inputMode="decimal" type="number" value={inputs.sgRate || ''} onChange={setNum('sgRate')} min="0" max="20" step="0.5" />
                 <span className="input-suffix">%</span>
               </div>
             </div>
             <div className="field">
-              <label>Is super calculated on your salary before packaging?</label>
-              <div className="segmented">
-                <button className={inputs.sgOnPrePackagedSalary ? 'active' : ''} onClick={() => set('sgOnPrePackagedSalary', true)}>Yes — full salary</button>
-                <button className={!inputs.sgOnPrePackagedSalary ? 'active' : ''} onClick={() => set('sgOnPrePackagedSalary', false)}>No — reduced salary</button>
+              <label id={`${uid}-sg-basis-label`}>Is super calculated on your salary before packaging?</label>
+              <div className="segmented" role="radiogroup" aria-labelledby={`${uid}-sg-basis-label`} aria-describedby={`${uid}-sg-basis-help`}>
+                <button type="button" role="radio" aria-checked={inputs.sgOnPrePackagedSalary} className={inputs.sgOnPrePackagedSalary ? 'active' : ''} onClick={() => set('sgOnPrePackagedSalary', true)}>Yes — full salary</button>
+                <button type="button" role="radio" aria-checked={!inputs.sgOnPrePackagedSalary} className={!inputs.sgOnPrePackagedSalary ? 'active' : ''} onClick={() => set('sgOnPrePackagedSalary', false)}>No — reduced salary</button>
               </div>
-              <p className="offset-note">
+              <p className="offset-note" id={`${uid}-sg-basis-help`}>
                 Worth asking. Packaging on the reduced salary costs {fmt(result.superReduction)} of super a year here,
                 and that is a real cost the headline saving never shows.
               </p>
             </div>
             <div className="field">
-              <label>HELP / HECS balance</label>
+              <label htmlFor={`${uid}-help-balance`}>HELP / HECS balance</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.helpBalance || ''} onChange={setNum('helpBalance')} min="0" step="1000" placeholder="0" />
+                <input id={`${uid}-help-balance`} inputMode="decimal" type="number" value={inputs.helpBalance || ''} onChange={setNum('helpBalance')} min="0" step="1000" placeholder="0" />
               </div>
             </div>
             <div className="field">
-              <label>Private hospital cover</label>
-              <div className="segmented">
-                <button className={inputs.hasPrivateCover ? 'active' : ''} onClick={() => set('hasPrivateCover', true)}>Yes</button>
-                <button className={!inputs.hasPrivateCover ? 'active' : ''} onClick={() => set('hasPrivateCover', false)}>No</button>
+              <label id={`${uid}-private-cover-label`}>Private hospital cover</label>
+              <div className="segmented" role="radiogroup" aria-labelledby={`${uid}-private-cover-label`}>
+                <button type="button" role="radio" aria-checked={inputs.hasPrivateCover} className={inputs.hasPrivateCover ? 'active' : ''} onClick={() => set('hasPrivateCover', true)}>Yes</button>
+                <button type="button" role="radio" aria-checked={!inputs.hasPrivateCover} className={!inputs.hasPrivateCover ? 'active' : ''} onClick={() => set('hasPrivateCover', false)}>No</button>
               </div>
             </div>
           </div>
@@ -347,19 +351,19 @@ export default function NovatedLeaseInstance({ instanceKey = '', label, onRemove
           <div className="panel-section">
             <div className="section-title">If you bought it outright instead</div>
             <div className="field">
-              <label>Would you finance the purchase?</label>
-              <div className="segmented">
-                <button className={inputs.outrightFinanced ? 'active' : ''} onClick={() => set('outrightFinanced', true)}>Car loan</button>
-                <button className={!inputs.outrightFinanced ? 'active' : ''} onClick={() => set('outrightFinanced', false)}>Pay cash</button>
+              <label id={`${uid}-outright-finance-label`}>Would you finance the purchase?</label>
+              <div className="segmented" role="radiogroup" aria-labelledby={`${uid}-outright-finance-label`}>
+                <button type="button" role="radio" aria-checked={inputs.outrightFinanced} className={inputs.outrightFinanced ? 'active' : ''} onClick={() => set('outrightFinanced', true)}>Car loan</button>
+                <button type="button" role="radio" aria-checked={!inputs.outrightFinanced} className={!inputs.outrightFinanced ? 'active' : ''} onClick={() => set('outrightFinanced', false)}>Pay cash</button>
               </div>
             </div>
             <div className="field">
-              <label>Work-related kilometres a year</label>
+              <label htmlFor={`${uid}-work-kms`}>Work-related kilometres a year</label>
               <div className="input-wrap has-suffix">
-                <input type="number" value={inputs.workRelatedKms || ''} onChange={setNum('workRelatedKms')} min="0" step="500" placeholder="0" />
+                <input id={`${uid}-work-kms`} inputMode="decimal" aria-describedby={`${uid}-work-kms-help`} type="number" value={inputs.workRelatedKms || ''} onChange={setNum('workRelatedKms')} min="0" step="500" placeholder="0" />
                 <span className="input-suffix">km</span>
               </div>
-              <p className="offset-note">
+              <p className="offset-note" id={`${uid}-work-kms-help`}>
                 <strong>Not your odometer.</strong> The {(result.centsPerKmRate * 100).toFixed(0)}c/km method covers
                 work travel only — driving between jobs or to a client. Home to work is private and does not count,
                 so for most people this is zero. Capped at {result.centsPerKmCapKm.toLocaleString('en-AU')} km, or{' '}
@@ -383,8 +387,8 @@ export default function NovatedLeaseInstance({ instanceKey = '', label, onRemove
           </div>
 
           <div className="savings-card">
-            <div className="savings-label">Annual tax saving, net of the reportable amount</div>
-            <div className="savings-amount">{fmt(result.annualTaxSaving)}</div>
+            <div className="savings-label" id={`${uid}-headline-label`}>Annual tax saving, net of the reportable amount</div>
+            <div className="savings-amount" aria-live="polite" aria-atomic="true" aria-labelledby={`${uid}-headline-label`}>{fmt(result.annualTaxSaving)}</div>
             <div className="savings-sub">
               From a pre-tax deduction of {fmt(result.preTaxDeduction)}
               {result.postTaxDeduction > 0 && <> plus {fmt(result.postTaxDeduction)} post-tax</>} at
@@ -463,6 +467,7 @@ export default function NovatedLeaseInstance({ instanceKey = '', label, onRemove
 
           <div className="chart-card">
             <div className="chart-title">Novated lease vs. buying the same car — cash out of pocket each year</div>
+            <div role="img" aria-label={`Grouped bar chart comparing cash out of pocket each year over ${result.termYears} year${result.termYears === 1 ? '' : 's'}: ${fmt(result.novatedTotalCost)} total novated against ${fmt(result.outrightTotalCost)} buying outright, so ${result.advantage >= 0 ? 'novating' : 'buying'} is ahead by ${fmt(Math.abs(result.advantage))}.`}>
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={result.chartData} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={chartGrid} vertical={false} />
@@ -474,6 +479,22 @@ export default function NovatedLeaseInstance({ instanceKey = '', label, onRemove
                 <Bar dataKey="Buy outright (net)" fill={chartRed} radius={[3, 3, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
+            </div>
+            <table className="visually-hidden">
+              <caption>Novated lease vs. buying the same car — cash out of pocket each year</caption>
+              <thead>
+                <tr><th scope="col">Year</th><th scope="col">Novated (net)</th><th scope="col">Buy outright (net)</th></tr>
+              </thead>
+              <tbody>
+                {result.chartData.map((d) => (
+                  <tr key={d.year}>
+                    <th scope="row">{d.year}</th>
+                    <td>{fmt(d['Novated (net)'])}</td>
+                    <td>{fmt(d['Buy outright (net)'])}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
             <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', padding: '0 4px' }}>
               The final novated year includes the {fmt(result.residualIncludingGst)} residual payout.{' '}
               {result.outrightFinanced
@@ -500,13 +521,25 @@ export default function NovatedLeaseInstance({ instanceKey = '', label, onRemove
           </div>
 
           <div className="schedule-card">
-            <div className="schedule-header" onClick={() => setShowExit((v) => !v)}>
+            <div
+              className="schedule-header"
+              role="button"
+              tabIndex={0}
+              aria-expanded={showExit}
+              aria-controls={`${uid}-exit-schedule`}
+              onClick={() => setShowExit((v) => !v)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+                  e.preventDefault();
+                  setShowExit((v) => !v);
+                }
+              }}>
               <span className="schedule-title">If you leave your employer — what you would owe</span>
               <span className="schedule-toggle">{showExit ? '▲ Hide' : '▼ Show'}</span>
             </div>
             {showExit && (
               <>
-                <div style={{ overflowX: 'auto' }}>
+                <div style={{ overflowX: 'auto' }} id={`${uid}-exit-schedule`}>
                   <table className="schedule-table">
                     <thead>
                       <tr>

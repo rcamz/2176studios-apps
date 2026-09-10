@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useId } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Cell,
@@ -108,6 +108,7 @@ export default function PayTaxInstance({
   instanceKey = '', label, onRemove, theme = 'light', isComparison = false,
   seed = null, onStateChange = null,
 }) {
+  const uid = useId();
   const [inputs, setInputs] = useState(() => {
     if (seed) return { ...seed };
     return instanceKey === ''
@@ -201,6 +202,32 @@ export default function PayTaxInstance({
     return entries;
   })();
 
+  // Text alternative for the waterfall. Exactly the numbers the chart plots —
+  // the segments of the first bar named individually, then each reduction, then
+  // net. The "kind" column is the non-colour cue for what the fills encode.
+  const wfPackage  = wfBase + wfBonus + wfSuper;
+  const wfTaxTotal = wfTax + wfMedicare + wfMLS + wfHECS;
+  const chartRows = [
+    { key: 'base', label: 'Base pay', kind: 'Income', value: wfBase },
+    ...(wfBonus > 0 ? [{ key: 'bonus', label: 'Bonus / commission', kind: 'Income', value: wfBonus }] : []),
+    ...(wfSuper > 0 ? [{ key: 'super', label: 'Employer super', kind: 'Income', value: wfSuper }] : []),
+    { key: 'package', label: 'Total package', kind: 'Subtotal', value: wfPackage },
+    ...(wfSuper > 0 ? [{ key: 'superout', label: 'Super paid to the fund', kind: 'Deduction', value: -wfSuper }] : []),
+    ...(wfTax > 0 ? [{ key: 'tax', label: 'Income tax', kind: 'Deduction', value: -wfTax }] : []),
+    ...(wfMedicare > 0 ? [{ key: 'medicare', label: 'Medicare levy', kind: 'Deduction', value: -wfMedicare }] : []),
+    ...(wfMLS > 0 ? [{ key: 'mls', label: 'Medicare levy surcharge', kind: 'Deduction', value: -wfMLS }] : []),
+    ...(wfHECS > 0 ? [{ key: 'hecs', label: 'HECS/HELP repayment', kind: 'Deduction', value: -wfHECS }] : []),
+    { key: 'net', label: 'Net pay', kind: 'Take-home', value: wfNet },
+  ];
+  const chartAlt =
+    `Income waterfall, ${FREQ_LABELS[inputs.freq].toLowerCase()}. Total package ${fmt(wfPackage)}`
+    + `, made up of base pay ${fmt(wfBase)}`
+    + (wfBonus > 0 ? `, bonus ${fmt(wfBonus)}` : '')
+    + (wfSuper > 0 ? `, employer super ${fmt(wfSuper)}` : '')
+    + `. Less `
+    + (wfSuper > 0 ? `super of ${fmt(wfSuper)} paid to the fund and ` : '')
+    + `tax and levies of ${fmt(wfTaxTotal)}, leaving net pay of ${fmt(wfNet)}.`;
+
   const entryFreqLabel = FREQ_LABELS[inputs.entryFreq].toLowerCase();
   const isNet = inputs.entryType === 'net';
   const derivedGrossNote = isNet ? `≈ ${fmt(annualGross)} gross / year` : null;
@@ -238,17 +265,20 @@ export default function PayTaxInstance({
 
             {YEARS.length > 1 && (
               <div className="field">
-                <label>Financial year</label>
-                <div className="segmented">
+                <label id={`${uid}-fy-label`}>Financial year</label>
+                <div className="segmented" role="radiogroup"
+                  aria-labelledby={`${uid}-fy-label`}
+                  aria-describedby={inputs.financialYear !== CURRENT_FY ? `${uid}-fy-note` : undefined}>
                   {YEARS.map((y) => (
                     <button key={y} className={inputs.financialYear === y ? 'active' : ''}
+                      role="radio" aria-checked={inputs.financialYear === y}
                       onClick={() => set('financialYear', y)}>
                       {y}
                     </button>
                   ))}
                 </div>
                 {inputs.financialYear !== CURRENT_FY && (
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                  <div id={`${uid}-fy-note`} style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
                     Showing a future year. The second tax bracket drops to 14% on 1 July 2027.
                   </div>
                 )}
@@ -256,28 +286,31 @@ export default function PayTaxInstance({
             )}
 
             <div className="field">
-              <label>Pay period</label>
-              <div className="segmented">
+              <label id={`${uid}-payperiod-label`}>Pay period</label>
+              <div className="segmented" role="radiogroup" aria-labelledby={`${uid}-payperiod-label`}>
                 {[['weekly','Weekly'],['fortnightly','Fortnight'],['monthly','Monthly'],['annual','Annual']].map(([v,l]) => (
-                  <button key={v} className={inputs.entryFreq === v ? 'active' : ''} onClick={() => set('entryFreq', v)}>{l}</button>
+                  <button key={v} className={inputs.entryFreq === v ? 'active' : ''} role="radio" aria-checked={inputs.entryFreq === v} onClick={() => set('entryFreq', v)}>{l}</button>
                 ))}
               </div>
             </div>
 
             <div className="field">
-              <label>Enter as</label>
-              <div className="segmented">
-                <button className={!isNet ? 'active' : ''} onClick={() => set('entryType', 'gross')}>Gross</button>
-                <button className={isNet ? 'active' : ''} onClick={() => set('entryType', 'net')}>Net (take-home)</button>
+              <label id={`${uid}-entrytype-label`}>Enter as</label>
+              <div className="segmented" role="radiogroup" aria-labelledby={`${uid}-entrytype-label`}>
+                <button className={!isNet ? 'active' : ''} role="radio" aria-checked={!isNet} onClick={() => set('entryType', 'gross')}>Gross</button>
+                <button className={isNet ? 'active' : ''} role="radio" aria-checked={isNet} onClick={() => set('entryType', 'net')}>Net (take-home)</button>
               </div>
             </div>
 
             <div className="field">
-              <label>{FREQ_LABELS[inputs.entryFreq]} {isNet ? 'net take-home' : 'gross income'}</label>
+              <label htmlFor={`${uid}-income`}>{FREQ_LABELS[inputs.entryFreq]} {isNet ? 'net take-home' : 'gross income'}</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
                 <input
+                  id={`${uid}-income`}
                   type="number"
+                  inputMode="decimal"
+                  aria-describedby={derivedGrossNote ? `${uid}-income-note` : undefined}
                   value={inputs.incomeAmount || ''}
                   onChange={setNum('incomeAmount')}
                   min="0"
@@ -285,18 +318,20 @@ export default function PayTaxInstance({
                 />
               </div>
               {derivedGrossNote && (
-                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                <div id={`${uid}-income-note`} style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
                   {derivedGrossNote}
                 </div>
               )}
             </div>
 
             <div className="field">
-              <label>Bonus / commission (gross)</label>
+              <label htmlFor={`${uid}-bonus`}>Bonus / commission (gross)</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
                 <input
+                  id={`${uid}-bonus`}
                   type="number"
+                  inputMode="decimal"
                   value={inputs.bonusAmount || ''}
                   onChange={setNum('bonusAmount')}
                   min="0"
@@ -307,13 +342,14 @@ export default function PayTaxInstance({
             </div>
             {(inputs.bonusAmount > 0) && (
               <div className="field">
-                <label>Bonus frequency</label>
-                <div className="segmented">
+                <label id={`${uid}-bonusfreq-label`}>Bonus frequency</label>
+                <div className="segmented" role="radiogroup"
+                  aria-labelledby={`${uid}-bonusfreq-label`} aria-describedby={`${uid}-bonusfreq-note`}>
                   {[['weekly','Weekly'],['fortnightly','Fortnight'],['monthly','Monthly'],['annual','Annual']].map(([v,l]) => (
-                    <button key={v} className={inputs.bonusFreq === v ? 'active' : ''} onClick={() => set('bonusFreq', v)}>{l}</button>
+                    <button key={v} className={inputs.bonusFreq === v ? 'active' : ''} role="radio" aria-checked={inputs.bonusFreq === v} onClick={() => set('bonusFreq', v)}>{l}</button>
                   ))}
                 </div>
-                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                <div id={`${uid}-bonusfreq-note`} style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
                   = {fmt(annualBonus)}/yr gross
                 </div>
               </div>
@@ -324,22 +360,24 @@ export default function PayTaxInstance({
           <div className="panel-section">
             <div className="section-title">Residency &amp; Medicare</div>
             <div className="field">
-              <label>Residency status</label>
-              <select className="field-select" value={inputs.residency} onChange={e => set('residency', e.target.value)}>
+              <label htmlFor={`${uid}-residency`}>Residency status</label>
+              <select id={`${uid}-residency`} className="field-select" value={inputs.residency} onChange={e => set('residency', e.target.value)}>
                 <option value="resident">Australian resident</option>
                 <option value="foreign">Foreign resident</option>
                 <option value="holiday">Working Holiday Maker</option>
               </select>
             </div>
             <div className="field">
-              <label>Private hospital cover</label>
-              <div className="segmented">
-                <button className={inputs.hasPrivateCover ? 'active' : ''} onClick={() => set('hasPrivateCover', true)}>Yes</button>
-                <button className={!inputs.hasPrivateCover ? 'active' : ''} onClick={() => set('hasPrivateCover', false)}>No</button>
+              <label id={`${uid}-cover-label`}>Private hospital cover</label>
+              <div className="segmented" role="radiogroup"
+                aria-labelledby={`${uid}-cover-label`}
+                aria-describedby={!inputs.hasPrivateCover ? `${uid}-cover-note` : undefined}>
+                <button className={inputs.hasPrivateCover ? 'active' : ''} role="radio" aria-checked={inputs.hasPrivateCover} onClick={() => set('hasPrivateCover', true)}>Yes</button>
+                <button className={!inputs.hasPrivateCover ? 'active' : ''} role="radio" aria-checked={!inputs.hasPrivateCover} onClick={() => set('hasPrivateCover', false)}>No</button>
               </div>
             </div>
             {!inputs.hasPrivateCover && (
-              <p style={{ fontSize: '0.73rem', color: 'var(--text-muted)', marginTop: 4 }}>
+              <p id={`${uid}-cover-note`} style={{ fontSize: '0.73rem', color: 'var(--text-muted)', marginTop: 4 }}>
                 Medicare Levy Surcharge applies if income &gt; $100,000
               </p>
             )}
@@ -348,12 +386,12 @@ export default function PayTaxInstance({
           <div className="panel-section">
             <div className="section-title">Deductions</div>
             <div className="field">
-              <label>Work-related expenses you can substantiate</label>
+              <label htmlFor={`${uid}-workexp`}>Work-related expenses you can substantiate</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.workExpenses || ''} onChange={setNum('workExpenses')} min="0" step="100" placeholder="0" />
+                <input id={`${uid}-workexp`} type="number" inputMode="decimal" aria-describedby={`${uid}-workexp-note`} value={inputs.workExpenses || ''} onChange={setNum('workExpenses')} min="0" step="100" placeholder="0" />
               </div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
+              <div id={`${uid}-workexp-note`} style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
                 {result.usedStandardDeduction
                   ? 'Below the $1,000 standard deduction, so the standard amount is claimed instead — no receipts needed.'
                   : `Above the $1,000 standard deduction, so your substantiated amount is claimed. Total deduction ${fmt(result.deductionClaimed)}.`}
@@ -364,10 +402,10 @@ export default function PayTaxInstance({
           <div className="panel-section">
             <div className="section-title">HECS/HELP</div>
             <div className="field">
-              <label>HECS/HELP debt balance</label>
+              <label htmlFor={`${uid}-hecs`}>HECS/HELP debt balance</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.hecsBalance || ''} onChange={setNum('hecsBalance')} min="0" step="1000" placeholder="0 if none" />
+                <input id={`${uid}-hecs`} type="number" inputMode="decimal" value={inputs.hecsBalance || ''} onChange={setNum('hecsBalance')} min="0" step="1000" placeholder="0 if none" />
               </div>
             </div>
           </div>
@@ -375,17 +413,17 @@ export default function PayTaxInstance({
           <div className="panel-section">
             <div className="section-title">Super &amp; Salary Sacrifice</div>
             <div className="field">
-              <label>Employer SG rate</label>
+              <label htmlFor={`${uid}-sgrate`}>Employer SG rate</label>
               <div className="input-wrap has-suffix">
-                <input type="number" value={inputs.sgRate || ''} onChange={setNum('sgRate')} min="0" max="30" step="0.5" />
+                <input id={`${uid}-sgrate`} type="number" inputMode="decimal" value={inputs.sgRate || ''} onChange={setNum('sgRate')} min="0" max="30" step="0.5" />
                 <span className="input-suffix">%</span>
               </div>
             </div>
             <div className="field">
-              <label>Salary sacrifice to super (pre-tax, annual)</label>
+              <label htmlFor={`${uid}-sacrifice`}>Salary sacrifice to super (pre-tax, annual)</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.salarySacrifice || ''} onChange={setNum('salarySacrifice')} min="0" step="500" placeholder="0" />
+                <input id={`${uid}-sacrifice`} type="number" inputMode="decimal" value={inputs.salarySacrifice || ''} onChange={setNum('salarySacrifice')} min="0" step="500" placeholder="0" />
               </div>
             </div>
             <AdUnit slotId={AD_SLOT_INLINE} format="horizontal" style={{ marginTop: 12 }} />
@@ -394,9 +432,9 @@ export default function PayTaxInstance({
 
         <div className="results-panel">
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
-            <div className="segmented">
+            <div className="segmented" role="radiogroup" aria-label="Show results per">
               {[['annual','Annual'],['monthly','Monthly'],['fortnightly','Fortnight'],['weekly','Weekly']].map(([v,l]) => (
-                <button key={v} className={inputs.freq === v ? 'active' : ''} onClick={() => set('freq', v)}>{l}</button>
+                <button key={v} className={inputs.freq === v ? 'active' : ''} role="radio" aria-checked={inputs.freq === v} onClick={() => set('freq', v)}>{l}</button>
               ))}
             </div>
           </div>
@@ -404,7 +442,7 @@ export default function PayTaxInstance({
             <div className="savings-label">
               {FREQ_LABELS[inputs.freq]} take-home
             </div>
-            <div className="savings-amount">{fv(result.takeHome)}</div>
+            <div className="savings-amount" aria-live="polite" aria-atomic="true">{fv(result.takeHome)}</div>
             <div className="savings-sub">
               {isNet
                 ? `from ${fmt(inputs.incomeAmount)} ${entryFreqLabel} net · ${fmt(annualGross)} gross / year`
@@ -488,6 +526,7 @@ export default function PayTaxInstance({
 
           <div className="chart-card">
             <div className="chart-title">Income waterfall ({FREQ_LABELS[inputs.freq].toLowerCase()})</div>
+            <div role="img" aria-label={chartAlt}>
             <ResponsiveContainer width="100%" height={260}>
               <BarChart data={waterfallData} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={chartGrid} vertical={false} />
@@ -535,6 +574,26 @@ export default function PayTaxInstance({
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
+            </div>
+            <table className="visually-hidden">
+              <caption>Income waterfall ({FREQ_LABELS[inputs.freq].toLowerCase()}) — same figures as the chart</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Segment</th>
+                  <th scope="col">Type</th>
+                  <th scope="col">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {chartRows.map((r) => (
+                  <tr key={r.key}>
+                    <th scope="row">{r.label}</th>
+                    <td>{r.kind}</td>
+                    <td>{r.value < 0 ? `minus ${fmt(Math.abs(r.value))}` : fmt(r.value)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
 
           {inputs.salarySacrifice > 0 && (

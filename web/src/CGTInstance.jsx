@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useId } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Cell,
@@ -125,6 +125,7 @@ function spanLabel(from, to) {
 }
 
 export default function CGTInstance({ instanceKey = '', label, onRemove, theme = 'light', isComparison = false }) {
+  const uid = useId();
   const [inputs, setInputs] = useState(() =>
     instanceKey === '' ? { ...DEFAULTS, ...decodeParams(window.location.search) } : { ...DEFAULTS }
   );
@@ -185,6 +186,14 @@ export default function CGTInstance({ instanceKey = '', label, onRemove, theme =
     { name: 'Net proceeds', value: Math.round(result.afterTaxProceeds), fill: chartAccent },
   ];
 
+  // Text alternative for the breakdown chart — the same series the bars plot.
+  const chartAlt =
+    `Capital gains tax breakdown. Cost base ${fmt(result.costBase)}`
+    + `, gross gain ${fmt(Math.max(0, result.grossGain))}`
+    + (exemptShown ? `, main residence exempt amount ${fmt(result.mainResidenceExemptAmount)}` : '')
+    + `, CGT payable ${fmt(result.cgtPayable)}`
+    + `, net proceeds after tax ${fmt(result.afterTaxProceeds)}.`;
+
   const isLoss = result.isCapitalLoss;
   const holdingStr = spanLabel(inputs.acquisitionDate, inputs.disposalDate);
   const discountLabel = result.discountRate > 0
@@ -219,40 +228,40 @@ export default function CGTInstance({ instanceKey = '', label, onRemove, theme =
           <div className="panel-section">
             <div className="section-title">Asset details</div>
             <div className="field">
-              <label>Asset type</label>
-              <div className="segmented">
+              <label id={`${uid}-assettype-label`}>Asset type</label>
+              <div className="segmented" role="radiogroup" aria-labelledby={`${uid}-assettype-label`}>
                 {[['property','Property'],['shares','Shares'],['crypto','Crypto'],['other','Other']].map(([v,l]) => (
-                  <button key={v} className={inputs.assetType === v ? 'active' : ''} onClick={() => set('assetType', v)}>{l}</button>
+                  <button key={v} className={inputs.assetType === v ? 'active' : ''} role="radio" aria-checked={inputs.assetType === v} onClick={() => set('assetType', v)}>{l}</button>
                 ))}
               </div>
             </div>
             <div className="field">
-              <label>Who owns it</label>
-              <div className="segmented">
+              <label id={`${uid}-entity-label`}>Who owns it</label>
+              <div className="segmented" role="radiogroup" aria-labelledby={`${uid}-entity-label`}>
                 {[['individual','Individual'],['super','Super fund'],['company','Company']].map(([v,l]) => (
-                  <button key={v} className={inputs.entity === v ? 'active' : ''} onClick={() => set('entity', v)}>{l}</button>
+                  <button key={v} className={inputs.entity === v ? 'active' : ''} role="radio" aria-checked={inputs.entity === v} onClick={() => set('entity', v)}>{l}</button>
                 ))}
               </div>
             </div>
             <div className="field">
-              <label>Purchase price</label>
+              <label htmlFor={`${uid}-purchaseprice`}>Purchase price</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.purchasePrice || ''} onChange={setNum('purchasePrice')} min="0" step="1000" />
+                <input id={`${uid}-purchaseprice`} type="number" inputMode="decimal" value={inputs.purchasePrice || ''} onChange={setNum('purchasePrice')} min="0" step="1000" />
               </div>
             </div>
             <div className="field">
-              <label>Purchase costs (stamp duty, brokerage, legal)</label>
+              <label htmlFor={`${uid}-purchasecosts`}>Purchase costs (stamp duty, brokerage, legal)</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.purchaseCosts || ''} onChange={setNum('purchaseCosts')} min="0" step="100" />
+                <input id={`${uid}-purchasecosts`} type="number" inputMode="decimal" value={inputs.purchaseCosts || ''} onChange={setNum('purchaseCosts')} min="0" step="100" />
               </div>
             </div>
             <div className="field">
-              <label>Capital improvements</label>
+              <label htmlFor={`${uid}-improvements`}>Capital improvements</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.improvements || ''} onChange={setNum('improvements')} min="0" step="1000" />
+                <input id={`${uid}-improvements`} type="number" inputMode="decimal" value={inputs.improvements || ''} onChange={setNum('improvements')} min="0" step="1000" />
               </div>
             </div>
           </div>
@@ -260,35 +269,35 @@ export default function CGTInstance({ instanceKey = '', label, onRemove, theme =
           <div className="panel-section">
             <div className="section-title">Sale details</div>
             <div className="field">
-              <label>Sale price</label>
+              <label htmlFor={`${uid}-saleprice`}>Sale price</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.salePrice || ''} onChange={setNum('salePrice')} min="0" step="1000" />
+                <input id={`${uid}-saleprice`} type="number" inputMode="decimal" value={inputs.salePrice || ''} onChange={setNum('salePrice')} min="0" step="1000" />
               </div>
             </div>
             <div className="field">
-              <label>Sale costs (agent fees, brokerage)</label>
+              <label htmlFor={`${uid}-salecosts`}>Sale costs (agent fees, brokerage)</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.saleCosts || ''} onChange={setNum('saleCosts')} min="0" step="100" />
+                <input id={`${uid}-salecosts`} type="number" inputMode="decimal" value={inputs.saleCosts || ''} onChange={setNum('saleCosts')} min="0" step="100" />
               </div>
             </div>
           </div>
 
           <div className="panel-section">
             <div className="section-title">Contract dates</div>
-            <p className="offset-note">
+            <p className="offset-note" id={`${uid}-dates-note`}>
               The CGT event is the day you <strong>sign the contract</strong>, not the day it settles. Same on the way in.
               A December contract settling in July is taxed in the earlier financial year, and the 12-month test counts
               neither the acquisition day nor the event day — so exactly one year to the day is 364 days and gets nothing.
             </p>
             <div className="field">
-              <label>Purchase contract date</label>
-              <input type="date" className="field-input" value={inputs.acquisitionDate} onChange={e => set('acquisitionDate', e.target.value)} />
+              <label htmlFor={`${uid}-acqdate`}>Purchase contract date</label>
+              <input id={`${uid}-acqdate`} aria-describedby={`${uid}-dates-note`} type="date" className="field-input" value={inputs.acquisitionDate} onChange={e => set('acquisitionDate', e.target.value)} />
             </div>
             <div className="field">
-              <label>Sale contract date</label>
-              <input type="date" className="field-input" value={inputs.disposalDate} onChange={e => set('disposalDate', e.target.value)} />
+              <label htmlFor={`${uid}-dispdate`}>Sale contract date</label>
+              <input id={`${uid}-dispdate`} aria-describedby={`${uid}-dates-note`} type="date" className="field-input" value={inputs.disposalDate} onChange={e => set('disposalDate', e.target.value)} />
             </div>
           </div>
 
@@ -296,10 +305,10 @@ export default function CGTInstance({ instanceKey = '', label, onRemove, theme =
             <div className="panel-section">
               <div className="section-title">Main residence</div>
               <div className="field">
-                <label>Was this your home?</label>
-                <div className="segmented">
+                <label id={`${uid}-mrstatus-label`}>Was this your home?</label>
+                <div className="segmented" role="radiogroup" aria-labelledby={`${uid}-mrstatus-label`}>
                   {[['never','Never'],['always','Always'],['partial','Part of the time']].map(([v,l]) => (
-                    <button key={v} className={inputs.mainResidenceStatus === v ? 'active' : ''} onClick={() => set('mainResidenceStatus', v)}>{l}</button>
+                    <button key={v} className={inputs.mainResidenceStatus === v ? 'active' : ''} role="radio" aria-checked={inputs.mainResidenceStatus === v} onClick={() => set('mainResidenceStatus', v)}>{l}</button>
                   ))}
                 </div>
               </div>
@@ -312,12 +321,12 @@ export default function CGTInstance({ instanceKey = '', label, onRemove, theme =
                     date blank if you still live there.
                   </p>
                   {inputs.residencePeriods.length > 0 && (
-                    <div className="lump-list">
+                    <div className="lump-list" role="group" aria-label="Periods you lived in the property">
                       {inputs.residencePeriods.map((p, i) => (
                         <div key={i} className="lump-row">
-                          <input type="date" value={p.from || ''} onChange={(e) => updatePeriod(i, 'from', e.target.value)} />
-                          <input type="date" value={p.to || ''} onChange={(e) => updatePeriod(i, 'to', e.target.value)} />
-                          <button onClick={() => removePeriod(i)} title="Remove period">×</button>
+                          <input type="date" aria-label={`Period ${i + 1} — moved in`} value={p.from || ''} onChange={(e) => updatePeriod(i, 'from', e.target.value)} />
+                          <input type="date" aria-label={`Period ${i + 1} — moved out (blank if you still live there)`} value={p.to || ''} onChange={(e) => updatePeriod(i, 'to', e.target.value)} />
+                          <button onClick={() => removePeriod(i)} title="Remove period" aria-label={`Remove period ${i + 1}`}>×</button>
                         </div>
                       ))}
                     </div>
@@ -325,10 +334,10 @@ export default function CGTInstance({ instanceKey = '', label, onRemove, theme =
                   <button className="add-lump" onClick={addPeriod}>+ Add a period you lived there</button>
 
                   <div className="field" style={{ marginTop: 12 }}>
-                    <label>While you were away, was it rented or otherwise earning income?</label>
-                    <div className="segmented">
-                      <button className={inputs.incomeProducingDuringAbsence ? 'active' : ''} onClick={() => set('incomeProducingDuringAbsence', true)}>Yes — six-year limit</button>
-                      <button className={!inputs.incomeProducingDuringAbsence ? 'active' : ''} onClick={() => set('incomeProducingDuringAbsence', false)}>No — indefinite</button>
+                    <label id={`${uid}-absence-label`}>While you were away, was it rented or otherwise earning income?</label>
+                    <div className="segmented" role="radiogroup" aria-labelledby={`${uid}-absence-label`}>
+                      <button className={inputs.incomeProducingDuringAbsence ? 'active' : ''} role="radio" aria-checked={inputs.incomeProducingDuringAbsence} onClick={() => set('incomeProducingDuringAbsence', true)}>Yes — six-year limit</button>
+                      <button className={!inputs.incomeProducingDuringAbsence ? 'active' : ''} role="radio" aria-checked={!inputs.incomeProducingDuringAbsence} onClick={() => set('incomeProducingDuringAbsence', false)}>No — indefinite</button>
                     </div>
                   </div>
                 </>
@@ -339,38 +348,38 @@ export default function CGTInstance({ instanceKey = '', label, onRemove, theme =
           <div className="panel-section">
             <div className="section-title">Your tax situation</div>
             <div className="field">
-              <label>Gross annual income (excl. this gain)</label>
+              <label htmlFor={`${uid}-grossincome`}>Gross annual income (excl. this gain)</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.grossIncome || ''} onChange={setNum('grossIncome')} min="0" step="1000" />
+                <input id={`${uid}-grossincome`} type="number" inputMode="decimal" value={inputs.grossIncome || ''} onChange={setNum('grossIncome')} min="0" step="1000" />
               </div>
             </div>
             <div className="field">
-              <label>Carry-forward capital losses</label>
+              <label htmlFor={`${uid}-caplosses`}>Carry-forward capital losses</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.capitalLosses || ''} onChange={setNum('capitalLosses')} min="0" step="1000" placeholder="0" />
+                <input id={`${uid}-caplosses`} type="number" inputMode="decimal" value={inputs.capitalLosses || ''} onChange={setNum('capitalLosses')} min="0" step="1000" placeholder="0" />
               </div>
             </div>
             {isIndividual && (
               <>
                 <div className="field">
-                  <label>HELP / HECS balance</label>
+                  <label htmlFor={`${uid}-helpbalance`}>HELP / HECS balance</label>
                   <div className="input-wrap has-prefix">
                     <span className="input-prefix">$</span>
-                    <input type="number" value={inputs.helpBalance || ''} onChange={setNum('helpBalance')} min="0" step="1000" placeholder="0" />
+                    <input id={`${uid}-helpbalance`} type="number" inputMode="decimal" value={inputs.helpBalance || ''} onChange={setNum('helpBalance')} min="0" step="1000" placeholder="0" />
                   </div>
                 </div>
                 <div className="field">
-                  <label>Private hospital cover</label>
-                  <div className="segmented">
-                    <button className={inputs.hasPrivateCover ? 'active' : ''} onClick={() => set('hasPrivateCover', true)}>Yes</button>
-                    <button className={!inputs.hasPrivateCover ? 'active' : ''} onClick={() => set('hasPrivateCover', false)}>No</button>
+                  <label id={`${uid}-cover-label`}>Private hospital cover</label>
+                  <div className="segmented" role="radiogroup" aria-labelledby={`${uid}-cover-label`}>
+                    <button className={inputs.hasPrivateCover ? 'active' : ''} role="radio" aria-checked={inputs.hasPrivateCover} onClick={() => set('hasPrivateCover', true)}>Yes</button>
+                    <button className={!inputs.hasPrivateCover ? 'active' : ''} role="radio" aria-checked={!inputs.hasPrivateCover} onClick={() => set('hasPrivateCover', false)}>No</button>
                   </div>
                 </div>
                 <div className="field">
-                  <label>Residency status when the sale contract is signed</label>
-                  <select className="field-select" value={inputs.residency} onChange={e => set('residency', e.target.value)}>
+                  <label htmlFor={`${uid}-residency`}>Residency status when the sale contract is signed</label>
+                  <select id={`${uid}-residency`} className="field-select" value={inputs.residency} onChange={e => set('residency', e.target.value)}>
                     <option value="resident">Australian resident</option>
                     <option value="foreign">Foreign resident</option>
                     <option value="holiday">Working holiday maker</option>
@@ -386,7 +395,7 @@ export default function CGTInstance({ instanceKey = '', label, onRemove, theme =
           {isLoss ? (
             <div className="savings-card">
               <div className="savings-label">Net capital loss</div>
-              <div className="savings-amount" style={{ color: 'var(--red)' }}>{fmt(Math.abs(result.gainAfterExemption))}</div>
+              <div className="savings-amount" style={{ color: 'var(--red)' }} aria-live="polite" aria-atomic="true">{fmt(Math.abs(result.gainAfterExemption))}</div>
               <div className="savings-sub">
                 No CGT payable. Carry {fmt(result.netCapitalLossCarriedForward)} forward — a capital loss offsets future
                 capital gains only, never salary, and it carries forward indefinitely until it is used.
@@ -409,7 +418,7 @@ export default function CGTInstance({ instanceKey = '', label, onRemove, theme =
           ) : (
             <div className="savings-card">
               <div className="savings-label">CGT payable</div>
-              <div className="savings-amount">{fmt(result.cgtPayable)}</div>
+              <div className="savings-amount" aria-live="polite" aria-atomic="true">{fmt(result.cgtPayable)}</div>
               <div className="savings-sub">
                 {result.grossGain > 0
                   ? <>Effective rate {fmtPct(result.effectiveCGTRate)} on a gross gain of {fmt(result.grossGain)}. Includes the Medicare levy the gain attracts.</>
@@ -532,6 +541,7 @@ export default function CGTInstance({ instanceKey = '', label, onRemove, theme =
           {!isLoss && (
             <div className="chart-card">
               <div className="chart-title">CGT breakdown</div>
+              <div role="img" aria-label={chartAlt}>
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={chartData} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={chartGrid} vertical={false} />
@@ -543,6 +553,24 @@ export default function CGTInstance({ instanceKey = '', label, onRemove, theme =
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
+              </div>
+              <table className="visually-hidden">
+                <caption>CGT breakdown — same figures as the chart</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Component</th>
+                    <th scope="col">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {chartData.map((d) => (
+                    <tr key={d.name}>
+                      <th scope="row">{d.name}</th>
+                      <td>{fmt(d.value)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
 

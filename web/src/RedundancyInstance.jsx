@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useId } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Cell,
@@ -91,6 +91,7 @@ function decodeParams(search) {
 }
 
 export default function RedundancyInstance({ instanceKey = '', label, onRemove, theme = 'light', isComparison = false }) {
+  const uid = useId();
   const [inputs, setInputs] = useState(() =>
     instanceKey === '' ? { ...DEFAULTS, ...decodeParams(window.location.search) } : { ...DEFAULTS }
   );
@@ -160,6 +161,32 @@ export default function RedundancyInstance({ instanceKey = '', label, onRemove, 
     return entries;
   }, [result, colorEtp, colorLeave, colorNotice, colorRed, colorNet]);
 
+  // Text alternative for the waterfall — the same figures the bars plot. The
+  // "type" column is the non-colour cue for what each fill encodes.
+  const altEtp       = Math.round(result.etpGross);
+  const altLeave     = Math.round(result.annualLeavePay + result.lslPay);
+  const altNotice    = Math.round(result.noticePay);
+  const altGross     = altEtp + altLeave + altNotice;
+  const altNet       = Math.round(result.netTakeHome);
+  const altEtpTax    = Math.round(result.etpTax);
+  const altLeaveTax  = Math.round(result.annualLeaveTax + result.lslTax);
+  const altNoticeTax = Math.round(result.noticeTax);
+  const chartRows = [
+    { key: 'etp', label: 'Redundancy pay and ETP', kind: 'Payment', value: altEtp },
+    ...(altLeave > 0 ? [{ key: 'leave', label: 'Leave payout (annual and long service)', kind: 'Payment', value: altLeave }] : []),
+    ...(altNotice > 0 ? [{ key: 'notice', label: 'Notice pay', kind: 'Payment', value: altNotice }] : []),
+    { key: 'gross', label: 'Total payout', kind: 'Subtotal', value: altGross },
+    ...(altEtpTax > 0 ? [{ key: 'etptax', label: 'ETP tax', kind: 'Deduction', value: -altEtpTax }] : []),
+    ...(altLeaveTax > 0 ? [{ key: 'leavetax', label: 'Leave tax', kind: 'Deduction', value: -altLeaveTax }] : []),
+    ...(altNoticeTax > 0 ? [{ key: 'noticetax', label: 'Notice tax', kind: 'Deduction', value: -altNoticeTax }] : []),
+    { key: 'net', label: 'Net take-home', kind: 'Take-home', value: altNet },
+  ];
+  const chartAlt =
+    `Payout waterfall. Total payout ${fmt(altGross)}, made up of redundancy pay and ETP ${fmt(altEtp)}`
+    + (altLeave > 0 ? `, leave payout ${fmt(altLeave)}` : '')
+    + (altNotice > 0 ? `, notice pay ${fmt(altNotice)}` : '')
+    + `. Less tax of ${fmt(altEtpTax + altLeaveTax + altNoticeTax)}, leaving net take-home of ${fmt(altNet)}.`;
+
   return (
     <div className="calc-instance">
       {isComparison && (
@@ -186,51 +213,51 @@ export default function RedundancyInstance({ instanceKey = '', label, onRemove, 
           <div className="panel-section">
             <div className="section-title">Employment details</div>
             <div className="field">
-              <label>Weekly base rate of pay</label>
+              <label htmlFor={`${uid}-baserate`}>Weekly base rate of pay</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.weeklyBaseRate || ''} onChange={setNum('weeklyBaseRate')} min="0" step="50" />
+                <input id={`${uid}-baserate`} type="number" inputMode="decimal" aria-describedby={`${uid}-baserate-note`} value={inputs.weeklyBaseRate || ''} onChange={setNum('weeklyBaseRate')} min="0" step="50" />
               </div>
-              <div className="offset-note" style={{ marginTop: 4, marginBottom: 0 }}>
+              <div className="offset-note" id={`${uid}-baserate-note`} style={{ marginTop: 4, marginBottom: 0 }}>
                 Ordinary hours only — excludes overtime, penalties, allowances, loadings and bonuses. Redundancy pay and leave are paid at this rate.
               </div>
             </div>
             <div className="field">
-              <label>Weekly full rate of pay (for notice)</label>
+              <label htmlFor={`${uid}-fullrate`}>Weekly full rate of pay (for notice)</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.weeklyFullRate || ''} onChange={setNum('weeklyFullRate')} min="0" step="50" />
+                <input id={`${uid}-fullrate`} type="number" inputMode="decimal" aria-describedby={`${uid}-fullrate-note`} value={inputs.weeklyFullRate || ''} onChange={setNum('weeklyFullRate')} min="0" step="50" />
               </div>
-              <div className="offset-note" style={{ marginTop: 4, marginBottom: 0 }}>
+              <div className="offset-note" id={`${uid}-fullrate-note`} style={{ marginTop: 4, marginBottom: 0 }}>
                 Includes overtime, penalties, allowances, loadings and bonuses. Payment in lieu of notice uses this rate.
               </div>
             </div>
             <div className="field">
-              <label>Other taxable income this year (for tax rates)</label>
+              <label htmlFor={`${uid}-otherincome`}>Other taxable income this year (for tax rates)</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.grossAnnualIncome || ''} onChange={setNum('grossAnnualIncome')} min="0" step="1000" />
+                <input id={`${uid}-otherincome`} type="number" inputMode="decimal" value={inputs.grossAnnualIncome || ''} onChange={setNum('grossAnnualIncome')} min="0" step="1000" />
               </div>
             </div>
             <div className="field">
-              <label>Years of continuous service</label>
+              <label htmlFor={`${uid}-yearsservice`}>Years of continuous service</label>
               <div className="input-wrap has-suffix">
-                <input type="number" value={inputs.yearsService || ''} onChange={setNum('yearsService')} min="0" max="50" step="0.25" />
+                <input id={`${uid}-yearsservice`} type="number" inputMode="decimal" value={inputs.yearsService || ''} onChange={setNum('yearsService')} min="0" max="50" step="0.25" />
                 <span className="input-suffix">yrs</span>
               </div>
             </div>
             <div className="field">
-              <label>Age at termination</label>
+              <label htmlFor={`${uid}-age`}>Age at termination</label>
               <div className="input-wrap has-suffix">
-                <input type="number" value={inputs.age || ''} onChange={setNum('age')} min="16" max="80" step="1" />
+                <input id={`${uid}-age`} type="number" inputMode="numeric" value={inputs.age || ''} onChange={setNum('age')} min="16" max="80" step="1" />
                 <span className="input-suffix">yrs</span>
               </div>
             </div>
             <div className="field">
-              <label>Employment basis</label>
-              <div className="segmented">
+              <label id={`${uid}-basis-label`}>Employment basis</label>
+              <div className="segmented" role="radiogroup" aria-labelledby={`${uid}-basis-label`}>
                 {[['permanent','Permanent'],['fixedTerm','Fixed term'],['casual','Casual'],['apprentice','Apprentice']].map(([v,l]) => (
-                  <button key={v} className={inputs.employmentBasis === v ? 'active' : ''} onClick={() => set('employmentBasis', v)}>{l}</button>
+                  <button key={v} className={inputs.employmentBasis === v ? 'active' : ''} role="radio" aria-checked={inputs.employmentBasis === v} onClick={() => set('employmentBasis', v)}>{l}</button>
                 ))}
               </div>
             </div>
@@ -239,29 +266,29 @@ export default function RedundancyInstance({ instanceKey = '', label, onRemove, 
           <div className="panel-section">
             <div className="section-title">Employer size</div>
             <div className="field">
-              <label>Small business employer (under 15 employees)</label>
-              <div className="segmented">
-                <button className={inputs.smallBusinessEmployer ? 'active' : ''} onClick={() => set('smallBusinessEmployer', true)}>Yes</button>
-                <button className={!inputs.smallBusinessEmployer ? 'active' : ''} onClick={() => set('smallBusinessEmployer', false)}>No</button>
+              <label id={`${uid}-smallbiz-label`}>Small business employer (under 15 employees)</label>
+              <div className="segmented" role="radiogroup" aria-labelledby={`${uid}-smallbiz-label`}>
+                <button className={inputs.smallBusinessEmployer ? 'active' : ''} role="radio" aria-checked={inputs.smallBusinessEmployer} onClick={() => set('smallBusinessEmployer', true)}>Yes</button>
+                <button className={!inputs.smallBusinessEmployer ? 'active' : ''} role="radio" aria-checked={!inputs.smallBusinessEmployer} onClick={() => set('smallBusinessEmployer', false)}>No</button>
               </div>
             </div>
             {inputs.smallBusinessEmployer && (
               <>
                 <div className="field">
-                  <label>Employees by headcount</label>
+                  <label htmlFor={`${uid}-headcount`}>Employees by headcount</label>
                   <div className="input-wrap has-suffix">
-                    <input type="number" value={inputs.employeeHeadcount || ''} onChange={setNum('employeeHeadcount')} min="1" max="500" step="1" />
+                    <input id={`${uid}-headcount`} type="number" inputMode="numeric" aria-describedby={`${uid}-headcount-note`} value={inputs.employeeHeadcount || ''} onChange={setNum('employeeHeadcount')} min="1" max="500" step="1" />
                     <span className="input-suffix">ppl</span>
                   </div>
-                  <div className="offset-note" style={{ marginTop: 4, marginBottom: 0 }}>
+                  <div className="offset-note" id={`${uid}-headcount-note`} style={{ marginTop: 4, marginBottom: 0 }}>
                     Headcount, not full-time equivalent. Include regular and systematic casuals; associated entities count as one employer.
                   </div>
                 </div>
                 <div className="field">
-                  <label>Employer bankrupt or in liquidation</label>
-                  <div className="segmented">
-                    <button className={inputs.employerInsolvent ? 'active' : ''} onClick={() => set('employerInsolvent', true)}>Yes</button>
-                    <button className={!inputs.employerInsolvent ? 'active' : ''} onClick={() => set('employerInsolvent', false)}>No</button>
+                  <label id={`${uid}-insolvent-label`}>Employer bankrupt or in liquidation</label>
+                  <div className="segmented" role="radiogroup" aria-labelledby={`${uid}-insolvent-label`}>
+                    <button className={inputs.employerInsolvent ? 'active' : ''} role="radio" aria-checked={inputs.employerInsolvent} onClick={() => set('employerInsolvent', true)}>Yes</button>
+                    <button className={!inputs.employerInsolvent ? 'active' : ''} role="radio" aria-checked={!inputs.employerInsolvent} onClick={() => set('employerInsolvent', false)}>No</button>
                   </div>
                 </div>
               </>
@@ -269,9 +296,9 @@ export default function RedundancyInstance({ instanceKey = '', label, onRemove, 
           </div>
 
           <div className="panel-section">
-            <div className="section-title">Termination reason</div>
+            <div className="section-title" id={`${uid}-reason-label`}>Termination reason</div>
             <div className="field">
-              <select className="field-select" value={inputs.terminationReason} onChange={e => set('terminationReason', e.target.value)}>
+              <select className="field-select" aria-labelledby={`${uid}-reason-label`} value={inputs.terminationReason} onChange={e => set('terminationReason', e.target.value)}>
                 <option value="redundancy">Genuine redundancy (NES applies)</option>
                 <option value="resignation">Resignation</option>
                 <option value="dismissal">Dismissal</option>
@@ -280,10 +307,10 @@ export default function RedundancyInstance({ instanceKey = '', label, onRemove, 
             </div>
             {inputs.terminationReason === 'dismissal' && (
               <div className="field">
-                <label>Dismissed for serious misconduct</label>
-                <div className="segmented">
-                  <button className={inputs.seriousMisconduct ? 'active' : ''} onClick={() => set('seriousMisconduct', true)}>Yes</button>
-                  <button className={!inputs.seriousMisconduct ? 'active' : ''} onClick={() => set('seriousMisconduct', false)}>No</button>
+                <label id={`${uid}-misconduct-label`}>Dismissed for serious misconduct</label>
+                <div className="segmented" role="radiogroup" aria-labelledby={`${uid}-misconduct-label`}>
+                  <button className={inputs.seriousMisconduct ? 'active' : ''} role="radio" aria-checked={inputs.seriousMisconduct} onClick={() => set('seriousMisconduct', true)}>Yes</button>
+                  <button className={!inputs.seriousMisconduct ? 'active' : ''} role="radio" aria-checked={!inputs.seriousMisconduct} onClick={() => set('seriousMisconduct', false)}>No</button>
                 </div>
               </div>
             )}
@@ -292,27 +319,27 @@ export default function RedundancyInstance({ instanceKey = '', label, onRemove, 
           <div className="panel-section">
             <div className="section-title">Leave &amp; notice</div>
             <div className="field">
-              <label>Unused annual leave (days)</label>
+              <label htmlFor={`${uid}-annualleave`}>Unused annual leave (days)</label>
               <div className="input-wrap has-suffix">
-                <input type="number" value={inputs.unusedAnnualLeaveDays || ''} onChange={setNum('unusedAnnualLeaveDays')} min="0" step="1" />
+                <input id={`${uid}-annualleave`} type="number" inputMode="decimal" value={inputs.unusedAnnualLeaveDays || ''} onChange={setNum('unusedAnnualLeaveDays')} min="0" step="1" />
                 <span className="input-suffix">days</span>
               </div>
             </div>
             <div className="field">
-              <label>Unused long service leave (days)</label>
+              <label htmlFor={`${uid}-lsldays`}>Unused long service leave (days)</label>
               <div className="input-wrap has-suffix">
-                <input type="number" value={inputs.unusedLslDays || ''} onChange={setNum('unusedLslDays')} min="0" step="1" />
+                <input id={`${uid}-lsldays`} type="number" inputMode="decimal" value={inputs.unusedLslDays || ''} onChange={setNum('unusedLslDays')} min="0" step="1" />
                 <span className="input-suffix">days</span>
               </div>
             </div>
             {inputs.unusedLslDays > 0 && (
               <div className="field">
-                <label>LSL accrual periods</label>
-                <div className="segmented">
-                  <button className={!inputs.splitLsl ? 'active' : ''} onClick={() => set('splitLsl', false)}>All post-Aug 1993</button>
-                  <button className={inputs.splitLsl ? 'active' : ''} onClick={() => set('splitLsl', true)}>Split by period</button>
+                <label id={`${uid}-lslsplit-label`}>LSL accrual periods</label>
+                <div className="segmented" role="radiogroup" aria-labelledby={`${uid}-lslsplit-label`} aria-describedby={`${uid}-lslsplit-note`}>
+                  <button className={!inputs.splitLsl ? 'active' : ''} role="radio" aria-checked={!inputs.splitLsl} onClick={() => set('splitLsl', false)}>All post-Aug 1993</button>
+                  <button className={inputs.splitLsl ? 'active' : ''} role="radio" aria-checked={inputs.splitLsl} onClick={() => set('splitLsl', true)}>Split by period</button>
                 </div>
-                <div className="offset-note" style={{ marginTop: 4, marginBottom: 0 }}>
+                <div className="offset-note" id={`${uid}-lslsplit-note`} style={{ marginTop: 4, marginBottom: 0 }}>
                   Apportion by days, not dollars. Leave already taken counts against the period it was used in.
                 </div>
               </div>
@@ -320,36 +347,36 @@ export default function RedundancyInstance({ instanceKey = '', label, onRemove, 
             {inputs.unusedLslDays > 0 && inputs.splitLsl && (
               <>
                 <div className="field">
-                  <label>Accrued before 16 Aug 1978 (days)</label>
+                  <label htmlFor={`${uid}-lslpre1978`}>Accrued before 16 Aug 1978 (days)</label>
                   <div className="input-wrap has-suffix">
-                    <input type="number" value={inputs.lslPre1978Days || ''} onChange={setNum('lslPre1978Days')} min="0" step="1" />
+                    <input id={`${uid}-lslpre1978`} type="number" inputMode="decimal" value={inputs.lslPre1978Days || ''} onChange={setNum('lslPre1978Days')} min="0" step="1" />
                     <span className="input-suffix">days</span>
                   </div>
                 </div>
                 <div className="field">
-                  <label>Accrued 16 Aug 1978 – 17 Aug 1993 (days)</label>
+                  <label htmlFor={`${uid}-lsl1978to1993`}>Accrued 16 Aug 1978 – 17 Aug 1993 (days)</label>
                   <div className="input-wrap has-suffix">
-                    <input type="number" value={inputs.lsl1978to1993Days || ''} onChange={setNum('lsl1978to1993Days')} min="0" step="1" />
+                    <input id={`${uid}-lsl1978to1993`} type="number" inputMode="decimal" aria-describedby={`${uid}-lslremainder-note`} value={inputs.lsl1978to1993Days || ''} onChange={setNum('lsl1978to1993Days')} min="0" step="1" />
                     <span className="input-suffix">days</span>
                   </div>
                 </div>
-                <div className="offset-note">
+                <div className="offset-note" id={`${uid}-lslremainder-note`}>
                   Remaining {Math.round((result.lslPost1993 / (result.baseRate / 5 || 1)))} days treated as post-17 Aug 1993 accrual.
                 </div>
               </>
             )}
             <div className="field">
-              <label>Notice paid in lieu (weeks)</label>
+              <label htmlFor={`${uid}-noticeweeks`}>Notice paid in lieu (weeks)</label>
               <div className="input-wrap has-suffix">
-                <input type="number" value={inputs.noticePaidWeeks || ''} onChange={setNum('noticePaidWeeks')} min="0" step="0.5" />
+                <input id={`${uid}-noticeweeks`} type="number" inputMode="decimal" value={inputs.noticePaidWeeks || ''} onChange={setNum('noticePaidWeeks')} min="0" step="0.5" />
                 <span className="input-suffix">wks</span>
               </div>
             </div>
             <div className="field">
-              <label>Ex gratia / severance on top of the NES</label>
+              <label htmlFor={`${uid}-exgratia`}>Ex gratia / severance on top of the NES</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.otherEtpAmount || ''} onChange={setNum('otherEtpAmount')} min="0" step="1000" placeholder="0 if none" />
+                <input id={`${uid}-exgratia`} type="number" inputMode="decimal" value={inputs.otherEtpAmount || ''} onChange={setNum('otherEtpAmount')} min="0" step="1000" placeholder="0 if none" />
               </div>
             </div>
             <AdUnit slotId={AD_SLOT_INLINE} format="horizontal" style={{ marginTop: 12 }} />
@@ -359,7 +386,7 @@ export default function RedundancyInstance({ instanceKey = '', label, onRemove, 
         <div className="results-panel">
           <div className="savings-card">
             <div className="savings-label">Net take-home</div>
-            <div className="savings-amount">{fmt(result.netTakeHome)}</div>
+            <div className="savings-amount" aria-live="polite" aria-atomic="true">{fmt(result.netTakeHome)}</div>
             <div className="savings-sub">from total payout of {fmt(result.totalGross)}</div>
             <div className="savings-meta">
               <div className="savings-stat">
@@ -444,6 +471,7 @@ export default function RedundancyInstance({ instanceKey = '', label, onRemove, 
 
           <div className="chart-card">
             <div className="chart-title">Payout waterfall</div>
+            <div role="img" aria-label={chartAlt}>
             <ResponsiveContainer width="100%" height={260}>
               <BarChart data={waterfallData} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={chartGrid} vertical={false} />
@@ -491,6 +519,26 @@ export default function RedundancyInstance({ instanceKey = '', label, onRemove, 
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
+            </div>
+            <table className="visually-hidden">
+              <caption>Payout waterfall — same figures as the chart</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Component</th>
+                  <th scope="col">Type</th>
+                  <th scope="col">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {chartRows.map((r) => (
+                  <tr key={r.key}>
+                    <th scope="row">{r.label}</th>
+                    <td>{r.kind}</td>
+                    <td>{r.value < 0 ? `minus ${fmt(Math.abs(r.value))}` : fmt(r.value)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
 
           {result.caveats.length > 0 && (

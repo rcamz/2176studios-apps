@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useId } from 'react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ResponsiveContainer,
@@ -74,6 +74,8 @@ export default function SavingsInstance({ instanceKey = '', label, onRemove, the
     instanceKey === '' ? { ...DEFAULTS, ...decodeParams(window.location.search) } : { ...DEFAULTS }
   );
 
+  const uid = useId();
+
   const set = (key, val) => setInputs(s => ({ ...s, [key]: val }));
   const setNum = (key) => (e) => set(key, num(e.target.value, 0));
 
@@ -115,7 +117,7 @@ export default function SavingsInstance({ instanceKey = '', label, onRemove, the
       {isComparison && (
         <div className="instance-header">
           <span className="instance-label">{label}</span>
-          <button className="instance-remove" onClick={onRemove || undefined} title="Remove scenario"
+          <button className="instance-remove" onClick={onRemove || undefined} title="Remove scenario" aria-label={`Remove scenario ${label ?? ''}`.trim()}
             style={!onRemove ? { visibility: 'hidden', pointerEvents: 'none' } : {}}>×</button>
         </div>
       )}
@@ -136,46 +138,46 @@ export default function SavingsInstance({ instanceKey = '', label, onRemove, the
           <div className="panel-section">
             <div className="section-title">Your savings</div>
             <div className="field">
-              <label>Starting balance</label>
+              <label htmlFor={`${uid}-initial`}>Starting balance</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.initialDeposit || ''} onChange={setNum('initialDeposit')} min="0" step="1000" />
+                <input id={`${uid}-initial`} type="number" inputMode="decimal" value={inputs.initialDeposit || ''} onChange={setNum('initialDeposit')} min="0" step="1000" />
               </div>
             </div>
             <div className="field">
-              <label>Monthly contribution</label>
+              <label htmlFor={`${uid}-monthly`}>Monthly contribution</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.monthlyContribution || ''} onChange={setNum('monthlyContribution')} min="0" step="100" />
+                <input id={`${uid}-monthly`} type="number" inputMode="decimal" value={inputs.monthlyContribution || ''} onChange={setNum('monthlyContribution')} min="0" step="100" />
               </div>
             </div>
             <div className="field">
-              <label>Contribution timing</label>
-              <div className="segmented">
+              <label id={`${uid}-timing-label`}>Contribution timing</label>
+              <div className="segmented" role="radiogroup" aria-labelledby={`${uid}-timing-label`}>
                 {[['start', 'Start of month'], ['end', 'End of month']].map(([v, l]) => (
-                  <button key={v} className={inputs.contributionTiming === v ? 'active' : ''} onClick={() => set('contributionTiming', v)}>{l}</button>
+                  <button key={v} role="radio" aria-checked={inputs.contributionTiming === v} className={inputs.contributionTiming === v ? 'active' : ''} onClick={() => set('contributionTiming', v)}>{l}</button>
                 ))}
               </div>
             </div>
             <div className="field">
-              <label>Annual interest rate</label>
+              <label htmlFor={`${uid}-rate`}>Annual interest rate</label>
               <div className="input-wrap has-suffix">
-                <input type="number" value={inputs.annualRate || ''} onChange={setNum('annualRate')} min="0" max="30" step="0.25" />
+                <input id={`${uid}-rate`} type="number" inputMode="decimal" value={inputs.annualRate || ''} onChange={setNum('annualRate')} min="0" max="30" step="0.25" />
                 <span className="input-suffix">% p.a.</span>
               </div>
             </div>
             <div className="field">
-              <label>Compounding frequency</label>
-              <div className="segmented">
+              <label id={`${uid}-compound-label`}>Compounding frequency</label>
+              <div className="segmented" role="radiogroup" aria-labelledby={`${uid}-compound-label`}>
                 {[['monthly','Monthly'],['quarterly','Quarterly'],['annually','Annually']].map(([v,l]) => (
-                  <button key={v} className={inputs.compoundFreq === v ? 'active' : ''} onClick={() => set('compoundFreq', v)}>{l}</button>
+                  <button key={v} role="radio" aria-checked={inputs.compoundFreq === v} className={inputs.compoundFreq === v ? 'active' : ''} onClick={() => set('compoundFreq', v)}>{l}</button>
                 ))}
               </div>
             </div>
             <div className="field">
-              <label>Savings term</label>
+              <label htmlFor={`${uid}-term`}>Savings term</label>
               <div className="input-wrap has-suffix">
-                <input type="number" value={inputs.termYears || ''} onChange={setNum('termYears')} min="1" max="50" step="1" />
+                <input id={`${uid}-term`} type="number" inputMode="numeric" value={inputs.termYears || ''} onChange={setNum('termYears')} min="1" max="50" step="1" />
                 <span className="input-suffix">yrs</span>
               </div>
             </div>
@@ -184,31 +186,31 @@ export default function SavingsInstance({ instanceKey = '', label, onRemove, the
           <div className="panel-section">
             <div className="section-title">Advanced settings</div>
             <div className="field">
-              <label>Inflation rate (for real value)</label>
+              <label htmlFor={`${uid}-inflation`}>Inflation rate (for real value)</label>
               <div className="input-wrap has-suffix">
-                <input type="number" value={inputs.inflationRate || ''} onChange={setNum('inflationRate')} min="0" max="15" step="0.5" />
+                <input id={`${uid}-inflation`} type="number" inputMode="decimal" value={inputs.inflationRate || ''} onChange={setNum('inflationRate')} min="0" max="15" step="0.5" />
                 <span className="input-suffix">% p.a.</span>
               </div>
             </div>
             <div className="field">
-              <label>Contribution indexation</label>
+              <label htmlFor={`${uid}-indexation`}>Contribution indexation</label>
               <div className="input-wrap has-suffix">
-                <input type="number" value={inputs.contributionGrowth || ''} onChange={setNum('contributionGrowth')} min="0" max="15" step="0.5" placeholder="e.g. 2.5 to match inflation" />
+                <input id={`${uid}-indexation`} type="number" inputMode="decimal" aria-describedby={`${uid}-indexation-help`} value={inputs.contributionGrowth || ''} onChange={setNum('contributionGrowth')} min="0" max="15" step="0.5" placeholder="e.g. 2.5 to match inflation" />
                 <span className="input-suffix">% p.a.</span>
               </div>
-              <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: 4 }}>
+              <div id={`${uid}-indexation-help`} style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: 4 }}>
                 Raises your contribution each year. Leave at 0 and a flat $
                 {inputs.monthlyContribution.toLocaleString('en-AU')} shrinks in real terms against an
                 inflation-adjusted result.
               </div>
             </div>
             <div className="field">
-              <label>Tax on interest earned</label>
+              <label htmlFor={`${uid}-tax`}>Tax on interest earned</label>
               <div className="input-wrap has-suffix">
-                <input type="number" value={inputs.taxOnInterest || ''} onChange={setNum('taxOnInterest')} min="0" max="50" step="5" placeholder="e.g. 32.5 for marginal rate" />
+                <input id={`${uid}-tax`} type="number" inputMode="decimal" aria-describedby={`${uid}-tax-help`} value={inputs.taxOnInterest || ''} onChange={setNum('taxOnInterest')} min="0" max="50" step="5" placeholder="e.g. 32.5 for marginal rate" />
                 <span className="input-suffix">%</span>
               </div>
-              <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: 4 }}>
+              <div id={`${uid}-tax-help`} style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: 4 }}>
                 Deducted each year on that year's interest, so it reduces what compounds.
               </div>
             </div>
@@ -217,24 +219,24 @@ export default function SavingsInstance({ instanceKey = '', label, onRemove, the
           <div className="panel-section">
             <div className="section-title">Savings goal (optional)</div>
             <div className="field">
-              <div className="segmented">
+              <div className="segmented" role="radiogroup" aria-label="What the savings goal should work out">
                 {[['time', 'How long?'], ['contribution', 'How much a month?']].map(([v, l]) => (
-                  <button key={v} className={inputs.goalMode === v ? 'active' : ''} onClick={() => set('goalMode', v)}>{l}</button>
+                  <button key={v} role="radio" aria-checked={inputs.goalMode === v} className={inputs.goalMode === v ? 'active' : ''} onClick={() => set('goalMode', v)}>{l}</button>
                 ))}
               </div>
             </div>
             <div className="field">
-              <label>Target amount</label>
+              <label htmlFor={`${uid}-goal`}>Target amount</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.goalAmount || ''} onChange={setNum('goalAmount')} min="0" step="5000" placeholder="0 to skip" />
+                <input id={`${uid}-goal`} type="number" inputMode="decimal" value={inputs.goalAmount || ''} onChange={setNum('goalAmount')} min="0" step="5000" placeholder="0 to skip" />
               </div>
             </div>
             {!seekTime && (
               <div className="field">
-                <label>Reach it within</label>
+                <label htmlFor={`${uid}-goal-years`}>Reach it within</label>
                 <div className="input-wrap has-suffix">
-                  <input type="number" value={inputs.goalYears || ''} onChange={setNum('goalYears')} min="1" max="50" step="1" />
+                  <input id={`${uid}-goal-years`} type="number" inputMode="numeric" value={inputs.goalYears || ''} onChange={setNum('goalYears')} min="1" max="50" step="1" />
                   <span className="input-suffix">yrs</span>
                 </div>
               </div>
@@ -282,7 +284,7 @@ export default function SavingsInstance({ instanceKey = '', label, onRemove, the
 
           <div className="savings-card">
             <div className="savings-label">Balance after {inputs.termYears} years</div>
-            <div className="savings-amount">{fmtShort(result.finalBalance)}</div>
+            <div className="savings-amount" aria-live="polite" aria-atomic="true">{fmtShort(result.finalBalance)}</div>
             <div className="savings-sub">
               {fmt(result.realBalance)} in today's money (adjusted for {inputs.inflationRate}% inflation)
             </div>
@@ -327,6 +329,7 @@ export default function SavingsInstance({ instanceKey = '', label, onRemove, the
 
           <div className="chart-card">
             <div className="chart-title">Balance growth over {inputs.termYears} years</div>
+            <div role="img" aria-label={`Line chart of balance growth over ${inputs.termYears} years. The balance reaches ${fmt(result.finalBalance)}, made up of ${fmt(result.totalContributed)} contributed and ${fmt(result.totalInterest)} interest.`}>
             <ResponsiveContainer width="100%" height={260}>
               <LineChart data={result.chartData} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={chartGrid} />
@@ -338,6 +341,22 @@ export default function SavingsInstance({ instanceKey = '', label, onRemove, the
                 <Line type="monotone" dataKey="Contributed" stroke={chartGhost} strokeWidth={1.5} strokeDasharray="5 4" dot={false} />
               </LineChart>
             </ResponsiveContainer>
+            </div>
+            <table className="visually-hidden">
+              <caption>Balance and total contributed at the end of each year</caption>
+              <thead>
+                <tr><th scope="col">Year</th><th scope="col">Balance</th><th scope="col">Total contributed</th></tr>
+              </thead>
+              <tbody>
+                {result.chartData.map((d) => (
+                  <tr key={d.year}>
+                    <th scope="row">{d.year}</th>
+                    <td>{fmt(d.Balance)}</td>
+                    <td>{fmt(d.Contributed)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
 
           <Workings data={explanation} />

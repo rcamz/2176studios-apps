@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useId } from 'react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ReferenceLine, ResponsiveContainer,
@@ -123,6 +123,7 @@ export default function RetirementInstance({
   instanceKey = '', label, onRemove, theme = 'light', isComparison = false,
   seed = null, onStateChange = null,
 }) {
+  const uid = useId();
   const [inputs, setInputs] = useState(() => {
     if (seed) return { ...seed };
     return instanceKey === ''
@@ -172,7 +173,7 @@ export default function RetirementInstance({
       {isComparison && (
         <div className="instance-header">
           <span className="instance-label">{label}</span>
-          <button className="instance-remove" onClick={onRemove || undefined} title="Remove scenario"
+          <button type="button" className="instance-remove" onClick={onRemove || undefined} title="Remove scenario" aria-label={`Remove ${label || 'scenario'}`}
             style={!onRemove ? { visibility: 'hidden', pointerEvents: 'none' } : {}}>×</button>
         </div>
       )}
@@ -193,52 +194,52 @@ export default function RetirementInstance({
           <div className="panel-section">
             <div className="section-title">Your details</div>
             <div className="field">
-              <label>Current age</label>
+              <label htmlFor={`${uid}-current-age`}>Current age</label>
               <div className="input-wrap has-suffix">
-                <input type="number" value={inputs.currentAge || ''} onChange={setNum('currentAge')} min="18" max="80" step="1" />
+                <input id={`${uid}-current-age`} inputMode="numeric" type="number" value={inputs.currentAge || ''} onChange={setNum('currentAge')} min="18" max="80" step="1" />
                 <span className="input-suffix">yrs</span>
               </div>
             </div>
             <div className="field">
-              <label>Retirement age</label>
+              <label htmlFor={`${uid}-retirement-age`}>Retirement age</label>
               <div className="input-wrap has-suffix">
-                <input type="number" value={inputs.retirementAge || ''} onChange={setNum('retirementAge')} min="60" max="80" step="1" />
+                <input id={`${uid}-retirement-age`} inputMode="numeric" aria-describedby={`${uid}-retirement-age-help`} type="number" value={inputs.retirementAge || ''} onChange={setNum('retirementAge')} min="60" max="80" step="1" />
                 <span className="input-suffix">yrs</span>
               </div>
-              <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
+              <p id={`${uid}-retirement-age-help`} style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
                 Preservation age is {result.preservationAge} — super cannot be drawn before then, so a lower retirement age
                 is modelled as a gap with no salary and no access.
               </p>
             </div>
             <div className="field">
-              <label>Current super balance</label>
+              <label htmlFor={`${uid}-current-balance`}>Current super balance</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.currentBalance || ''} onChange={setNum('currentBalance')} min="0" step="5000" />
+                <input id={`${uid}-current-balance`} inputMode="decimal" type="number" value={inputs.currentBalance || ''} onChange={setNum('currentBalance')} min="0" step="5000" />
               </div>
             </div>
             <div className="field">
-              <label>Annual gross salary</label>
+              <label htmlFor={`${uid}-gross-salary`}>Annual gross salary</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.grossSalary || ''} onChange={setNum('grossSalary')} min="0" step="1000" />
+                <input id={`${uid}-gross-salary`} inputMode="decimal" type="number" value={inputs.grossSalary || ''} onChange={setNum('grossSalary')} min="0" step="1000" />
               </div>
             </div>
             <div className="field">
-              <label>Salary growth</label>
+              <label htmlFor={`${uid}-salary-growth`}>Salary growth</label>
               <div className="input-wrap has-suffix">
-                <input type="number" value={inputs.salaryGrowth ?? ''} onChange={setNum('salaryGrowth')} min="0" max="10" step="0.5" />
+                <input id={`${uid}-salary-growth`} inputMode="decimal" aria-describedby={`${uid}-salary-growth-help`} type="number" value={inputs.salaryGrowth ?? ''} onChange={setNum('salaryGrowth')} min="0" max="10" step="0.5" />
                 <span className="input-suffix">% p.a.</span>
               </div>
-              <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
+              <p id={`${uid}-salary-growth-help`} style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
                 SG is a percentage of salary, so a flat salary understates every contribution after the first.
                 At {fmtPct(inputs.salaryGrowth / 100)} your salary reaches {fmt(result.finalSalary)} by {result.retirementAge}.
               </p>
             </div>
             <div className="field">
-              <label>Employer SG rate</label>
+              <label htmlFor={`${uid}-sg-rate`}>Employer SG rate</label>
               <div className="input-wrap has-suffix">
-                <input type="number" value={inputs.sgRate || ''} onChange={setNum('sgRate')} min="0" max="30" step="0.5" />
+                <input id={`${uid}-sg-rate`} inputMode="decimal" type="number" value={inputs.sgRate || ''} onChange={setNum('sgRate')} min="0" max="30" step="0.5" />
                 <span className="input-suffix">%</span>
               </div>
             </div>
@@ -247,43 +248,43 @@ export default function RetirementInstance({
           <div className="panel-section">
             <div className="section-title">Extra contributions</div>
             <div className="field">
-              <label>Additional personal contributions (per year)</label>
+              <label htmlFor={`${uid}-extra-contributions`}>Additional personal contributions (per year)</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.extraContributions || ''} onChange={setNum('extraContributions')} min="0" step="500" />
+                <input id={`${uid}-extra-contributions`} inputMode="decimal" aria-describedby={`${uid}-extra-contributions-help`} type="number" value={inputs.extraContributions || ''} onChange={setNum('extraContributions')} min="0" step="500" />
               </div>
-              <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
+              <p id={`${uid}-extra-contributions-help`} style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
                 SG of {fmt(result.sgContributionYearOne)} leaves {fmt(result.contributionCap.headroom)} under your {fmt(result.contributionCap.effectiveCap)} concessional cap.
               </p>
             </div>
             <div className="field">
-              <label>Contribution type</label>
-              <div className="segmented">
-                <button className={inputs.extraIsPreTax ? 'active' : ''} onClick={() => set('extraIsPreTax', true)}>Pre-tax (concessional)</button>
-                <button className={!inputs.extraIsPreTax ? 'active' : ''} onClick={() => set('extraIsPreTax', false)}>After-tax</button>
+              <label id={`${uid}-contrib-type-label`}>Contribution type</label>
+              <div className="segmented" role="radiogroup" aria-labelledby={`${uid}-contrib-type-label`}>
+                <button type="button" role="radio" aria-checked={inputs.extraIsPreTax} className={inputs.extraIsPreTax ? 'active' : ''} onClick={() => set('extraIsPreTax', true)}>Pre-tax (concessional)</button>
+                <button type="button" role="radio" aria-checked={!inputs.extraIsPreTax} className={!inputs.extraIsPreTax ? 'active' : ''} onClick={() => set('extraIsPreTax', false)}>After-tax</button>
               </div>
             </div>
             <div className="field">
-              <label>Grow contributions with salary</label>
-              <div className="segmented">
-                <button className={inputs.indexExtraContributions ? 'active' : ''} onClick={() => set('indexExtraContributions', true)}>Yes</button>
-                <button className={!inputs.indexExtraContributions ? 'active' : ''} onClick={() => set('indexExtraContributions', false)}>Hold flat</button>
+              <label id={`${uid}-index-extra-label`}>Grow contributions with salary</label>
+              <div className="segmented" role="radiogroup" aria-labelledby={`${uid}-index-extra-label`}>
+                <button type="button" role="radio" aria-checked={inputs.indexExtraContributions} className={inputs.indexExtraContributions ? 'active' : ''} onClick={() => set('indexExtraContributions', true)}>Yes</button>
+                <button type="button" role="radio" aria-checked={!inputs.indexExtraContributions} className={!inputs.indexExtraContributions ? 'active' : ''} onClick={() => set('indexExtraContributions', false)}>Hold flat</button>
               </div>
             </div>
             <div className="field">
-              <label>Unused concessional cap from the last 5 years</label>
+              <label htmlFor={`${uid}-prior-unused-cap`}>Unused concessional cap from the last 5 years</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.priorUnusedCap || ''} onChange={setNum('priorUnusedCap')} min="0" step="1000" />
+                <input id={`${uid}-prior-unused-cap`} inputMode="decimal" type="number" value={inputs.priorUnusedCap || ''} onChange={setNum('priorUnusedCap')} min="0" step="1000" />
               </div>
             </div>
             <div className="field">
-              <label>Use carry-forward this year</label>
-              <div className="segmented">
-                <button className={inputs.useCarryForward ? 'active' : ''} onClick={() => set('useCarryForward', true)}>Yes</button>
-                <button className={!inputs.useCarryForward ? 'active' : ''} onClick={() => set('useCarryForward', false)}>No</button>
+              <label id={`${uid}-carry-forward-label`}>Use carry-forward this year</label>
+              <div className="segmented" role="radiogroup" aria-labelledby={`${uid}-carry-forward-label`} aria-describedby={`${uid}-carry-forward-help`}>
+                <button type="button" role="radio" aria-checked={inputs.useCarryForward} className={inputs.useCarryForward ? 'active' : ''} onClick={() => set('useCarryForward', true)}>Yes</button>
+                <button type="button" role="radio" aria-checked={!inputs.useCarryForward} className={!inputs.useCarryForward ? 'active' : ''} onClick={() => set('useCarryForward', false)}>No</button>
               </div>
-              <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
+              <p id={`${uid}-carry-forward-help`} style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
                 {result.contributionCap.carryForward.eligible
                   ? `Available: ${fmt(result.contributionCap.carryForward.available)}. Unused cap expires after ${result.contributionCap.carryForward.lookbackYears} years.`
                   : `Not available — carry-forward needs a total super balance under ${fmt(result.contributionCap.carryForward.balanceTest)} at 30 June of the prior year.`}
@@ -295,29 +296,29 @@ export default function RetirementInstance({
           <div className="panel-section">
             <div className="section-title">Retirement income</div>
             <div className="field">
-              <label>Drawdown</label>
-              <div className="segmented">
-                <button className={inputs.drawdownMode === 'minimum' ? 'active' : ''} onClick={() => set('drawdownMode', 'minimum')}>Legislated minimum</button>
-                <button className={inputs.drawdownMode === 'target' ? 'active' : ''} onClick={() => set('drawdownMode', 'target')}>Target income</button>
+              <label id={`${uid}-drawdown-label`}>Drawdown</label>
+              <div className="segmented" role="radiogroup" aria-labelledby={`${uid}-drawdown-label`} aria-describedby={`${uid}-drawdown-help`}>
+                <button type="button" role="radio" aria-checked={inputs.drawdownMode === 'minimum'} className={inputs.drawdownMode === 'minimum' ? 'active' : ''} onClick={() => set('drawdownMode', 'minimum')}>Legislated minimum</button>
+                <button type="button" role="radio" aria-checked={inputs.drawdownMode === 'target'} className={inputs.drawdownMode === 'target' ? 'active' : ''} onClick={() => set('drawdownMode', 'target')}>Target income</button>
               </div>
-              <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
+              <p id={`${uid}-drawdown-help`} style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
                 The minimum is legislated and rises with age — {fmtPct(0.04, 0)} under 65, {fmtPct(0.05, 0)} at 65–74, {fmtPct(0.07, 0)} at 80–84, {fmtPct(0.14, 0)} at 95+.
                 Drawing only the minimum never empties the account; it just shrinks the income.
               </p>
             </div>
             {inputs.drawdownMode === 'target' && (
               <div className="field">
-                <label>Target retirement income (today&rsquo;s dollars, including Age Pension)</label>
+                <label htmlFor={`${uid}-target-income`}>Target retirement income (today&rsquo;s dollars, including Age Pension)</label>
                 <div className="input-wrap has-prefix">
                   <span className="input-prefix">$</span>
-                  <input type="number" value={inputs.targetIncome || ''} onChange={setNum('targetIncome')} min="0" step="1000" />
+                  <input id={`${uid}-target-income`} inputMode="decimal" type="number" value={inputs.targetIncome || ''} onChange={setNum('targetIncome')} min="0" step="1000" />
                 </div>
               </div>
             )}
             <div className="field">
-              <label>Plan to age</label>
+              <label htmlFor={`${uid}-plan-to-age`}>Plan to age</label>
               <div className="input-wrap has-suffix">
-                <input type="number" value={inputs.planToAge || ''} onChange={setNum('planToAge')} min="70" max="105" step="1" />
+                <input id={`${uid}-plan-to-age`} inputMode="numeric" type="number" value={inputs.planToAge || ''} onChange={setNum('planToAge')} min="70" max="105" step="1" />
                 <span className="input-suffix">yrs</span>
               </div>
             </div>
@@ -326,65 +327,65 @@ export default function RetirementInstance({
           <div className="panel-section">
             <div className="section-title">Age Pension</div>
             <div className="field">
-              <label>Include an Age Pension estimate</label>
-              <div className="segmented">
-                <button className={inputs.includeAgePension ? 'active' : ''} onClick={() => set('includeAgePension', true)}>Yes</button>
-                <button className={!inputs.includeAgePension ? 'active' : ''} onClick={() => set('includeAgePension', false)}>No</button>
+              <label id={`${uid}-include-pension-label`}>Include an Age Pension estimate</label>
+              <div className="segmented" role="radiogroup" aria-labelledby={`${uid}-include-pension-label`}>
+                <button type="button" role="radio" aria-checked={inputs.includeAgePension} className={inputs.includeAgePension ? 'active' : ''} onClick={() => set('includeAgePension', true)}>Yes</button>
+                <button type="button" role="radio" aria-checked={!inputs.includeAgePension} className={!inputs.includeAgePension ? 'active' : ''} onClick={() => set('includeAgePension', false)}>No</button>
               </div>
             </div>
             {inputs.includeAgePension && (
               <>
                 <div className="field">
-                  <label>Relationship status</label>
-                  <div className="segmented">
-                    <button className={inputs.relationshipStatus === 'single' ? 'active' : ''} onClick={() => set('relationshipStatus', 'single')}>Single</button>
-                    <button className={inputs.relationshipStatus === 'couple' ? 'active' : ''} onClick={() => set('relationshipStatus', 'couple')}>Couple</button>
+                  <label id={`${uid}-relationship-label`}>Relationship status</label>
+                  <div className="segmented" role="radiogroup" aria-labelledby={`${uid}-relationship-label`} aria-describedby={`${uid}-relationship-help`}>
+                    <button type="button" role="radio" aria-checked={inputs.relationshipStatus === 'single'} className={inputs.relationshipStatus === 'single' ? 'active' : ''} onClick={() => set('relationshipStatus', 'single')}>Single</button>
+                    <button type="button" role="radio" aria-checked={inputs.relationshipStatus === 'couple'} className={inputs.relationshipStatus === 'couple' ? 'active' : ''} onClick={() => set('relationshipStatus', 'couple')}>Couple</button>
                   </div>
-                  <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                  <p id={`${uid}-relationship-help`} style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
                     Couples are assessed on combined income and combined assets, against much higher thresholds. Figures shown are the combined rate.
                   </p>
                 </div>
                 <div className="field">
-                  <label>Homeowner</label>
-                  <div className="segmented">
-                    <button className={inputs.homeowner ? 'active' : ''} onClick={() => set('homeowner', true)}>Yes</button>
-                    <button className={!inputs.homeowner ? 'active' : ''} onClick={() => set('homeowner', false)}>No</button>
+                  <label id={`${uid}-homeowner-label`}>Homeowner</label>
+                  <div className="segmented" role="radiogroup" aria-labelledby={`${uid}-homeowner-label`} aria-describedby={`${uid}-homeowner-help`}>
+                    <button type="button" role="radio" aria-checked={inputs.homeowner} className={inputs.homeowner ? 'active' : ''} onClick={() => set('homeowner', true)}>Yes</button>
+                    <button type="button" role="radio" aria-checked={!inputs.homeowner} className={!inputs.homeowner ? 'active' : ''} onClick={() => set('homeowner', false)}>No</button>
                   </div>
-                  <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                  <p id={`${uid}-homeowner-help`} style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
                     The family home is exempt, but non-homeowners get a much higher assets free area.
                   </p>
                 </div>
                 {inputs.relationshipStatus === 'couple' && (
                   <div className="field">
-                    <label>Partner&rsquo;s super balance</label>
+                    <label htmlFor={`${uid}-partner-balance`}>Partner&rsquo;s super balance</label>
                     <div className="input-wrap has-prefix">
                       <span className="input-prefix">$</span>
-                      <input type="number" value={inputs.partnerSuperBalance || ''} onChange={setNum('partnerSuperBalance')} min="0" step="5000" />
+                      <input id={`${uid}-partner-balance`} inputMode="decimal" type="number" value={inputs.partnerSuperBalance || ''} onChange={setNum('partnerSuperBalance')} min="0" step="5000" />
                     </div>
                   </div>
                 )}
                 <div className="field">
-                  <label>Other financial assets (bank, shares — deemed)</label>
+                  <label htmlFor={`${uid}-other-financial`}>Other financial assets (bank, shares — deemed)</label>
                   <div className="input-wrap has-prefix">
                     <span className="input-prefix">$</span>
-                    <input type="number" value={inputs.otherFinancialAssets || ''} onChange={setNum('otherFinancialAssets')} min="0" step="5000" />
+                    <input id={`${uid}-other-financial`} inputMode="decimal" type="number" value={inputs.otherFinancialAssets || ''} onChange={setNum('otherFinancialAssets')} min="0" step="5000" />
                   </div>
                 </div>
                 <div className="field">
-                  <label>Other assessable assets (car, contents, investment property)</label>
+                  <label htmlFor={`${uid}-other-assets`}>Other assessable assets (car, contents, investment property)</label>
                   <div className="input-wrap has-prefix">
                     <span className="input-prefix">$</span>
-                    <input type="number" value={inputs.otherNonFinancialAssets || ''} onChange={setNum('otherNonFinancialAssets')} min="0" step="5000" />
+                    <input id={`${uid}-other-assets`} inputMode="decimal" aria-describedby={`${uid}-other-assets-help`} type="number" value={inputs.otherNonFinancialAssets || ''} onChange={setNum('otherNonFinancialAssets')} min="0" step="5000" />
                   </div>
-                  <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                  <p id={`${uid}-other-assets-help`} style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
                     Exclude the family home. These count in the assets test but are not deemed.
                   </p>
                 </div>
                 <div className="field">
-                  <label>Other assessable income (per year)</label>
+                  <label htmlFor={`${uid}-other-income`}>Other assessable income (per year)</label>
                   <div className="input-wrap has-prefix">
                     <span className="input-prefix">$</span>
-                    <input type="number" value={inputs.otherIncomeAnnual || ''} onChange={setNum('otherIncomeAnnual')} min="0" step="1000" />
+                    <input id={`${uid}-other-income`} inputMode="decimal" type="number" value={inputs.otherIncomeAnnual || ''} onChange={setNum('otherIncomeAnnual')} min="0" step="1000" />
                   </div>
                 </div>
               </>
@@ -394,49 +395,49 @@ export default function RetirementInstance({
           <div className="panel-section">
             <div className="section-title">Assumptions &amp; fees</div>
             <div className="field">
-              <label>Expected investment return (before fees)</label>
+              <label htmlFor={`${uid}-investment-return`}>Expected investment return (before fees)</label>
               <div className="input-wrap has-suffix">
-                <input type="number" value={inputs.investmentReturn || ''} onChange={setNum('investmentReturn')} min="0" max="20" step="0.5" />
+                <input id={`${uid}-investment-return`} inputMode="decimal" type="number" value={inputs.investmentReturn || ''} onChange={setNum('investmentReturn')} min="0" max="20" step="0.5" />
                 <span className="input-suffix">% p.a.</span>
               </div>
             </div>
             <div className="field">
-              <label>Inflation rate</label>
+              <label htmlFor={`${uid}-inflation-rate`}>Inflation rate</label>
               <div className="input-wrap has-suffix">
-                <input type="number" value={inputs.inflationRate ?? ''} onChange={setNum('inflationRate')} min="0" max="10" step="0.5" />
+                <input id={`${uid}-inflation-rate`} inputMode="decimal" type="number" value={inputs.inflationRate ?? ''} onChange={setNum('inflationRate')} min="0" max="10" step="0.5" />
                 <span className="input-suffix">% p.a.</span>
               </div>
             </div>
             <div className="field">
-              <label>Percentage fee</label>
+              <label htmlFor={`${uid}-fee-percent`}>Percentage fee</label>
               <div className="input-wrap has-suffix">
-                <input type="number" value={inputs.feePercent ?? ''} onChange={setNum('feePercent')} min="0" max="5" step="0.1" />
+                <input id={`${uid}-fee-percent`} inputMode="decimal" type="number" value={inputs.feePercent ?? ''} onChange={setNum('feePercent')} min="0" max="5" step="0.1" />
                 <span className="input-suffix">% p.a.</span>
               </div>
             </div>
             <div className="field">
-              <label>Flat administration fee</label>
+              <label htmlFor={`${uid}-fee-flat`}>Flat administration fee</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.feeFlat ?? ''} onChange={setNum('feeFlat')} min="0" step="10" />
+                <input id={`${uid}-fee-flat`} inputMode="decimal" aria-describedby={`${uid}-fee-flat-help`} type="number" value={inputs.feeFlat ?? ''} onChange={setNum('feeFlat')} min="0" step="10" />
               </div>
-              <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
+              <p id={`${uid}-fee-flat-help`} style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
                 Most funds charge a flat dollar admin fee as well as a percentage. A percentage-only model understates the drag on smaller balances.
               </p>
             </div>
             <div className="field">
-              <label>Insurance premiums inside super (per year)</label>
+              <label htmlFor={`${uid}-insurance-premium`}>Insurance premiums inside super (per year)</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.insurancePremium ?? ''} onChange={setNum('insurancePremium')} min="0" step="50" />
+                <input id={`${uid}-insurance-premium`} inputMode="decimal" type="number" value={inputs.insurancePremium ?? ''} onChange={setNum('insurancePremium')} min="0" step="50" />
               </div>
             </div>
             {result.division293Applies && (
               <div className="field">
-                <label>Division 293 paid from</label>
-                <div className="segmented">
-                  <button className={!inputs.division293FromSuper ? 'active' : ''} onClick={() => set('division293FromSuper', false)}>Personally</button>
-                  <button className={inputs.division293FromSuper ? 'active' : ''} onClick={() => set('division293FromSuper', true)}>Released from super</button>
+                <label id={`${uid}-div293-label`}>Division 293 paid from</label>
+                <div className="segmented" role="radiogroup" aria-labelledby={`${uid}-div293-label`}>
+                  <button type="button" role="radio" aria-checked={!inputs.division293FromSuper} className={!inputs.division293FromSuper ? 'active' : ''} onClick={() => set('division293FromSuper', false)}>Personally</button>
+                  <button type="button" role="radio" aria-checked={inputs.division293FromSuper} className={inputs.division293FromSuper ? 'active' : ''} onClick={() => set('division293FromSuper', true)}>Released from super</button>
                 </div>
               </div>
             )}
@@ -496,17 +497,17 @@ export default function RetirementInstance({
           )}
 
           <div className="savings-card">
-            <div className="savings-label">Projected balance at age {result.accessAge}</div>
-            <div className="savings-amount">{fmtShort(headline)}</div>
+            <div className="savings-label" id={`${uid}-headline-label`}>Projected balance at age {result.accessAge}</div>
+            <div className="savings-amount" aria-live="polite" aria-atomic="true" aria-labelledby={`${uid}-headline-label`}>{fmtShort(headline)}</div>
             <div className="savings-sub">
               {real
                 ? <>in today&rsquo;s dollars · {fmt(secondary)} nominal at {fmtPct(inputs.inflationRate / 100)} inflation</>
                 : <>nominal · {fmt(secondary)} in today&rsquo;s dollars at {fmtPct(inputs.inflationRate / 100)} inflation</>}
             </div>
             <div className="field" style={{ margin: '10px 0 0' }}>
-              <div className="segmented">
-                <button className={real ? 'active' : ''} onClick={() => set('basis', 'real')}>Today&rsquo;s dollars</button>
-                <button className={!real ? 'active' : ''} onClick={() => set('basis', 'nominal')}>Nominal</button>
+              <div className="segmented" role="radiogroup" aria-label="Show figures in">
+                <button type="button" role="radio" aria-checked={real} className={real ? 'active' : ''} onClick={() => set('basis', 'real')}>Today&rsquo;s dollars</button>
+                <button type="button" role="radio" aria-checked={!real} className={!real ? 'active' : ''} onClick={() => set('basis', 'nominal')}>Nominal</button>
               </div>
             </div>
             <div className="savings-meta">
@@ -570,6 +571,7 @@ export default function RetirementInstance({
             <div className="chart-title">
               Super balance by age — accumulation then drawdown ({real ? "today's dollars" : 'nominal'})
             </div>
+            <div role="img" aria-label={`Line chart of super balance by age from ${result.currentAge} to ${result.planToAge} in ${real ? "today's dollars" : 'nominal dollars'}, peaking around ${fmtShort(headline)} at age ${result.accessAge}${result.runsOut ? ` and running out at age ${result.depletionAge}` : ` and lasting past age ${result.planToAge}`}.`}>
             <ResponsiveContainer width="100%" height={280}>
               <LineChart data={chartData} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={chartGrid} />
@@ -589,6 +591,22 @@ export default function RetirementInstance({
                 <Line type="monotone" dataKey="Without extra" stroke={chartGhost} strokeWidth={1.5} strokeDasharray="5 4" dot={false} />
               </LineChart>
             </ResponsiveContainer>
+            </div>
+            <table className="visually-hidden">
+              <caption>Super balance by age ({real ? "today's dollars" : 'nominal'})</caption>
+              <thead>
+                <tr><th scope="col">Age</th><th scope="col">Balance</th><th scope="col">Without extra contributions</th></tr>
+              </thead>
+              <tbody>
+                {chartData.map((d) => (
+                  <tr key={d.age}>
+                    <th scope="row">{d.age}</th>
+                    <td>{fmt(d['Balance'])}</td>
+                    <td>{fmt(d['Without extra'])}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
             <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', margin: '8px 0 0' }}>
               Reference lines are the ASFA Retirement Standard lump sums for a {result.asfa.status} — {fmt(result.asfa.comfortableLumpSum)} comfortable
               and {fmt(result.asfa.modestLumpSum)} modest, in today&rsquo;s dollars, assuming you own your home outright and draw a part Age Pension.
@@ -601,6 +619,7 @@ export default function RetirementInstance({
           {result.incomeData.length > 0 && (
             <div className="chart-card">
               <div className="chart-title">Retirement income by age — super drawdown and Age Pension (nominal)</div>
+              <div role="img" aria-label={`Line chart of retirement income by age from ${result.accessAge} to ${result.planToAge} in nominal dollars, starting at ${fmt(result.firstYearIncome)} in the first year of retirement, split between super drawdown and Age Pension.`}>
               <ResponsiveContainer width="100%" height={220}>
                 <LineChart data={result.incomeData} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={chartGrid} />
@@ -612,6 +631,22 @@ export default function RetirementInstance({
                   <Line type="monotone" dataKey="Age Pension" stroke={chartGhost} strokeWidth={1.5} strokeDasharray="5 4" dot={false} />
                 </LineChart>
               </ResponsiveContainer>
+              </div>
+              <table className="visually-hidden">
+                <caption>Retirement income by age (nominal)</caption>
+                <thead>
+                  <tr><th scope="col">Age</th><th scope="col">Super drawdown</th><th scope="col">Age Pension</th></tr>
+                </thead>
+                <tbody>
+                  {result.incomeData.map((d) => (
+                    <tr key={d.age}>
+                      <th scope="row">{d.age}</th>
+                      <td>{fmt(d['Super drawdown'])}</td>
+                      <td>{fmt(d['Age Pension'])}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
               <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', margin: '8px 0 0' }}>
                 Drawdown at the legislated minimum falls as the balance falls, even though the percentage rises with age.
                 The Age Pension moves the other way — as assets are spent down, the means tests bite less.

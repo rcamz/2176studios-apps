@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useId, useRef } from 'react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, ReferenceLine,
@@ -75,12 +75,36 @@ function MacroBar({ label, grams, calories, color, last = false }) {
 const BLOCK_STYLE = { borderColor: 'var(--red)', background: 'rgba(224,82,82,0.06)' };
 
 export default function HealthInstance({ instanceKey = '', label, onRemove, theme = 'light', isComparison = false }) {
+  const uid = useId();
   const [inputs, setInputs] = useState(() =>
     instanceKey === '' ? { ...DEFAULTS, ...decodeParams(window.location.search) } : { ...DEFAULTS }
   );
 
   const set = (key, val) => setInputs(s => ({ ...s, [key]: val }));
   const setNum = (key) => (e) => set(key, num(e.target.value, 0));
+
+  // ── Activity cards are a real radio group. The markup carries the roles and
+  //    the keyboard behaviour; the styling below is untouched.
+  const activityRefs = useRef([]);
+  const activeActivityIndex = Math.max(
+    0, ACTIVITY_LEVELS.findIndex((a) => a.key === inputs.activityLevel)
+  );
+  const onActivityKeyDown = (e, i) => {
+    const last = ACTIVITY_LEVELS.length - 1;
+    let next = null;
+    if (e.key === 'ArrowDown' || e.key === 'ArrowRight') next = i === last ? 0 : i + 1;
+    else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') next = i === 0 ? last : i - 1;
+    else if (e.key === 'Home') next = 0;
+    else if (e.key === 'End') next = last;
+    else if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+      e.preventDefault();
+      set('activityLevel', ACTIVITY_LEVELS[i].key);
+      return;
+    } else return;
+    e.preventDefault();
+    set('activityLevel', ACTIVITY_LEVELS[next].key);
+    activityRefs.current[next]?.focus();
+  };
 
   useEffect(() => {
     if (instanceKey !== '') return;
@@ -108,50 +132,56 @@ export default function HealthInstance({ instanceKey = '', label, onRemove, them
       <div className="panel-section">
         <div className="section-title">Your stats</div>
         <div className="field">
-          <label>Biological sex</label>
-          <div className="segmented">
-            <button className={inputs.sex === 'male' ? 'active' : ''} onClick={() => set('sex', 'male')}>Male</button>
-            <button className={inputs.sex === 'female' ? 'active' : ''} onClick={() => set('sex', 'female')}>Female</button>
+          <label id={`${uid}-sex-label`}>Biological sex</label>
+          <div className="segmented" role="radiogroup" aria-labelledby={`${uid}-sex-label`}>
+            <button type="button" role="radio" aria-checked={inputs.sex === 'male'} className={inputs.sex === 'male' ? 'active' : ''} onClick={() => set('sex', 'male')}>Male</button>
+            <button type="button" role="radio" aria-checked={inputs.sex === 'female'} className={inputs.sex === 'female' ? 'active' : ''} onClick={() => set('sex', 'female')}>Female</button>
           </div>
         </div>
         <div className="field">
-          <label>Age</label>
+          <label htmlFor={`${uid}-age`}>Age</label>
           <div className="input-wrap has-suffix">
-            <input type="number" value={inputs.age || ''} onChange={setNum('age')} min="18" max="100" step="1" />
+            <input id={`${uid}-age`} inputMode="numeric" type="number" value={inputs.age || ''} onChange={setNum('age')} min="18" max="100" step="1" />
             <span className="input-suffix">yrs</span>
           </div>
         </div>
         <div className="field">
-          <label>Height</label>
+          <label htmlFor={`${uid}-height`}>Height</label>
           <div className="input-wrap has-suffix">
-            <input type="number" value={inputs.heightCm || ''} onChange={setNum('heightCm')} min="100" max="250" step="1" />
+            <input id={`${uid}-height`} inputMode="decimal" type="number" value={inputs.heightCm || ''} onChange={setNum('heightCm')} min="100" max="250" step="1" />
             <span className="input-suffix">cm</span>
           </div>
         </div>
         <div className="field">
-          <label>Current weight</label>
+          <label htmlFor={`${uid}-weight`}>Current weight</label>
           <div className="input-wrap has-suffix">
-            <input type="number" value={inputs.weightKg || ''} onChange={setNum('weightKg')} min="30" max="300" step="0.5" />
+            <input id={`${uid}-weight`} inputMode="decimal" type="number" value={inputs.weightKg || ''} onChange={setNum('weightKg')} min="30" max="300" step="0.5" />
             <span className="input-suffix">kg</span>
           </div>
         </div>
         <div className="field">
-          <label>Body fat (optional)</label>
+          <label htmlFor={`${uid}-body-fat`}>Body fat (optional)</label>
           <div className="input-wrap has-suffix">
-            <input type="number" value={inputs.bodyFatPercent || ''} onChange={setNum('bodyFatPercent')} min="0" max="70" step="0.5" placeholder="Leave blank if unknown" />
+            <input id={`${uid}-body-fat`} inputMode="decimal" aria-describedby={`${uid}-body-fat-help`} type="number" value={inputs.bodyFatPercent || ''} onChange={setNum('bodyFatPercent')} min="0" max="70" step="0.5" placeholder="Leave blank if unknown" />
             <span className="input-suffix">%</span>
           </div>
-          <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: 4 }}>
+          <div id={`${uid}-body-fat-help`} style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: 4 }}>
             Above 25% body fat, protein targets scale to lean body mass rather than total weight.
           </div>
         </div>
       </div>
 
-      <div className="panel-section">
-        <div className="section-title">Activity level</div>
-        {ACTIVITY_LEVELS.map((a) => (
+      <div className="panel-section" role="radiogroup" aria-labelledby={`${uid}-activity-label`}>
+        <div className="section-title" id={`${uid}-activity-label`}>Activity level</div>
+        {ACTIVITY_LEVELS.map((a, i) => (
           <div key={a.key} className="field" style={{ marginBottom: 6 }}>
             <div
+              ref={(el) => { activityRefs.current[i] = el; }}
+              role="radio"
+              aria-checked={inputs.activityLevel === a.key}
+              tabIndex={i === activeActivityIndex ? 0 : -1}
+              aria-describedby={`${uid}-activity-${a.key}-examples`}
+              onKeyDown={(e) => onActivityKeyDown(e, i)}
               onClick={() => set('activityLevel', a.key)}
               style={{
                 padding: '8px 12px',
@@ -164,7 +194,7 @@ export default function HealthInstance({ instanceKey = '', label, onRemove, them
               <div style={{ fontSize: '0.78rem', fontWeight: 700, color: inputs.activityLevel === a.key ? 'var(--accent)' : 'var(--text)' }}>
                 {a.label}
               </div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 2 }}>{a.examples}</div>
+              <div id={`${uid}-activity-${a.key}-examples`} style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 2 }}>{a.examples}</div>
             </div>
           </div>
         ))}
@@ -173,25 +203,25 @@ export default function HealthInstance({ instanceKey = '', label, onRemove, them
       <div className="panel-section">
         <div className="section-title">Goal</div>
         <div className="field">
-          <div className="segmented">
-            <button className={inputs.goalType === 'lose' ? 'active' : ''} onClick={() => set('goalType', 'lose')}>Lose weight</button>
-            <button className={inputs.goalType === 'maintain' ? 'active' : ''} onClick={() => set('goalType', 'maintain')}>Maintain</button>
-            <button className={inputs.goalType === 'gain' ? 'active' : ''} onClick={() => set('goalType', 'gain')}>Gain muscle</button>
+          <div className="segmented" role="radiogroup" aria-label="Goal">
+            <button type="button" role="radio" aria-checked={inputs.goalType === 'lose'} className={inputs.goalType === 'lose' ? 'active' : ''} onClick={() => set('goalType', 'lose')}>Lose weight</button>
+            <button type="button" role="radio" aria-checked={inputs.goalType === 'maintain'} className={inputs.goalType === 'maintain' ? 'active' : ''} onClick={() => set('goalType', 'maintain')}>Maintain</button>
+            <button type="button" role="radio" aria-checked={inputs.goalType === 'gain'} className={inputs.goalType === 'gain' ? 'active' : ''} onClick={() => set('goalType', 'gain')}>Gain muscle</button>
           </div>
         </div>
         {inputs.goalType !== 'maintain' && (
           <>
             <div className="field">
-              <label>Goal weight</label>
+              <label htmlFor={`${uid}-goal-weight`}>Goal weight</label>
               <div className="input-wrap has-suffix">
-                <input type="number" value={inputs.goalWeightKg || ''} onChange={setNum('goalWeightKg')} min="30" max="300" step="0.5" />
+                <input id={`${uid}-goal-weight`} inputMode="decimal" type="number" value={inputs.goalWeightKg || ''} onChange={setNum('goalWeightKg')} min="30" max="300" step="0.5" />
                 <span className="input-suffix">kg</span>
               </div>
             </div>
             <div className="field">
-              <label>Timeframe</label>
+              <label htmlFor={`${uid}-goal-weeks`}>Timeframe</label>
               <div className="input-wrap has-suffix">
-                <input type="number" value={inputs.goalWeeks || ''} onChange={setNum('goalWeeks')} min="1" max="104" step="1" />
+                <input id={`${uid}-goal-weeks`} inputMode="numeric" type="number" value={inputs.goalWeeks || ''} onChange={setNum('goalWeeks')} min="1" max="104" step="1" />
                 <span className="input-suffix">weeks</span>
               </div>
             </div>
@@ -203,12 +233,12 @@ export default function HealthInstance({ instanceKey = '', label, onRemove, them
       <div className="panel-section">
         <div className="section-title">BMI reference</div>
         <div className="field">
-          <div className="segmented">
-            <button className={inputs.bmiView === 'standard' ? 'active' : ''} onClick={() => set('bmiView', 'standard')}>Standard</button>
-            <button className={inputs.bmiView === 'who-asian' ? 'active' : ''} onClick={() => set('bmiView', 'who-asian')}>WHO Asian-adjusted</button>
+          <div className="segmented" role="radiogroup" aria-label="BMI reference" aria-describedby={`${uid}-bmi-view-help`}>
+            <button type="button" role="radio" aria-checked={inputs.bmiView === 'standard'} className={inputs.bmiView === 'standard' ? 'active' : ''} onClick={() => set('bmiView', 'standard')}>Standard</button>
+            <button type="button" role="radio" aria-checked={inputs.bmiView === 'who-asian'} className={inputs.bmiView === 'who-asian' ? 'active' : ''} onClick={() => set('bmiView', 'who-asian')}>WHO Asian-adjusted</button>
           </div>
         </div>
-        <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>
+        <div id={`${uid}-bmi-view-help`} style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>
           Standard WHO cut-offs are the default. The Asian-adjusted view shows the 2004 WHO Expert
           Consultation's public health action points — not an Australian recommendation.
         </div>
@@ -230,7 +260,7 @@ export default function HealthInstance({ instanceKey = '', label, onRemove, them
   const instanceHeader = isComparison && (
     <div className="instance-header">
       <span className="instance-label">{label}</span>
-      <button className="instance-remove" onClick={onRemove || undefined} title="Remove scenario"
+      <button type="button" className="instance-remove" onClick={onRemove || undefined} title="Remove scenario" aria-label={`Remove ${label || 'scenario'}`}
         style={!onRemove ? { visibility: 'hidden', pointerEvents: 'none' } : {}}>×</button>
     </div>
   );
@@ -244,7 +274,7 @@ export default function HealthInstance({ instanceKey = '', label, onRemove, them
         <div className="calc-body">
           {inputPanel}
           <div className="results-panel">
-            <div className="rate-callout" style={inputs.age > 0 ? BLOCK_STYLE : undefined}>
+            <div className="rate-callout" role="alert" style={inputs.age > 0 ? BLOCK_STYLE : undefined}>
               <strong>{inputs.age > 0 ? 'No results shown — this calculator is for adults' : 'Enter your age'}</strong>
               {result.ageBlockMessage}
             </div>
@@ -290,7 +320,7 @@ export default function HealthInstance({ instanceKey = '', label, onRemove, them
           {/* HARD BLOCK. The target is not rendered anywhere on this screen —
               §7.4 records this as a block, not a warning beside a figure. */}
           {result.goalBlocked && result.blockReasons.map((b) => (
-            <div key={b.code} className="rate-callout" style={BLOCK_STYLE}>
+            <div key={b.code} className="rate-callout" role="alert" style={BLOCK_STYLE}>
               <strong>{b.title}</strong>
               {b.message}
             </div>
@@ -304,14 +334,14 @@ export default function HealthInstance({ instanceKey = '', label, onRemove, them
           ))}
 
           <div className="savings-card">
-            <div className="savings-label">
+            <div className="savings-label" id={`${uid}-headline-label`}>
               {result.goalBlocked
                 ? 'Daily maintenance calories'
                 : goalShown
                   ? (isLosing ? 'Caloric deficit target' : 'Caloric surplus target')
                   : 'Daily maintenance calories'}
             </div>
-            <div className="savings-amount">
+            <div className="savings-amount" aria-live="polite" aria-atomic="true" aria-labelledby={`${uid}-headline-label`}>
               {(result.goalBlocked ? result.maintenanceCalories : calories).toLocaleString()}{' '}
               <span style={{ fontSize: '1.2rem', fontWeight: 400 }}>kcal</span>
             </div>
@@ -413,6 +443,7 @@ export default function HealthInstance({ instanceKey = '', label, onRemove, them
               <div className="chart-title">
                 Projected weight — {isLosing ? 'loss' : 'gain'} slows as BMR moves with your weight
               </div>
+              <div role="img" aria-label={`Line chart of projected weight over ${result.chartData.length - 1} weeks, from ${inputs.weightKg} kg to a ${inputs.goalWeightKg} kg goal, with the rate of ${isLosing ? 'loss' : 'gain'} slowing as BMR moves with your weight.`}>
               <ResponsiveContainer width="100%" height={220}>
                 <LineChart data={result.chartData} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={chartGrid} />
@@ -423,6 +454,21 @@ export default function HealthInstance({ instanceKey = '', label, onRemove, them
                   <Line type="monotone" dataKey="Weight (kg)" stroke={chartAccent} strokeWidth={2} dot={false} />
                 </LineChart>
               </ResponsiveContainer>
+              </div>
+              <table className="visually-hidden">
+                <caption>Projected weight by week</caption>
+                <thead>
+                  <tr><th scope="col">Week</th><th scope="col">Weight (kg)</th></tr>
+                </thead>
+                <tbody>
+                  {result.chartData.map((d) => (
+                    <tr key={d.week}>
+                      <th scope="row">{d.week}</th>
+                      <td>{d['Weight (kg)']}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
 

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useId } from 'react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ReferenceLine, ResponsiveContainer,
@@ -58,6 +58,7 @@ function decodeParams(search) {
 }
 
 export default function SalarySacrificeInstance({ instanceKey = '', label, onRemove, theme = 'light', isComparison = false }) {
+  const uid = useId();
   const [inputs, setInputs] = useState(() =>
     instanceKey === '' ? { ...DEFAULTS, ...decodeParams(window.location.search) } : { ...DEFAULTS }
   );
@@ -80,6 +81,15 @@ export default function SalarySacrificeInstance({ instanceKey = '', label, onRem
   const chartTick    = theme === 'dark' ? 'rgba(240,239,233,0.35)' : 'rgba(13,13,16,0.4)';
   const tooltipBg    = theme === 'dark' ? '#1D1D22' : '#FAFAF6';
   const tooltipBorder = theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+
+  // Text alternative for the projection chart — the same two series it plots.
+  const projRows = result.projectionData || [];
+  const projLast = projRows[projRows.length - 1];
+  const chartAlt = projLast
+    ? `Line chart projecting super over ${projLast.year} years. With salary sacrifice the balance reaches `
+      + `${fmt(projLast['With sacrifice'])}; without sacrifice, super plus the extra take-home invested outside `
+      + `reaches ${fmt(projLast['Without sacrifice'])}. Difference ${fmt(result.projectionDelta)}.`
+    : 'Projection chart.';
 
   const savingHeadline = result.division293Applies
     ? `by paying 15% + 15% Division 293 super tax instead of your ${fmtPct(result.withSacrifice.marginalRate)} marginal rate`
@@ -111,43 +121,43 @@ export default function SalarySacrificeInstance({ instanceKey = '', label, onRem
           <div className="panel-section">
             <div className="section-title">Salary &amp; super</div>
             <div className="field">
-              <label>Gross annual salary</label>
+              <label htmlFor={`${uid}-grosssalary`}>Gross annual salary</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.grossSalary || ''} onChange={setNum('grossSalary')} min="0" step="1000" />
+                <input id={`${uid}-grosssalary`} type="number" inputMode="decimal" value={inputs.grossSalary || ''} onChange={setNum('grossSalary')} min="0" step="1000" />
               </div>
             </div>
             <div className="field">
-              <label>Age</label>
+              <label htmlFor={`${uid}-age`}>Age</label>
               <div className="input-wrap has-suffix">
-                <input type="number" value={inputs.age || ''} onChange={setNum('age')} min="15" max="75" step="1" />
+                <input id={`${uid}-age`} type="number" inputMode="numeric" value={inputs.age || ''} onChange={setNum('age')} min="15" max="75" step="1" />
                 <span className="input-suffix">yrs</span>
               </div>
             </div>
             <div className="field">
-              <label>Employer SG rate</label>
+              <label htmlFor={`${uid}-sgrate`}>Employer SG rate</label>
               <div className="input-wrap has-suffix">
-                <input type="number" value={inputs.sgRate || ''} onChange={setNum('sgRate')} min="0" max="30" step="0.5" />
+                <input id={`${uid}-sgrate`} type="number" inputMode="decimal" aria-describedby={`${uid}-sgrate-note`} value={inputs.sgRate || ''} onChange={setNum('sgRate')} min="0" max="30" step="0.5" />
                 <span className="input-suffix">%</span>
               </div>
-              <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
+              <p id={`${uid}-sgrate-note`} style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
                 SG of {fmt(result.sgContribution)} leaves {fmt(result.capHeadroom)} of room under your {fmt(result.effectiveCap)} cap.
               </p>
             </div>
             <div className="field">
-              <label>Salary sacrifice to super (pre-tax)</label>
+              <label htmlFor={`${uid}-sacrifice`}>Salary sacrifice to super (pre-tax)</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.sacrificeAmount || ''} onChange={setNum('sacrificeAmount')} min="0" step="500" />
+                <input id={`${uid}-sacrifice`} type="number" inputMode="decimal" value={inputs.sacrificeAmount || ''} onChange={setNum('sacrificeAmount')} min="0" step="500" />
               </div>
             </div>
             <div className="field">
-              <label>Other concessional contributions (second employer, personal deductible)</label>
+              <label htmlFor={`${uid}-othersacrifice`}>Other concessional contributions (second employer, personal deductible)</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.otherSacrifice || ''} onChange={setNum('otherSacrifice')} min="0" step="500" />
+                <input id={`${uid}-othersacrifice`} type="number" inputMode="decimal" aria-describedby={`${uid}-othersacrifice-note`} value={inputs.otherSacrifice || ''} onChange={setNum('otherSacrifice')} min="0" step="500" />
               </div>
-              <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
+              <p id={`${uid}-othersacrifice-note`} style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
                 Counts toward the cap and is taxed the same way. A novated lease is not a concessional contribution — use the novated lease calculator for that.
               </p>
             </div>
@@ -156,26 +166,26 @@ export default function SalarySacrificeInstance({ instanceKey = '', label, onRem
           <div className="panel-section">
             <div className="section-title">Carry-forward cap</div>
             <div className="field">
-              <label>Total super balance at 30 June last year</label>
+              <label htmlFor={`${uid}-superbalance`}>Total super balance at 30 June last year</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.superBalance || ''} onChange={setNum('superBalance')} min="0" step="5000" />
+                <input id={`${uid}-superbalance`} type="number" inputMode="decimal" value={inputs.superBalance || ''} onChange={setNum('superBalance')} min="0" step="5000" />
               </div>
             </div>
             <div className="field">
-              <label>Unused concessional cap from the last 5 years</label>
+              <label htmlFor={`${uid}-priorcap`}>Unused concessional cap from the last 5 years</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.priorUnusedCap || ''} onChange={setNum('priorUnusedCap')} min="0" step="1000" />
+                <input id={`${uid}-priorcap`} type="number" inputMode="decimal" value={inputs.priorUnusedCap || ''} onChange={setNum('priorUnusedCap')} min="0" step="1000" />
               </div>
             </div>
             <div className="field">
-              <label>Use carry-forward this year</label>
-              <div className="segmented">
-                <button className={inputs.useCarryForward ? 'active' : ''} onClick={() => set('useCarryForward', true)}>Yes</button>
-                <button className={!inputs.useCarryForward ? 'active' : ''} onClick={() => set('useCarryForward', false)}>No</button>
+              <label id={`${uid}-carryforward-label`}>Use carry-forward this year</label>
+              <div className="segmented" role="radiogroup" aria-labelledby={`${uid}-carryforward-label`} aria-describedby={`${uid}-carryforward-note`}>
+                <button className={inputs.useCarryForward ? 'active' : ''} role="radio" aria-checked={inputs.useCarryForward} onClick={() => set('useCarryForward', true)}>Yes</button>
+                <button className={!inputs.useCarryForward ? 'active' : ''} role="radio" aria-checked={!inputs.useCarryForward} onClick={() => set('useCarryForward', false)}>No</button>
               </div>
-              <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
+              <p id={`${uid}-carryforward-note`} style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
                 {result.carryForward.eligible
                   ? `Available: ${fmt(result.carryForward.available)}. Unused cap expires after ${result.carryForward.lookbackYears} years.`
                   : `Not available — your total super balance was ${fmt(result.carryForward.totalSuperBalance)} at 30 June, and carry-forward requires under ${fmt(result.carryForward.balanceTest)}.`}
@@ -186,16 +196,16 @@ export default function SalarySacrificeInstance({ instanceKey = '', label, onRem
           <div className="panel-section">
             <div className="section-title">Projection settings</div>
             <div className="field">
-              <label>Projection horizon</label>
+              <label htmlFor={`${uid}-horizon`}>Projection horizon</label>
               <div className="input-wrap has-suffix">
-                <input type="number" value={inputs.horizonYears || ''} onChange={setNum('horizonYears')} min="1" max="40" step="5" />
+                <input id={`${uid}-horizon`} type="number" inputMode="numeric" value={inputs.horizonYears || ''} onChange={setNum('horizonYears')} min="1" max="40" step="5" />
                 <span className="input-suffix">yrs</span>
               </div>
             </div>
             <div className="field">
-              <label>Expected investment return</label>
+              <label htmlFor={`${uid}-return`}>Expected investment return</label>
               <div className="input-wrap has-suffix">
-                <input type="number" value={inputs.investmentReturn || ''} onChange={setNum('investmentReturn')} min="0" max="20" step="0.5" />
+                <input id={`${uid}-return`} type="number" inputMode="decimal" value={inputs.investmentReturn || ''} onChange={setNum('investmentReturn')} min="0" max="20" step="0.5" />
                 <span className="input-suffix">% p.a.</span>
               </div>
             </div>
@@ -231,7 +241,7 @@ export default function SalarySacrificeInstance({ instanceKey = '', label, onRem
 
           <div className="savings-card">
             <div className="savings-label">Annual tax saving</div>
-            <div className="savings-amount">{fmt(result.annualTaxSaving)}</div>
+            <div className="savings-amount" aria-live="polite" aria-atomic="true">{fmt(result.annualTaxSaving)}</div>
             <div className="savings-sub">{savingHeadline} — an effective {fmtPct(result.savingRate)} on {fmt(result.totalSacrifice)} sacrificed</div>
             <div className="savings-meta">
               <div className="savings-stat">
@@ -272,6 +282,7 @@ export default function SalarySacrificeInstance({ instanceKey = '', label, onRem
 
           <div className="chart-card">
             <div className="chart-title">Projected wealth after {inputs.horizonYears} years</div>
+            <div role="img" aria-label={chartAlt}>
             <ResponsiveContainer width="100%" height={260}>
               <LineChart data={result.projectionData} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={chartGrid} />
@@ -287,6 +298,26 @@ export default function SalarySacrificeInstance({ instanceKey = '', label, onRem
                 <Line type="monotone" dataKey="Without sacrifice" stroke={chartGhost} strokeWidth={1.5} strokeDasharray="5 4" dot={false} />
               </LineChart>
             </ResponsiveContainer>
+            </div>
+            <table className="visually-hidden">
+              <caption>Projected balance by year — same figures as the chart</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Year</th>
+                  <th scope="col">With sacrifice</th>
+                  <th scope="col">Without sacrifice</th>
+                </tr>
+              </thead>
+              <tbody>
+                {projRows.map((r) => (
+                  <tr key={r.year}>
+                    <th scope="row">{r.year}</th>
+                    <td>{fmt(r['With sacrifice'])}</td>
+                    <td>{fmt(r['Without sacrifice'])}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
             <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', margin: '8px 0 0' }}>
               Apples to apples: &ldquo;without sacrifice&rdquo; is your super plus the {fmt(result.netTakeHomeCost)}/yr of extra take-home pay invested outside super. Super earnings are taxed at 15% ({fmtPct(result.superReturn)} net), outside earnings at your marginal rate ({fmtPct(result.outsideReturn)} net). Difference after {inputs.horizonYears} years: {fmt(result.projectionDelta)}.
             </p>

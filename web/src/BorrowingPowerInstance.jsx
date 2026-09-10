@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useId } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Cell,
@@ -101,6 +101,8 @@ export default function BorrowingPowerInstance({
       : { ...DEFAULTS };
   });
 
+  const uid = useId();
+
   const set = (key, val) => setInputs(s => ({ ...s, [key]: val }));
   const setNum = (key) => (e) => set(key, parseFloat(e.target.value) || 0);
 
@@ -130,7 +132,7 @@ export default function BorrowingPowerInstance({
       {isComparison && (
         <div className="instance-header">
           <span className="instance-label">{label}</span>
-          <button className="instance-remove" onClick={onRemove || undefined} title="Remove scenario"
+          <button className="instance-remove" onClick={onRemove || undefined} title="Remove scenario" aria-label={`Remove scenario ${label ?? ''}`.trim()}
             style={!onRemove ? { visibility: 'hidden', pointerEvents: 'none' } : {}}>×</button>
         </div>
       )}
@@ -151,26 +153,26 @@ export default function BorrowingPowerInstance({
           <div className="panel-section">
             <div className="section-title">Applicants</div>
             <div className="field">
-              <label>Applicant type</label>
-              <div className="segmented">
-                <button className={!isJoint ? 'active' : ''} onClick={() => set('applicantType', 'single')}>Single</button>
-                <button className={isJoint ? 'active' : ''} onClick={() => set('applicantType', 'joint')}>Joint</button>
+              <label id={`${uid}-applicant-label`}>Applicant type</label>
+              <div className="segmented" role="radiogroup" aria-labelledby={`${uid}-applicant-label`}>
+                <button role="radio" aria-checked={!isJoint} className={!isJoint ? 'active' : ''} onClick={() => set('applicantType', 'single')}>Single</button>
+                <button role="radio" aria-checked={isJoint} className={isJoint ? 'active' : ''} onClick={() => set('applicantType', 'joint')}>Joint</button>
               </div>
             </div>
             <div className="field">
-              <label>Gross annual income{isJoint ? ' — Applicant 1' : ''}</label>
+              <label htmlFor={`${uid}-income1`}>Gross annual income{isJoint ? ' — Applicant 1' : ''}</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.grossIncome1 || ''} onChange={setNum('grossIncome1')} min="0" step="1000" />
+                <input id={`${uid}-income1`} type="number" inputMode="decimal" value={inputs.grossIncome1 || ''} onChange={setNum('grossIncome1')} min="0" step="1000" />
               </div>
             </div>
             <div className="field">
-              <label>Employment type{isJoint ? ' — Applicant 1' : ''}</label>
-              <select className="field-select" value={inputs.employmentType1} onChange={e => set('employmentType1', e.target.value)}>
+              <label htmlFor={`${uid}-emp1`}>Employment type{isJoint ? ' — Applicant 1' : ''}</label>
+              <select id={`${uid}-emp1`} className="field-select" aria-describedby={inputs.employmentType1 !== 'payg' ? `${uid}-emp1-help` : undefined} value={inputs.employmentType1} onChange={e => set('employmentType1', e.target.value)}>
                 {Object.entries(EMPLOYMENT).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
               </select>
               {inputs.employmentType1 !== 'payg' && (
-                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                <div id={`${uid}-emp1-help`} style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
                   Lenders shade this income before assessing it.
                 </div>
               )}
@@ -178,41 +180,41 @@ export default function BorrowingPowerInstance({
             {isJoint && (
               <>
                 <div className="field">
-                  <label>Gross annual income — Applicant 2</label>
+                  <label htmlFor={`${uid}-income2`}>Gross annual income — Applicant 2</label>
                   <div className="input-wrap has-prefix">
                     <span className="input-prefix">$</span>
-                    <input type="number" value={inputs.grossIncome2 || ''} onChange={setNum('grossIncome2')} min="0" step="1000" />
+                    <input id={`${uid}-income2`} type="number" inputMode="decimal" value={inputs.grossIncome2 || ''} onChange={setNum('grossIncome2')} min="0" step="1000" />
                   </div>
                 </div>
                 <div className="field">
-                  <label>Employment type — Applicant 2</label>
-                  <select className="field-select" value={inputs.employmentType2} onChange={e => set('employmentType2', e.target.value)}>
+                  <label htmlFor={`${uid}-emp2`}>Employment type — Applicant 2</label>
+                  <select id={`${uid}-emp2`} className="field-select" value={inputs.employmentType2} onChange={e => set('employmentType2', e.target.value)}>
                     {Object.entries(EMPLOYMENT).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                   </select>
                 </div>
               </>
             )}
             <div className="field">
-              <label>Rental income (annual)</label>
+              <label htmlFor={`${uid}-rental`}>Rental income (annual)</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.rentalIncome || ''} onChange={setNum('rentalIncome')} min="0" step="1000" />
+                <input id={`${uid}-rental`} type="number" inputMode="decimal" aria-describedby={`${uid}-rental-help`} value={inputs.rentalIncome || ''} onChange={setNum('rentalIncome')} min="0" step="1000" />
               </div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
+              <div id={`${uid}-rental-help`} style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
                 Shaded to 80% and taxed, per APRA guidance.
               </div>
             </div>
             <div className="field">
-              <label>Other taxable income (annual)</label>
+              <label htmlFor={`${uid}-other-income`}>Other taxable income (annual)</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.otherIncome || ''} onChange={setNum('otherIncome')} min="0" step="1000" />
+                <input id={`${uid}-other-income`} type="number" inputMode="decimal" value={inputs.otherIncome || ''} onChange={setNum('otherIncome')} min="0" step="1000" />
               </div>
             </div>
             <div className="field">
-              <label>Dependants</label>
+              <label htmlFor={`${uid}-dependants`}>Dependants</label>
               <div className="input-wrap has-suffix">
-                <input type="number" value={inputs.dependants || ''} onChange={setNum('dependants')} min="0" max="10" step="1" />
+                <input id={`${uid}-dependants`} type="number" inputMode="numeric" value={inputs.dependants || ''} onChange={setNum('dependants')} min="0" max="10" step="1" />
                 <span className="input-suffix">children</span>
               </div>
             </div>
@@ -221,17 +223,17 @@ export default function BorrowingPowerInstance({
           <div className="panel-section">
             <div className="section-title">Deposit</div>
             <div className="field">
-              <label>Deposit saved</label>
+              <label htmlFor={`${uid}-deposit`}>Deposit saved</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.deposit || ''} onChange={setNum('deposit')} min="0" step="10000" />
+                <input id={`${uid}-deposit`} type="number" inputMode="decimal" value={inputs.deposit || ''} onChange={setNum('deposit')} min="0" step="10000" />
               </div>
             </div>
             <div className="field">
-              <label>Using the First Home Guarantee?</label>
-              <div className="segmented">
-                <button className={inputs.firstHomeGuarantee ? 'active' : ''} onClick={() => set('firstHomeGuarantee', true)}>Yes</button>
-                <button className={!inputs.firstHomeGuarantee ? 'active' : ''} onClick={() => set('firstHomeGuarantee', false)}>No</button>
+              <label id={`${uid}-fhg-label`}>Using the First Home Guarantee?</label>
+              <div className="segmented" role="radiogroup" aria-labelledby={`${uid}-fhg-label`}>
+                <button role="radio" aria-checked={inputs.firstHomeGuarantee} className={inputs.firstHomeGuarantee ? 'active' : ''} onClick={() => set('firstHomeGuarantee', true)}>Yes</button>
+                <button role="radio" aria-checked={!inputs.firstHomeGuarantee} className={!inputs.firstHomeGuarantee ? 'active' : ''} onClick={() => set('firstHomeGuarantee', false)}>No</button>
               </div>
             </div>
           </div>
@@ -239,42 +241,42 @@ export default function BorrowingPowerInstance({
           <div className="panel-section">
             <div className="section-title">Existing debts</div>
             <div className="field">
-              <label>Credit card limits (total)</label>
+              <label htmlFor={`${uid}-cards`}>Credit card limits (total)</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.creditCardLimits || ''} onChange={setNum('creditCardLimits')} min="0" step="1000" />
+                <input id={`${uid}-cards`} type="number" inputMode="decimal" aria-describedby={`${uid}-cards-help`} value={inputs.creditCardLimits || ''} onChange={setNum('creditCardLimits')} min="0" step="1000" />
               </div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
+              <div id={`${uid}-cards-help`} style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
                 Assessed on the full limit at 3.8% a month, whether or not you owe anything.
               </div>
             </div>
             <div className="field">
-              <label>Personal loan (monthly repayment)</label>
+              <label htmlFor={`${uid}-personal-loan`}>Personal loan (monthly repayment)</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.personalLoanMonthly || ''} onChange={setNum('personalLoanMonthly')} min="0" step="50" />
+                <input id={`${uid}-personal-loan`} type="number" inputMode="decimal" value={inputs.personalLoanMonthly || ''} onChange={setNum('personalLoanMonthly')} min="0" step="50" />
               </div>
             </div>
             <div className="field">
-              <label>Car loan (monthly repayment)</label>
+              <label htmlFor={`${uid}-car-loan`}>Car loan (monthly repayment)</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.carLoanMonthly || ''} onChange={setNum('carLoanMonthly')} min="0" step="50" />
+                <input id={`${uid}-car-loan`} type="number" inputMode="decimal" value={inputs.carLoanMonthly || ''} onChange={setNum('carLoanMonthly')} min="0" step="50" />
               </div>
             </div>
             <div className="field">
-              <label>HELP/HECS balance{isJoint ? ' — Applicant 1' : ''}</label>
+              <label htmlFor={`${uid}-help1`}>HELP/HECS balance{isJoint ? ' — Applicant 1' : ''}</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.helpBalance1 || ''} onChange={setNum('helpBalance1')} min="0" step="1000" />
+                <input id={`${uid}-help1`} type="number" inputMode="decimal" value={inputs.helpBalance1 || ''} onChange={setNum('helpBalance1')} min="0" step="1000" />
               </div>
             </div>
             {isJoint && (
               <div className="field">
-                <label>HELP/HECS balance — Applicant 2</label>
+                <label htmlFor={`${uid}-help2`}>HELP/HECS balance — Applicant 2</label>
                 <div className="input-wrap has-prefix">
                   <span className="input-prefix">$</span>
-                  <input type="number" value={inputs.helpBalance2 || ''} onChange={setNum('helpBalance2')} min="0" step="1000" />
+                  <input id={`${uid}-help2`} type="number" inputMode="decimal" value={inputs.helpBalance2 || ''} onChange={setNum('helpBalance2')} min="0" step="1000" />
                 </div>
               </div>
             )}
@@ -283,47 +285,47 @@ export default function BorrowingPowerInstance({
           <div className="panel-section">
             <div className="section-title">Loan &amp; expenses</div>
             <div className="field">
-              <label>Interest rate</label>
+              <label htmlFor={`${uid}-rate`}>Interest rate</label>
               <div className="input-wrap has-suffix">
-                <input type="number" value={inputs.interestRate || ''} onChange={setNum('interestRate')} min="0" max="20" step="0.1" />
+                <input id={`${uid}-rate`} type="number" inputMode="decimal" value={inputs.interestRate || ''} onChange={setNum('interestRate')} min="0" max="20" step="0.1" />
                 <span className="input-suffix">% p.a.</span>
               </div>
             </div>
             <div className="field">
-              <label>Loan term</label>
+              <label htmlFor={`${uid}-term`}>Loan term</label>
               <div className="input-wrap has-suffix">
-                <input type="number" value={inputs.termYears || ''} onChange={setNum('termYears')} min="5" max="40" step="5" />
+                <input id={`${uid}-term`} type="number" inputMode="numeric" value={inputs.termYears || ''} onChange={setNum('termYears')} min="5" max="40" step="5" />
                 <span className="input-suffix">yrs</span>
               </div>
             </div>
             <div className="field">
-              <label>Repayment type</label>
-              <div className="segmented">
-                <button className={inputs.repaymentType === 'pi' ? 'active' : ''} onClick={() => set('repaymentType', 'pi')}>Principal &amp; interest</button>
-                <button className={inputs.repaymentType === 'io' ? 'active' : ''} onClick={() => set('repaymentType', 'io')}>Interest only</button>
+              <label id={`${uid}-repayment-label`}>Repayment type</label>
+              <div className="segmented" role="radiogroup" aria-labelledby={`${uid}-repayment-label`} aria-describedby={inputs.repaymentType === 'io' ? `${uid}-repayment-help` : undefined}>
+                <button role="radio" aria-checked={inputs.repaymentType === 'pi'} className={inputs.repaymentType === 'pi' ? 'active' : ''} onClick={() => set('repaymentType', 'pi')}>Principal &amp; interest</button>
+                <button role="radio" aria-checked={inputs.repaymentType === 'io'} className={inputs.repaymentType === 'io' ? 'active' : ''} onClick={() => set('repaymentType', 'io')}>Interest only</button>
               </div>
               {inputs.repaymentType === 'io' && (
-                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                <div id={`${uid}-repayment-help`} style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
                   Assessed on the higher repayment that applies once the interest-only period ends.
                 </div>
               )}
             </div>
             {inputs.repaymentType === 'io' && (
               <div className="field">
-                <label>Interest-only period</label>
+                <label htmlFor={`${uid}-io-years`}>Interest-only period</label>
                 <div className="input-wrap has-suffix">
-                  <input type="number" value={inputs.interestOnlyYears || ''} onChange={setNum('interestOnlyYears')} min="1" max="10" step="1" />
+                  <input id={`${uid}-io-years`} type="number" inputMode="numeric" value={inputs.interestOnlyYears || ''} onChange={setNum('interestOnlyYears')} min="1" max="10" step="1" />
                   <span className="input-suffix">yrs</span>
                 </div>
               </div>
             )}
             <div className="field">
-              <label>Monthly living expenses</label>
+              <label htmlFor={`${uid}-expenses`}>Monthly living expenses</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.monthlyExpenses || ''} onChange={setNum('monthlyExpenses')} min="0" step="100" />
+                <input id={`${uid}-expenses`} type="number" inputMode="decimal" aria-describedby={`${uid}-expenses-help`} value={inputs.monthlyExpenses || ''} onChange={setNum('monthlyExpenses')} min="0" step="100" />
               </div>
-              <div style={{ fontSize: '0.72rem', color: result.benchmarkApplied ? 'var(--red)' : 'var(--text-muted)', marginTop: 4 }}>
+              <div id={`${uid}-expenses-help`} style={{ fontSize: '0.72rem', color: result.benchmarkApplied ? 'var(--red)' : 'var(--text-muted)', marginTop: 4 }}>
                 {result.benchmarkApplied
                   ? `Below our benchmark of ${fmt(result.expenseBenchmark)}/mo for your household — the higher figure is used.`
                   : `Above our benchmark of ${fmt(result.expenseBenchmark)}/mo, so your figure is used.`}
@@ -338,7 +340,7 @@ export default function BorrowingPowerInstance({
             <div className="savings-label">
               Estimated borrowing power{depositBinds ? ' — limited by your deposit' : ''}
             </div>
-            <div className="savings-amount">{fmtShort(result.maxBorrowing)}</div>
+            <div className="savings-amount" aria-live="polite" aria-atomic="true">{fmtShort(result.maxBorrowing)}</div>
             <div className="savings-sub">
               {depositBinds
                 ? `You could service ${fmtShort(result.maxByServiceability)}, but your deposit caps you here`
@@ -396,6 +398,7 @@ export default function BorrowingPowerInstance({
 
           <div className="chart-card">
             <div className="chart-title">How much rate changes move your limit</div>
+            <div role="img" aria-label={`Bar chart of borrowing power against interest rate changes. At today's rate of ${inputs.interestRate}% you could borrow ${fmt(result.maxBorrowing)}; a 2% rise takes that to ${fmt(result.sensitivity[result.sensitivity.length - 1].borrowing)}.`}>
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={result.sensitivity} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={chartGrid} vertical={false} />
@@ -413,6 +416,22 @@ export default function BorrowingPowerInstance({
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
+            </div>
+            <table className="visually-hidden">
+              <caption>Maximum borrowing at each interest rate change</caption>
+              <thead>
+                <tr><th scope="col">Rate change</th><th scope="col">Interest rate</th><th scope="col">Maximum borrowing</th></tr>
+              </thead>
+              <tbody>
+                {result.sensitivity.map((s) => (
+                  <tr key={s.delta}>
+                    <th scope="row">{s.delta === 0 ? 'Today’s rate' : `${s.delta > 0 ? '+' : ''}${s.delta}%`}</th>
+                    <td>{s.rate.toFixed(2)}%</td>
+                    <td>{fmt(s.borrowing)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
 
           <Workings data={explanation} />

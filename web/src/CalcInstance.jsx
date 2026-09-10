@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useId } from 'react';
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ResponsiveContainer, Cell,
@@ -127,6 +127,8 @@ export default function CalcInstance({
   const [showTable, setShowTable] = useState(false);
   const [showAllRows, setShowAllRows] = useState(false);
   const [showSensitivity, setShowSensitivity] = useState(false);
+
+  const uid = useId();
 
   const set = (key, val) => setInputs((s) => ({ ...s, [key]: val }));
   const setNum = (key) => (e) => set(key, parseFloat(e.target.value) || 0);
@@ -311,7 +313,7 @@ export default function CalcInstance({
       {isComparison && (
         <div className="instance-header">
           <span className="instance-label">{label}</span>
-          <button className="instance-remove" onClick={onRemove || undefined} title="Remove scenario"
+          <button className="instance-remove" onClick={onRemove || undefined} title="Remove scenario" aria-label={`Remove scenario ${label ?? ''}`.trim()}
             style={!onRemove ? { visibility: 'hidden', pointerEvents: 'none' } : {}}>×</button>
         </div>
       )}
@@ -336,20 +338,20 @@ export default function CalcInstance({
           <div className="panel-section">
             <div className="section-title">Loan basics</div>
             <div className="field">
-              <label>Loan amount</label>
+              <label htmlFor={`${uid}-loan`}>Loan amount</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.loanAmount || ''} onChange={setNum('loanAmount')} min="0" step="1000" />
+                <input id={`${uid}-loan`} type="number" inputMode="decimal" value={inputs.loanAmount || ''} onChange={setNum('loanAmount')} min="0" step="1000" />
               </div>
             </div>
             <div className="field">
-              <label>Property value <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>— optional, for LVR and LMI</span></label>
+              <label htmlFor={`${uid}-property`}>Property value <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>— optional, for LVR and LMI</span></label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.propertyValue || ''} onChange={setNum('propertyValue')} min="0" step="10000" placeholder="0 to skip" />
+                <input id={`${uid}-property`} type="number" inputMode="decimal" aria-describedby={lmi && lmi.lvr !== null ? `${uid}-property-help` : undefined} value={inputs.propertyValue || ''} onChange={setNum('propertyValue')} min="0" step="10000" placeholder="0 to skip" />
               </div>
               {lmi && lmi.lvr !== null && (
-                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                <div id={`${uid}-property-help`} style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
                   LVR {(lmi.lvr * 100).toFixed(1)}%
                   {lmi.payable
                     ? ` · LMI approx ${fmt(lmi.low)}–${fmt(lmi.high)}`
@@ -358,23 +360,23 @@ export default function CalcInstance({
               )}
             </div>
             <div className="field">
-              <label>Loan term</label>
+              <label htmlFor={`${uid}-term`}>Loan term</label>
               <div className="input-wrap has-suffix">
-                <input type="number" value={inputs.termYears || ''} onChange={setNum('termYears')} min="1" max="40" step="1" />
+                <input id={`${uid}-term`} type="number" inputMode="numeric" value={inputs.termYears || ''} onChange={setNum('termYears')} min="1" max="40" step="1" />
                 <span className="input-suffix">yrs</span>
               </div>
             </div>
             <div className="field">
-              <label>Repayment frequency</label>
-              <div className="segmented">
+              <label id={`${uid}-freq-label`}>Repayment frequency</label>
+              <div className="segmented" role="radiogroup" aria-labelledby={`${uid}-freq-label`} aria-describedby={inputs.paymentFrequency !== 'monthly' ? `${uid}-freq-help` : undefined}>
                 {['monthly', 'fortnightly', 'weekly'].map((f) => (
-                  <button key={f} className={inputs.paymentFrequency === f ? 'active' : ''} onClick={() => set('paymentFrequency', f)}>
+                  <button key={f} role="radio" aria-checked={inputs.paymentFrequency === f} className={inputs.paymentFrequency === f ? 'active' : ''} onClick={() => set('paymentFrequency', f)}>
                     {FREQ_LABEL[f]}
                   </button>
                 ))}
               </div>
               {inputs.paymentFrequency !== 'monthly' && (
-                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                <div id={`${uid}-freq-help`} style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
                   {inputs.paymentFrequency === 'fortnightly'
                     ? 'Half the monthly repayment, 26 times a year — 13 months’ worth.'
                     : 'A quarter of the monthly repayment, 52 times a year — 13 months’ worth.'}
@@ -382,25 +384,25 @@ export default function CalcInstance({
               )}
             </div>
             <div className="field">
-              <label>Interest-only period</label>
+              <label htmlFor={`${uid}-io-years`}>Interest-only period</label>
               <div className="input-wrap has-suffix">
-                <input type="number" value={inputs.interestOnlyYears || ''} onChange={setNum('interestOnlyYears')} min="0" max={Math.max(0, inputs.termYears - 1)} step="1" placeholder="0" />
+                <input id={`${uid}-io-years`} type="number" inputMode="numeric" value={inputs.interestOnlyYears || ''} onChange={setNum('interestOnlyYears')} min="0" max={Math.max(0, inputs.termYears - 1)} step="1" placeholder="0" />
                 <span className="input-suffix">yrs</span>
               </div>
             </div>
             <div className="field">
-              <label>Loan start</label>
-              <input className="field-select" type="date" value={inputs.loanStart} onChange={(e) => set('loanStart', e.target.value)} />
+              <label htmlFor={`${uid}-start`}>Loan start</label>
+              <input id={`${uid}-start`} className="field-select" type="date" value={inputs.loanStart} onChange={(e) => set('loanStart', e.target.value)} />
             </div>
           </div>
 
           <div className="panel-section">
             <div className="section-title">Interest rate</div>
             <div className="field">
-              <label>Rate type</label>
-              <div className="segmented">
+              <label id={`${uid}-ratetype-label`}>Rate type</label>
+              <div className="segmented" role="radiogroup" aria-labelledby={`${uid}-ratetype-label`}>
                 {['variable', 'fixed', 'split'].map((t) => (
-                  <button key={t} className={inputs.rateType === t ? 'active' : ''} onClick={() => set('rateType', t)}>
+                  <button key={t} role="radio" aria-checked={inputs.rateType === t} className={inputs.rateType === t ? 'active' : ''} onClick={() => set('rateType', t)}>
                     {t.charAt(0).toUpperCase() + t.slice(1)}
                   </button>
                 ))}
@@ -409,9 +411,9 @@ export default function CalcInstance({
 
             {inputs.rateType === 'variable' && (
               <div className="field">
-                <label>Interest rate</label>
+                <label htmlFor={`${uid}-rate`}>Interest rate</label>
                 <div className="input-wrap has-suffix">
-                  <input type="number" value={inputs.annualRatePercent || ''} onChange={setNum('annualRatePercent')} min="0" max="20" step="0.05" />
+                  <input id={`${uid}-rate`} type="number" inputMode="decimal" value={inputs.annualRatePercent || ''} onChange={setNum('annualRatePercent')} min="0" max="20" step="0.05" />
                   <span className="input-suffix">% p.a.</span>
                 </div>
               </div>
@@ -420,10 +422,12 @@ export default function CalcInstance({
             {inputs.rateType === 'split' && (
               <div className="field">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                  <label style={{ marginBottom: 0 }}>Split</label>
-                  <div className="segmented" style={{ width: 'auto' }}>
+                  <label style={{ marginBottom: 0 }} htmlFor={`${uid}-split`}>Split</label>
+                  <div className="segmented" style={{ width: 'auto' }} role="radiogroup" aria-label="Enter the split as a percentage or a dollar amount">
                     {['pct', 'dollar'].map((m) => (
-                      <button key={m} className={inputs.splitMode === m ? 'active' : ''} onClick={() => set('splitMode', m)}
+                      <button key={m} role="radio" aria-checked={inputs.splitMode === m}
+                        aria-label={m === 'pct' ? 'Percentage' : 'Dollar amount'}
+                        className={inputs.splitMode === m ? 'active' : ''} onClick={() => set('splitMode', m)}
                         style={{ padding: '4px 12px', fontSize: '0.78rem' }}>
                         {m === 'pct' ? '%' : '$'}
                       </button>
@@ -434,7 +438,7 @@ export default function CalcInstance({
                   <>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 8, alignItems: 'center' }}>
                       <div className="input-wrap has-suffix">
-                        <input type="number" value={inputs.splitFixedPct || ''} onChange={(e) => {
+                        <input id={`${uid}-split`} type="number" inputMode="decimal" aria-label="Fixed portion, percentage of the loan" value={inputs.splitFixedPct || ''} onChange={(e) => {
                           const v = Math.min(99, parseFloat(e.target.value) || 0);
                           set('splitFixedPct', v);
                           set('splitFixedAmt', Math.round(inputs.loanAmount * v / 100));
@@ -447,7 +451,7 @@ export default function CalcInstance({
                       </div>
                       <span style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.8rem' }}>/</span>
                       <div className="input-wrap has-suffix">
-                        <input type="number" value={100 - inputs.splitFixedPct} readOnly style={{ background: 'var(--surface-2)', color: 'var(--text-muted)' }} />
+                        <input type="number" aria-label="Variable portion, percentage of the loan" value={100 - inputs.splitFixedPct} readOnly style={{ background: 'var(--surface-2)', color: 'var(--text-muted)' }} />
                         <span className="input-suffix">% variable</span>
                       </div>
                     </div>
@@ -461,7 +465,7 @@ export default function CalcInstance({
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 8, alignItems: 'center' }}>
                       <div className="input-wrap has-prefix">
                         <span className="input-prefix">$</span>
-                        <input type="number" value={inputs.splitFixedAmt || ''} onChange={(e) => {
+                        <input id={`${uid}-split`} type="number" inputMode="decimal" aria-label="Fixed portion, dollar amount" value={inputs.splitFixedAmt || ''} onChange={(e) => {
                           const v = Math.min(inputs.loanAmount - 1, parseFloat(e.target.value) || 0);
                           set('splitFixedAmt', v);
                           set('splitFixedPct', Math.round(v / inputs.loanAmount * 100));
@@ -474,7 +478,7 @@ export default function CalcInstance({
                       <span style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.8rem' }}>/</span>
                       <div className="input-wrap has-prefix">
                         <span className="input-prefix">$</span>
-                        <input type="number" value={inputs.loanAmount - inputs.splitFixedAmt} readOnly style={{ background: 'var(--surface-2)', color: 'var(--text-muted)' }} />
+                        <input type="number" aria-label="Variable portion, dollar amount" value={inputs.loanAmount - inputs.splitFixedAmt} readOnly style={{ background: 'var(--surface-2)', color: 'var(--text-muted)' }} />
                       </div>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, fontSize: '0.75rem', color: 'var(--text-muted)' }}>
@@ -489,43 +493,43 @@ export default function CalcInstance({
             {(inputs.rateType === 'fixed' || inputs.rateType === 'split') && (
               <>
                 <div className="field">
-                  <label>Fixed rate</label>
+                  <label htmlFor={`${uid}-fixed-rate`}>Fixed rate</label>
                   <div className="input-wrap has-suffix">
-                    <input type="number" value={inputs.fixedRatePercent || ''} onChange={setNum('fixedRatePercent')} min="0" max="20" step="0.05" />
+                    <input id={`${uid}-fixed-rate`} type="number" inputMode="decimal" value={inputs.fixedRatePercent || ''} onChange={setNum('fixedRatePercent')} min="0" max="20" step="0.05" />
                     <span className="input-suffix">% p.a.</span>
                   </div>
                 </div>
                 <div className="field">
-                  <label>Fixed period</label>
+                  <label htmlFor={`${uid}-fixed-period`}>Fixed period</label>
                   <div className="input-wrap has-suffix">
-                    <input type="number" value={inputs.fixedPeriodYears || ''} onChange={setNum('fixedPeriodYears')} min="1" max="10" step="1" />
+                    <input id={`${uid}-fixed-period`} type="number" inputMode="numeric" value={inputs.fixedPeriodYears || ''} onChange={setNum('fixedPeriodYears')} min="1" max="10" step="1" />
                     <span className="input-suffix">yrs</span>
                   </div>
                 </div>
                 <div className="field">
-                  <label>Revert rate (after fixed)</label>
+                  <label htmlFor={`${uid}-revert-rate`}>Revert rate (after fixed)</label>
                   <div className="input-wrap has-suffix">
-                    <input type="number" value={inputs.revertRatePercent || ''} onChange={setNum('revertRatePercent')} min="0" max="20" step="0.05" />
+                    <input id={`${uid}-revert-rate`} type="number" inputMode="decimal" value={inputs.revertRatePercent || ''} onChange={setNum('revertRatePercent')} min="0" max="20" step="0.05" />
                     <span className="input-suffix">% p.a.</span>
                   </div>
                 </div>
                 {inputs.rateType === 'fixed' && (
                   <div className="field">
-                    <label>Offset applies during fixed period?</label>
-                    <div className="segmented">
-                      <button className={inputs.offsetAppliesDuringFixed ? 'active' : ''} onClick={() => set('offsetAppliesDuringFixed', true)}>Yes</button>
-                      <button className={!inputs.offsetAppliesDuringFixed ? 'active' : ''} onClick={() => set('offsetAppliesDuringFixed', false)}>No</button>
+                    <label id={`${uid}-offset-fixed-label`}>Offset applies during fixed period?</label>
+                    <div className="segmented" role="radiogroup" aria-labelledby={`${uid}-offset-fixed-label`} aria-describedby={`${uid}-offset-fixed-help`}>
+                      <button role="radio" aria-checked={inputs.offsetAppliesDuringFixed} className={inputs.offsetAppliesDuringFixed ? 'active' : ''} onClick={() => set('offsetAppliesDuringFixed', true)}>Yes</button>
+                      <button role="radio" aria-checked={!inputs.offsetAppliesDuringFixed} className={!inputs.offsetAppliesDuringFixed ? 'active' : ''} onClick={() => set('offsetAppliesDuringFixed', false)}>No</button>
                     </div>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                    <div id={`${uid}-offset-fixed-help`} style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
                       Varies by lender. Either way the balance keeps building and offsets once the loan reverts.
                     </div>
                   </div>
                 )}
                 {inputs.rateType === 'split' && (
                   <div className="field">
-                    <label>Variable portion rate</label>
+                    <label htmlFor={`${uid}-var-rate`}>Variable portion rate</label>
                     <div className="input-wrap has-suffix">
-                      <input type="number" value={inputs.splitVariableRatePercent || ''} onChange={setNum('splitVariableRatePercent')} min="0" max="20" step="0.05" />
+                      <input id={`${uid}-var-rate`} type="number" inputMode="decimal" value={inputs.splitVariableRatePercent || ''} onChange={setNum('splitVariableRatePercent')} min="0" max="20" step="0.05" />
                       <span className="input-suffix">% p.a.</span>
                     </div>
                   </div>
@@ -537,10 +541,10 @@ export default function CalcInstance({
           <div className="panel-section">
             <div className="section-title">Extra repayments</div>
             <div className="field">
-              <label>Extra per month</label>
+              <label htmlFor={`${uid}-extra`}>Extra per month</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.extraRecurring || ''} onChange={setNum('extraRecurring')} min="0" step="100" />
+                <input id={`${uid}-extra`} type="number" inputMode="decimal" value={inputs.extraRecurring || ''} onChange={setNum('extraRecurring')} min="0" step="100" />
               </div>
             </div>
             {inputs.extraLumps.length > 0 && (
@@ -549,13 +553,13 @@ export default function CalcInstance({
                   <div key={i} className="lump-row">
                     <div className="input-wrap has-prefix">
                       <span className="input-prefix">$</span>
-                      <input type="number" value={lump.amount || ''} onChange={(e) => updateLump('extraLumps', i, 'amount', e.target.value)} min="0" step="1000" placeholder="Amount" />
+                      <input type="number" inputMode="decimal" aria-label={`Lump sum repayment ${i + 1} — amount`} value={lump.amount || ''} onChange={(e) => updateLump('extraLumps', i, 'amount', e.target.value)} min="0" step="1000" placeholder="Amount" />
                     </div>
                     <div className="input-wrap has-suffix">
-                      <input type="number" value={lump.month || ''} onChange={(e) => updateLump('extraLumps', i, 'month', e.target.value)} min="1" max={inputs.termYears * 12} placeholder="Month" />
+                      <input type="number" inputMode="numeric" aria-label={`Lump sum repayment ${i + 1} — month of the loan`} value={lump.month || ''} onChange={(e) => updateLump('extraLumps', i, 'month', e.target.value)} min="1" max={inputs.termYears * 12} placeholder="Month" />
                       <span className="input-suffix" style={{ fontSize: '0.75rem' }}>mo</span>
                     </div>
-                    <button onClick={() => removeLump('extraLumps', i)}>×</button>
+                    <button aria-label={`Remove lump sum repayment ${i + 1}`} onClick={() => removeLump('extraLumps', i)}>×</button>
                   </div>
                 ))}
               </div>
@@ -568,17 +572,17 @@ export default function CalcInstance({
             <div className="section-title">Offset account</div>
             <p className="offset-note">Offset applies to the variable portion only — standard for AU lenders.</p>
             <div className="field">
-              <label>Starting balance</label>
+              <label htmlFor={`${uid}-offset-start`}>Starting balance</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.offsetStart || ''} onChange={setNum('offsetStart')} min="0" step="1000" />
+                <input id={`${uid}-offset-start`} type="number" inputMode="decimal" value={inputs.offsetStart || ''} onChange={setNum('offsetStart')} min="0" step="1000" />
               </div>
             </div>
             <div className="field">
-              <label>Monthly increase (e.g. salary)</label>
+              <label htmlFor={`${uid}-offset-monthly`}>Monthly increase (e.g. salary)</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.offsetMonthly || ''} onChange={setNum('offsetMonthly')} min="0" step="100" />
+                <input id={`${uid}-offset-monthly`} type="number" inputMode="decimal" value={inputs.offsetMonthly || ''} onChange={setNum('offsetMonthly')} min="0" step="100" />
               </div>
             </div>
             {inputs.offsetLumps.length > 0 && (
@@ -587,13 +591,13 @@ export default function CalcInstance({
                   <div key={i} className="lump-row">
                     <div className="input-wrap has-prefix">
                       <span className="input-prefix">$</span>
-                      <input type="number" value={lump.amount || ''} onChange={(e) => updateLump('offsetLumps', i, 'amount', e.target.value)} min="0" step="1000" placeholder="Amount" />
+                      <input type="number" inputMode="decimal" aria-label={`Offset deposit ${i + 1} — amount`} value={lump.amount || ''} onChange={(e) => updateLump('offsetLumps', i, 'amount', e.target.value)} min="0" step="1000" placeholder="Amount" />
                     </div>
                     <div className="input-wrap has-suffix">
-                      <input type="number" value={lump.month || ''} onChange={(e) => updateLump('offsetLumps', i, 'month', e.target.value)} min="1" max={inputs.termYears * 12} placeholder="Month" />
+                      <input type="number" inputMode="numeric" aria-label={`Offset deposit ${i + 1} — month of the loan`} value={lump.month || ''} onChange={(e) => updateLump('offsetLumps', i, 'month', e.target.value)} min="1" max={inputs.termYears * 12} placeholder="Month" />
                       <span className="input-suffix" style={{ fontSize: '0.75rem' }}>mo</span>
                     </div>
-                    <button onClick={() => removeLump('offsetLumps', i)}>×</button>
+                    <button aria-label={`Remove offset deposit ${i + 1}`} onClick={() => removeLump('offsetLumps', i)}>×</button>
                   </div>
                 ))}
               </div>
@@ -605,13 +609,13 @@ export default function CalcInstance({
                   <div key={i} className="lump-row">
                     <div className="input-wrap has-prefix">
                       <span className="input-prefix">$</span>
-                      <input type="number" value={lump.amount || ''} onChange={(e) => updateLump('offsetWithdrawals', i, 'amount', e.target.value)} min="0" step="1000" placeholder="Amount" />
+                      <input type="number" inputMode="decimal" aria-label={`Offset withdrawal ${i + 1} — amount`} value={lump.amount || ''} onChange={(e) => updateLump('offsetWithdrawals', i, 'amount', e.target.value)} min="0" step="1000" placeholder="Amount" />
                     </div>
                     <div className="input-wrap has-suffix">
-                      <input type="number" value={lump.month || ''} onChange={(e) => updateLump('offsetWithdrawals', i, 'month', e.target.value)} min="1" max={inputs.termYears * 12} placeholder="Month" />
+                      <input type="number" inputMode="numeric" aria-label={`Offset withdrawal ${i + 1} — month of the loan`} value={lump.month || ''} onChange={(e) => updateLump('offsetWithdrawals', i, 'month', e.target.value)} min="1" max={inputs.termYears * 12} placeholder="Month" />
                       <span className="input-suffix" style={{ fontSize: '0.75rem' }}>mo</span>
                     </div>
-                    <button onClick={() => removeLump('offsetWithdrawals', i)}>×</button>
+                    <button aria-label={`Remove offset withdrawal ${i + 1}`} onClick={() => removeLump('offsetWithdrawals', i)}>×</button>
                   </div>
                 ))}
               </div>
@@ -625,7 +629,7 @@ export default function CalcInstance({
 
           <div className="savings-card">
             <div className="savings-label">You save</div>
-            <div className="savings-amount">{fmt(interestSaved)}</div>
+            <div className="savings-amount" aria-live="polite" aria-atomic="true">{fmt(interestSaved)}</div>
             <div className="savings-sub">in interest compared to no offset or extra repayments</div>
             <div className="savings-meta">
               <div className="savings-stat">
@@ -686,6 +690,7 @@ export default function CalcInstance({
 
           <div className="chart-card">
             <div className="chart-title">Loan balance over time</div>
+            <div role="img" aria-label={`Line chart of the loan balance year by year, with and without the offset and extra repayments. With them the loan is cleared in ${monthsToLabel(withSummary.payoffMonths)}, saving ${fmt(interestSaved)} in interest.`}>
             <ResponsiveContainer width="100%" height={260}>
               <LineChart data={chartData} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={chartGrid} />
@@ -702,15 +707,37 @@ export default function CalcInstance({
                 <Line type="monotone" dataKey="No offset" stroke={chartGhost} strokeWidth={1.5} strokeDasharray="5 4" dot={false} />
               </LineChart>
             </ResponsiveContainer>
+            </div>
+            <table className="visually-hidden">
+              <caption>Loan balance at the end of each year, with and without the offset and extra repayments</caption>
+              <thead>
+                <tr><th scope="col">Year</th><th scope="col">Balance with offset</th><th scope="col">Balance without offset</th></tr>
+              </thead>
+              <tbody>
+                {chartData.map((d) => (
+                  <tr key={d.year}>
+                    <th scope="row">{d.year}</th>
+                    <td>{fmt(d['With offset'])}</td>
+                    <td>{fmt(d['No offset'])}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
 
           <div className="schedule-card">
-            <div className="schedule-header" onClick={() => setShowSensitivity((v) => !v)}>
+            <div className="schedule-header" role="button" tabIndex={0}
+              aria-expanded={showSensitivity} aria-controls={showSensitivity ? `${uid}-sensitivity` : undefined}
+              onClick={() => setShowSensitivity((v) => !v)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setShowSensitivity((v) => !v); }
+              }}>
               <span className="schedule-title">What if rates change?</span>
               <span className="schedule-toggle">{showSensitivity ? '▲ Hide' : '▼ Show'}</span>
             </div>
             {showSensitivity && (
-              <div style={{ padding: '12px 0' }}>
+              <div id={`${uid}-sensitivity`} style={{ padding: '12px 0' }}>
+                <div role="img" aria-label={`Bar chart of the ${freqNoun.toLowerCase()} repayment at each rate change. At today's rate it is ${fmt(withRows[0]?.payment ?? 0)}; a ${sensitivity[sensitivity.length - 1].delta}% rise takes it to ${fmt(sensitivity[sensitivity.length - 1].payment)}.`}>
                 <ResponsiveContainer width="100%" height={200}>
                   <BarChart data={sensitivity} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke={chartGrid} vertical={false} />
@@ -729,6 +756,22 @@ export default function CalcInstance({
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
+                </div>
+                <table className="visually-hidden">
+                  <caption>{freqNoun} repayment at each interest rate change</caption>
+                  <thead>
+                    <tr><th scope="col">Rate change</th><th scope="col">Interest rate</th><th scope="col">{freqNoun} repayment</th></tr>
+                  </thead>
+                  <tbody>
+                    {sensitivity.map((s) => (
+                      <tr key={s.delta}>
+                        <th scope="row">{s.delta === 0 ? 'Today’s rate' : `${s.delta > 0 ? '+' : ''}${s.delta}%`}</th>
+                        <td>{s.rate.toFixed(2)}%</td>
+                        <td>{fmt(s.payment)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
                 <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', padding: '0 4px' }}>
                   A {sensitivity[sensitivity.length - 1].delta}% rise takes your repayment to{' '}
                   {fmt(sensitivity[sensitivity.length - 1].payment)} — {fmt(sensitivity[sensitivity.length - 1].payment - (withRows[0]?.payment ?? 0))} more per {inputs.paymentFrequency === 'monthly' ? 'month' : inputs.paymentFrequency === 'fortnightly' ? 'fortnight' : 'week'}.
@@ -738,19 +781,24 @@ export default function CalcInstance({
           </div>
 
           <div className="schedule-card">
-            <div className="schedule-header" onClick={() => setShowTable((v) => !v)}>
+            <div className="schedule-header" role="button" tabIndex={0}
+              aria-expanded={showTable} aria-controls={showTable ? `${uid}-schedule` : undefined}
+              onClick={() => setShowTable((v) => !v)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setShowTable((v) => !v); }
+              }}>
               <span className="schedule-title">Repayment schedule</span>
               <span className="schedule-toggle">{showTable ? '▲ Hide' : '▼ Show'}</span>
             </div>
             {showTable && (
               <>
-                <div style={{ overflowX: 'auto' }}>
+                <div id={`${uid}-schedule`} style={{ overflowX: 'auto' }}>
                   <table className="schedule-table">
                     <thead>
                       <tr>
-                        <th>{inputs.paymentFrequency === 'monthly' ? 'Mo' : '#'}</th>
-                        <th>Payment</th><th>Interest</th>
-                        <th>Principal</th><th>Balance</th><th>Offset</th>
+                        <th scope="col">{inputs.paymentFrequency === 'monthly' ? 'Mo' : '#'}</th>
+                        <th scope="col">Payment</th><th scope="col">Interest</th>
+                        <th scope="col">Principal</th><th scope="col">Balance</th><th scope="col">Offset</th>
                       </tr>
                     </thead>
                     <tbody>

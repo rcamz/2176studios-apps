@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useId } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ResponsiveContainer,
@@ -57,6 +57,7 @@ function decodeParams(search) {
 }
 
 export default function FHSSSInstance({ instanceKey = '', label, onRemove, theme = 'light', isComparison = false }) {
+  const uid = useId();
   const [inputs, setInputs] = useState(() =>
     instanceKey === '' ? { ...DEFAULTS, ...decodeParams(window.location.search) } : { ...DEFAULTS }
   );
@@ -91,7 +92,7 @@ export default function FHSSSInstance({ instanceKey = '', label, onRemove, theme
       {isComparison && (
         <div className="instance-header">
           <span className="instance-label">{label}</span>
-          <button className="instance-remove" onClick={onRemove || undefined} title="Remove scenario"
+          <button type="button" className="instance-remove" onClick={onRemove || undefined} title="Remove scenario" aria-label={`Remove ${label || 'scenario'}`}
             style={!onRemove ? { visibility: 'hidden', pointerEvents: 'none' } : {}}>×</button>
         </div>
       )}
@@ -112,19 +113,19 @@ export default function FHSSSInstance({ instanceKey = '', label, onRemove, theme
           <div className="panel-section">
             <div className="section-title">Income &amp; super</div>
             <div className="field">
-              <label>Annual gross income</label>
+              <label htmlFor={`${uid}-gross-income`}>Annual gross income</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.grossIncome || ''} onChange={setNum('grossIncome')} min="0" step="1000" />
+                <input id={`${uid}-gross-income`} inputMode="decimal" type="number" value={inputs.grossIncome || ''} onChange={setNum('grossIncome')} min="0" step="1000" />
               </div>
             </div>
             <div className="field">
-              <label>Employer SG rate</label>
+              <label htmlFor={`${uid}-sg-rate`}>Employer SG rate</label>
               <div className="input-wrap has-suffix">
-                <input type="number" value={inputs.sgRate || ''} onChange={setNum('sgRate')} min="0" max="20" step="0.5" />
+                <input id={`${uid}-sg-rate`} inputMode="decimal" aria-describedby={`${uid}-sg-rate-help`} type="number" value={inputs.sgRate || ''} onChange={setNum('sgRate')} min="0" max="20" step="0.5" />
                 <span className="input-suffix">%</span>
               </div>
-              <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
+              <p id={`${uid}-sg-rate-help`} style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
                 SG of {fmt(result.sgContribution)} uses {fmt(Math.min(result.sgContribution, result.concessionalCap))} of your {fmt(result.concessionalCap)} concessional cap. Compulsory SG is not releasable under FHSSS — voluntary contributions only.
               </p>
             </div>
@@ -133,26 +134,26 @@ export default function FHSSSInstance({ instanceKey = '', label, onRemove, theme
           <div className="panel-section">
             <div className="section-title">FHSSS contributions (per year)</div>
             <div className="field">
-              <label>Voluntary concessional (salary sacrifice, pre-tax)</label>
+              <label htmlFor={`${uid}-concessional`}>Voluntary concessional (salary sacrifice, pre-tax)</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.annualConcessional || ''} onChange={setNum('annualConcessional')} min="0" step="500" />
+                <input id={`${uid}-concessional`} inputMode="decimal" aria-describedby={`${uid}-concessional-help`} type="number" value={inputs.annualConcessional || ''} onChange={setNum('annualConcessional')} min="0" step="500" />
               </div>
-              <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
+              <p id={`${uid}-concessional-help`} style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
                 {fmt(result.annualLimit)}/yr and {fmt(result.lifetimeLimit)} lifetime are limits on contributions counted. Only 85% of concessional contributions can be released.
               </p>
             </div>
             <div className="field">
-              <label>Non-concessional (after-tax, optional)</label>
+              <label htmlFor={`${uid}-non-concessional`}>Non-concessional (after-tax, optional)</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.annualNonConcessional || ''} onChange={setNum('annualNonConcessional')} min="0" step="500" />
+                <input id={`${uid}-non-concessional`} inputMode="decimal" type="number" value={inputs.annualNonConcessional || ''} onChange={setNum('annualNonConcessional')} min="0" step="500" />
               </div>
             </div>
             <div className="field">
-              <label>Years contributing</label>
+              <label htmlFor={`${uid}-years`}>Years contributing</label>
               <div className="input-wrap has-suffix">
-                <input type="number" value={inputs.years || ''} onChange={setNum('years')} min="1" max="10" step="1" />
+                <input id={`${uid}-years`} inputMode="numeric" type="number" value={inputs.years || ''} onChange={setNum('years')} min="1" max="10" step="1" />
                 <span className="input-suffix">yrs</span>
               </div>
             </div>
@@ -164,15 +165,20 @@ export default function FHSSSInstance({ instanceKey = '', label, onRemove, theme
               const met = inputs.eligibility[item.key] !== false;
               return (
                 <div className="field" key={item.key}>
-                  <label style={item.critical ? { color: 'var(--text)' } : undefined}>
+                  <label id={`${uid}-el-${item.key}-label`} style={item.critical ? { color: 'var(--text)' } : undefined}>
                     {item.critical ? '⚠ ' : ''}{item.label}
                   </label>
-                  <div className="segmented">
-                    <button className={met ? 'active' : ''} onClick={() => setEligible(item.key, true)}>Yes</button>
-                    <button className={!met ? 'active' : ''} onClick={() => setEligible(item.key, false)}>No</button>
+                  <div
+                    className="segmented"
+                    role="radiogroup"
+                    aria-labelledby={`${uid}-el-${item.key}-label`}
+                    aria-describedby={(!met || item.critical) ? `${uid}-el-${item.key}-detail` : undefined}
+                  >
+                    <button type="button" role="radio" aria-checked={met} className={met ? 'active' : ''} onClick={() => setEligible(item.key, true)}>Yes</button>
+                    <button type="button" role="radio" aria-checked={!met} className={!met ? 'active' : ''} onClick={() => setEligible(item.key, false)}>No</button>
                   </div>
                   {(!met || item.critical) && (
-                    <p style={{ fontSize: '0.72rem', color: met ? 'var(--text-muted)' : 'var(--red)', marginTop: 4 }}>
+                    <p id={`${uid}-el-${item.key}-detail`} style={{ fontSize: '0.72rem', color: met ? 'var(--text-muted)' : 'var(--red)', marginTop: 4 }}>
                       {item.detail}
                     </p>
                   )}
@@ -216,8 +222,8 @@ export default function FHSSSInstance({ instanceKey = '', label, onRemove, theme
           )}
 
           <div className="savings-card">
-            <div className="savings-label">Net deposit amount</div>
-            <div className="savings-amount">{fmt(result.netDeposit)}</div>
+            <div className="savings-label" id={`${uid}-headline-label`}>Net deposit amount</div>
+            <div className="savings-amount" aria-live="polite" aria-atomic="true" aria-labelledby={`${uid}-headline-label`}>{fmt(result.netDeposit)}</div>
             <div className="savings-sub">
               after withdrawal tax of {fmt(result.withdrawalTax)} — {fmtPct(result.withholdingRate)} of the assessable {fmt(result.assessableAmount)} (marginal {fmtPct(result.marginalRate)} + {fmtPct(result.medicareRate)} Medicare − {fmtPct(result.withdrawalOffset)} offset)
             </div>
@@ -264,7 +270,8 @@ export default function FHSSSInstance({ instanceKey = '', label, onRemove, theme
           </div>
 
           <div className="chart-card">
-            <div className="chart-title">Year-by-year accumulation</div>
+            <div className="chart-title" id={`${uid}-chart-title`}>Year-by-year accumulation</div>
+            <div role="img" aria-label={`Stacked bar chart of year-by-year FHSSS accumulation over ${result.yearData.length} year${result.yearData.length === 1 ? '' : 's'}, reaching ${fmt(result.totalReleasable)} releasable plus ${fmt(result.totalEarnings)} of associated earnings, ${fmt(result.totalWithEarnings)} in total.`}>
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={result.yearData} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={chartGrid} vertical={false} />
@@ -276,6 +283,23 @@ export default function FHSSSInstance({ instanceKey = '', label, onRemove, theme
                 <Bar dataKey="earnings" name="Associated earnings" fill={theme === 'dark' ? '#9E98E8' : '#7F77DD'} stackId="a" radius={[3, 3, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
+            </div>
+            <table className="visually-hidden">
+              <caption>Year-by-year accumulation</caption>
+              <thead>
+                <tr><th scope="col">Year</th><th scope="col">Releasable</th><th scope="col">Associated earnings</th><th scope="col">Total</th></tr>
+              </thead>
+              <tbody>
+                {result.yearData.map((d) => (
+                  <tr key={d.year}>
+                    <th scope="row">Year {d.year}</th>
+                    <td>{fmt(d.releasable)}</td>
+                    <td>{fmt(d.earnings)}</td>
+                    <td>{fmt(d.total)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
 
           <Workings data={explanation} />

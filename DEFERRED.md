@@ -113,3 +113,21 @@ Shipped deliberately simplified. Each needs a visible caveat in the UI.
 | **First Home Guarantee price caps** | Not hardcoded — caps are indexed, vary by postcode, and stale pre-Oct-2025 figures circulate widely. Links to the Housing Australia postcode tool instead |
 | **Payday Super** | SG payable each payday on "qualifying earnings" from 1 Jul 2026. Calculators use annual salary × SG%, which is unaffected in aggregate, but the OTE → qualifying earnings change may alter which earnings attract SG |
 | **Long service leave apportionment** | Apportioned by days. Does not model LSL taken during employment being attributed to the period used, nor separate part-time/full-time service calculations |
+
+---
+
+## 5. Accessibility — known residual items
+
+The suite went from zero accessibility attributes to full labelling, radio
+semantics, live regions and chart text alternatives. Four things remain, each
+because fixing it properly needs a design change rather than markup.
+
+| # | Item | Why it was left |
+|---|---|---|
+| 1 | **Rent vs Buy chart lines are distinguished by colour alone** — both series are solid, so the legend text is the only non-colour cue | A dash pattern would change the visual design. Data is covered in the hidden table. Other charts already have a shape or axis cue |
+| 2 | **Pay/Tax waterfall segments carry no in-chart non-colour cue** | Hatching or in-bar labels would alter what a sighted user sees. The hidden table has a Type column (Income / Deduction / Take-home), but a colour-blind sighted user still gets nothing in the chart itself |
+| 3 | **Most segmented controls have no roving tabindex** — each button is individually tabbable rather than the group being one tab stop with arrow-key navigation | Valid and usable as-is; proper roving focus is JS behaviour rather than attributes. The Health activity cards DO implement it and are the pattern to copy |
+| 4 | **Ad placeholders render as visible grey boxes** and ignore the theme | Deliberate, pending AdSense approval. `AdUnit.jsx` hardcodes `#d6dde5` — the only element in the app that ignores dark mode |
+
+Worth doing before the Android wrappers freeze the markup: items 1 and 2 are
+small design decisions, and item 3 is a contained piece of shared behaviour.

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useId } from 'react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ReferenceLine, ResponsiveContainer,
@@ -106,6 +106,8 @@ export default function RentVBuyInstance({
       : { ...DEFAULTS };
   });
 
+  const uid = useId();
+
   const set = (key, val) => setInputs(s => ({ ...s, [key]: val }));
   const setNum = (key) => (e) => set(key, parseFloat(e.target.value) || 0);
 
@@ -134,7 +136,7 @@ export default function RentVBuyInstance({
       {isComparison && (
         <div className="instance-header">
           <span className="instance-label">{label}</span>
-          <button className="instance-remove" onClick={onRemove || undefined} title="Remove scenario"
+          <button className="instance-remove" onClick={onRemove || undefined} title="Remove scenario" aria-label={`Remove scenario ${label ?? ''}`.trim()}
             style={!onRemove ? { visibility: 'hidden', pointerEvents: 'none' } : {}}>×</button>
         </div>
       )}
@@ -155,46 +157,46 @@ export default function RentVBuyInstance({
           <div className="panel-section">
             <div className="section-title">The property</div>
             <div className="field">
-              <label>Purchase price</label>
+              <label htmlFor={`${uid}-price`}>Purchase price</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.purchasePrice || ''} onChange={setNum('purchasePrice')} min="0" step="10000" />
+                <input id={`${uid}-price`} type="number" inputMode="decimal" value={inputs.purchasePrice || ''} onChange={setNum('purchasePrice')} min="0" step="10000" />
               </div>
             </div>
             <div className="field">
-              <label>State or territory</label>
-              <select className="field-select" value={inputs.state} onChange={e => set('state', e.target.value)}>
+              <label htmlFor={`${uid}-state`}>State or territory</label>
+              <select id={`${uid}-state`} className="field-select" value={inputs.state} onChange={e => set('state', e.target.value)}>
                 {JURISDICTIONS.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
             <div className="field">
-              <label>Property type</label>
-              <select className="field-select" value={inputs.propertyType} onChange={e => set('propertyType', e.target.value)}>
+              <label htmlFor={`${uid}-property-type`}>Property type</label>
+              <select id={`${uid}-property-type`} className="field-select" value={inputs.propertyType} onChange={e => set('propertyType', e.target.value)}>
                 {Object.entries(PROPERTY_TYPES).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
               </select>
             </div>
             <div className="field">
-              <label>Contract date</label>
-              <input className="field-select" type="date" value={inputs.contractDate} onChange={e => set('contractDate', e.target.value)} />
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
+              <label htmlFor={`${uid}-contract-date`}>Contract date</label>
+              <input id={`${uid}-contract-date`} className="field-select" type="date" aria-describedby={`${uid}-contract-date-help`} value={inputs.contractDate} onChange={e => set('contractDate', e.target.value)} />
+              <div id={`${uid}-contract-date-help`} style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
                 Several states changed their concessions during 2026, so duty depends on when you sign.
               </div>
             </div>
             <div className="field">
-              <label>First home buyer?</label>
-              <div className="segmented">
-                <button className={inputs.firstHomeBuyer ? 'active' : ''} onClick={() => set('firstHomeBuyer', true)}>Yes</button>
-                <button className={!inputs.firstHomeBuyer ? 'active' : ''} onClick={() => set('firstHomeBuyer', false)}>No</button>
+              <label id={`${uid}-fhb-label`}>First home buyer?</label>
+              <div className="segmented" role="radiogroup" aria-labelledby={`${uid}-fhb-label`}>
+                <button role="radio" aria-checked={inputs.firstHomeBuyer} className={inputs.firstHomeBuyer ? 'active' : ''} onClick={() => set('firstHomeBuyer', true)}>Yes</button>
+                <button role="radio" aria-checked={!inputs.firstHomeBuyer} className={!inputs.firstHomeBuyer ? 'active' : ''} onClick={() => set('firstHomeBuyer', false)}>No</button>
               </div>
             </div>
             {inputs.firstHomeBuyer && (
               <div className="field">
-                <label>Using the First Home Guarantee?</label>
-                <div className="segmented">
-                  <button className={inputs.firstHomeGuarantee ? 'active' : ''} onClick={() => set('firstHomeGuarantee', true)}>Yes</button>
-                  <button className={!inputs.firstHomeGuarantee ? 'active' : ''} onClick={() => set('firstHomeGuarantee', false)}>No</button>
+                <label id={`${uid}-fhg-label`}>Using the First Home Guarantee?</label>
+                <div className="segmented" role="radiogroup" aria-labelledby={`${uid}-fhg-label`} aria-describedby={`${uid}-fhg-help`}>
+                  <button role="radio" aria-checked={inputs.firstHomeGuarantee} className={inputs.firstHomeGuarantee ? 'active' : ''} onClick={() => set('firstHomeGuarantee', true)}>Yes</button>
+                  <button role="radio" aria-checked={!inputs.firstHomeGuarantee} className={!inputs.firstHomeGuarantee ? 'active' : ''} onClick={() => set('firstHomeGuarantee', false)}>No</button>
                 </div>
-                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                <div id={`${uid}-fhg-help`} style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
                   Removes LMI entirely. Price caps vary by postcode — check firsthomebuyers.gov.au.
                 </div>
               </div>
@@ -204,38 +206,38 @@ export default function RentVBuyInstance({
           <div className="panel-section">
             <div className="section-title">Your loan</div>
             <div className="field">
-              <label>Deposit</label>
+              <label htmlFor={`${uid}-deposit`}>Deposit</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.deposit || ''} onChange={setNum('deposit')} min="0" step="10000" />
+                <input id={`${uid}-deposit`} type="number" inputMode="decimal" aria-describedby={lvrPct ? `${uid}-deposit-help` : undefined} value={inputs.deposit || ''} onChange={setNum('deposit')} min="0" step="10000" />
               </div>
               {lvrPct && (
-                <div style={{ fontSize: '0.72rem', color: result.lmiPayable ? 'var(--red)' : 'var(--text-muted)', marginTop: 4 }}>
+                <div id={`${uid}-deposit-help`} style={{ fontSize: '0.72rem', color: result.lmiPayable ? 'var(--red)' : 'var(--text-muted)', marginTop: 4 }}>
                   {lvrPct}% LVR{result.lmiPayable ? ` · LMI approx ${fmt(result.lmiPremium)}` : ' · no LMI'}
                 </div>
               )}
             </div>
             <div className="field">
-              <label>Mortgage rate</label>
+              <label htmlFor={`${uid}-mortgage-rate`}>Mortgage rate</label>
               <div className="input-wrap has-suffix">
-                <input type="number" value={inputs.mortgageRate || ''} onChange={setNum('mortgageRate')} min="0" max="20" step="0.1" />
+                <input id={`${uid}-mortgage-rate`} type="number" inputMode="decimal" value={inputs.mortgageRate || ''} onChange={setNum('mortgageRate')} min="0" max="20" step="0.1" />
                 <span className="input-suffix">% p.a.</span>
               </div>
             </div>
             <div className="field">
-              <label>Loan term</label>
+              <label htmlFor={`${uid}-loan-term`}>Loan term</label>
               <div className="input-wrap has-suffix">
-                <input type="number" value={inputs.loanTerm || ''} onChange={setNum('loanTerm')} min="5" max="40" step="5" />
+                <input id={`${uid}-loan-term`} type="number" inputMode="numeric" value={inputs.loanTerm || ''} onChange={setNum('loanTerm')} min="5" max="40" step="5" />
                 <span className="input-suffix">yrs</span>
               </div>
             </div>
             <div className="field">
-              <label>Capitalise stamp duty into the loan?</label>
-              <div className="segmented">
-                <button className={inputs.capitaliseStampDuty ? 'active' : ''} onClick={() => set('capitaliseStampDuty', true)}>Yes</button>
-                <button className={!inputs.capitaliseStampDuty ? 'active' : ''} onClick={() => set('capitaliseStampDuty', false)}>No</button>
+              <label id={`${uid}-capitalise-label`}>Capitalise stamp duty into the loan?</label>
+              <div className="segmented" role="radiogroup" aria-labelledby={`${uid}-capitalise-label`} aria-describedby={`${uid}-capitalise-help`}>
+                <button role="radio" aria-checked={inputs.capitaliseStampDuty} className={inputs.capitaliseStampDuty ? 'active' : ''} onClick={() => set('capitaliseStampDuty', true)}>Yes</button>
+                <button role="radio" aria-checked={!inputs.capitaliseStampDuty} className={!inputs.capitaliseStampDuty ? 'active' : ''} onClick={() => set('capitaliseStampDuty', false)}>No</button>
               </div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
+              <div id={`${uid}-capitalise-help`} style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
                 Most lenders require duty to be paid in cash.
               </div>
             </div>
@@ -244,30 +246,30 @@ export default function RentVBuyInstance({
           <div className="panel-section">
             <div className="section-title">Owning costs</div>
             <div className="field">
-              <label>Upfront costs (conveyancing, inspections, loan fees)</label>
+              <label htmlFor={`${uid}-upfront`}>Upfront costs (conveyancing, inspections, loan fees)</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.purchaseCosts || ''} onChange={setNum('purchaseCosts')} min="0" step="500" />
+                <input id={`${uid}-upfront`} type="number" inputMode="decimal" value={inputs.purchaseCosts || ''} onChange={setNum('purchaseCosts')} min="0" step="500" />
               </div>
             </div>
             <div className="field">
-              <label>Annual ongoing costs (rates, strata, maintenance, insurance)</label>
+              <label htmlFor={`${uid}-ongoing`}>Annual ongoing costs (rates, strata, maintenance, insurance)</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.ongoingCosts || ''} onChange={setNum('ongoingCosts')} min="0" step="500" />
+                <input id={`${uid}-ongoing`} type="number" inputMode="decimal" value={inputs.ongoingCosts || ''} onChange={setNum('ongoingCosts')} min="0" step="500" />
               </div>
             </div>
             <div className="field">
-              <label>Annual property growth</label>
+              <label htmlFor={`${uid}-growth`}>Annual property growth</label>
               <div className="input-wrap has-suffix">
-                <input type="number" value={inputs.propertyGrowth || ''} onChange={setNum('propertyGrowth')} min="0" max="20" step="0.5" />
+                <input id={`${uid}-growth`} type="number" inputMode="decimal" value={inputs.propertyGrowth || ''} onChange={setNum('propertyGrowth')} min="0" max="20" step="0.5" />
                 <span className="input-suffix">% p.a.</span>
               </div>
             </div>
             <div className="field">
-              <label>Selling costs</label>
+              <label htmlFor={`${uid}-selling`}>Selling costs</label>
               <div className="input-wrap has-suffix">
-                <input type="number" value={inputs.sellingCosts || ''} onChange={setNum('sellingCosts')} min="0" max="10" step="0.5" />
+                <input id={`${uid}-selling`} type="number" inputMode="decimal" value={inputs.sellingCosts || ''} onChange={setNum('sellingCosts')} min="0" max="10" step="0.5" />
                 <span className="input-suffix">%</span>
               </div>
             </div>
@@ -276,31 +278,31 @@ export default function RentVBuyInstance({
           <div className="panel-section">
             <div className="section-title">Renting instead</div>
             <div className="field">
-              <label>Annual rent</label>
+              <label htmlFor={`${uid}-rent`}>Annual rent</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.annualRent || ''} onChange={setNum('annualRent')} min="0" step="1000" />
+                <input id={`${uid}-rent`} type="number" inputMode="decimal" value={inputs.annualRent || ''} onChange={setNum('annualRent')} min="0" step="1000" />
               </div>
             </div>
             <div className="field">
-              <label>Annual rent increase</label>
+              <label htmlFor={`${uid}-rent-increase`}>Annual rent increase</label>
               <div className="input-wrap has-suffix">
-                <input type="number" value={inputs.rentIncrease || ''} onChange={setNum('rentIncrease')} min="0" max="15" step="0.5" />
+                <input id={`${uid}-rent-increase`} type="number" inputMode="decimal" value={inputs.rentIncrease || ''} onChange={setNum('rentIncrease')} min="0" max="15" step="0.5" />
                 <span className="input-suffix">% p.a.</span>
               </div>
             </div>
             <div className="field">
-              <label>Return on invested savings</label>
+              <label htmlFor={`${uid}-return`}>Return on invested savings</label>
               <div className="input-wrap has-suffix">
-                <input type="number" value={inputs.investmentReturn || ''} onChange={setNum('investmentReturn')} min="0" max="20" step="0.5" />
+                <input id={`${uid}-return`} type="number" inputMode="decimal" value={inputs.investmentReturn || ''} onChange={setNum('investmentReturn')} min="0" max="20" step="0.5" />
                 <span className="input-suffix">% p.a.</span>
               </div>
             </div>
             <div className="field">
-              <label>Your gross income (for CGT on those investments)</label>
+              <label htmlFor={`${uid}-income`}>Your gross income (for CGT on those investments)</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
-                <input type="number" value={inputs.grossIncome || ''} onChange={setNum('grossIncome')} min="0" step="5000" />
+                <input id={`${uid}-income`} type="number" inputMode="decimal" value={inputs.grossIncome || ''} onChange={setNum('grossIncome')} min="0" step="5000" />
               </div>
             </div>
           </div>
@@ -308,9 +310,9 @@ export default function RentVBuyInstance({
           <div className="panel-section">
             <div className="section-title">Comparison period</div>
             <div className="field">
-              <div className="segmented">
+              <div className="segmented" role="radiogroup" aria-label="Comparison period in years">
                 {[5, 10, 15, 20, 25, 30].map(y => (
-                  <button key={y} className={inputs.comparisonYears === y ? 'active' : ''} onClick={() => set('comparisonYears', y)}>{y}yr</button>
+                  <button key={y} role="radio" aria-checked={inputs.comparisonYears === y} className={inputs.comparisonYears === y ? 'active' : ''} onClick={() => set('comparisonYears', y)}>{y}yr</button>
                 ))}
               </div>
             </div>
@@ -323,7 +325,7 @@ export default function RentVBuyInstance({
             <div className="savings-label">
               {buyerWins ? 'Buying is ahead after' : 'Renting is ahead after'} {inputs.comparisonYears} years
             </div>
-            <div className="savings-amount" style={{ color: buyerWins ? 'var(--accent)' : 'var(--red)' }}>
+            <div className="savings-amount" aria-live="polite" aria-atomic="true" style={{ color: buyerWins ? 'var(--accent)' : 'var(--red)' }}>
               {fmt(Math.abs(result.wealthGap))}
             </div>
             <div className="savings-sub">
@@ -387,6 +389,7 @@ export default function RentVBuyInstance({
 
           <div className="chart-card">
             <div className="chart-title">Wealth after {inputs.comparisonYears} years — owning vs renting and investing</div>
+            <div role="img" aria-label={`Line chart comparing buyer equity with renter wealth over ${inputs.comparisonYears} years. ${buyerWins ? 'Buying' : 'Renting'} ends ahead by ${fmt(Math.abs(result.wealthGap))}${result.breakEvenYear ? `, with buying overtaking renting in year ${result.breakEvenYear}` : ', with no break-even inside the period'}.`}>
             <ResponsiveContainer width="100%" height={260}>
               <LineChart data={result.chartData} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={chartGrid} />
@@ -407,6 +410,22 @@ export default function RentVBuyInstance({
                 <Line type="monotone" dataKey="Renter wealth" stroke={chartBlue} strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
+            </div>
+            <table className="visually-hidden">
+              <caption>Buyer equity and renter wealth at the end of each year</caption>
+              <thead>
+                <tr><th scope="col">Year</th><th scope="col">Buyer equity</th><th scope="col">Renter wealth</th></tr>
+              </thead>
+              <tbody>
+                {result.chartData.map((d) => (
+                  <tr key={d.year}>
+                    <th scope="row">{d.year}{result.breakEvenYear === d.year ? ' (break-even)' : ''}</th>
+                    <td>{fmt(d['Buyer equity'])}</td>
+                    <td>{fmt(d['Renter wealth'])}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
 
           <Workings data={explanation} />
