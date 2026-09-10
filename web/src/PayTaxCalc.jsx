@@ -50,10 +50,12 @@ let _nextId = 1;
 
 export default function PayTaxCalc() {
   const [theme, setTheme] = useState('light');
-  const [instances, setInstances] = useState(() => [{ id: _nextId++, key: '' }]);
+  const [instances, setInstances] = useState(() => [{ id: _nextId++, key: '', seed: null }]);
   const [modal, setModal] = useState(null);
   const [copied, setCopied] = useState(false);
   const instancesRef = useRef(null);
+  // Latest inputs per instance, so a new scenario can start from an existing one.
+  const stateRef = useRef({});
 
   useEffect(() => { document.documentElement.setAttribute('data-theme', theme); }, [theme]);
 
@@ -71,12 +73,15 @@ export default function PayTaxCalc() {
 
   const isMulti = instances.length > 1;
 
-  const addInstance = () => {
+  // Seeds from an existing scenario: comparison is almost always the same
+  // situation with one thing changed.
+  const addInstance = (copyFrom = null) => {
     if (instances.length >= 3) return;
     const usedKeys = new Set(instances.map(i => i.key));
     const nextKey = ['b', 'c'].find(k => !usedKeys.has(k));
     if (!nextKey) return;
-    setInstances(prev => [...prev, { id: _nextId++, key: nextKey }]);
+    const seed = copyFrom !== null ? stateRef.current[copyFrom] ?? null : null;
+    setInstances(prev => [...prev, { id: _nextId++, key: nextKey, seed }]);
     setTimeout(() => {
       if (instancesRef.current) instancesRef.current.scrollTo({ left: instancesRef.current.scrollWidth, behavior: 'smooth' });
     }, 50);
@@ -105,13 +110,15 @@ export default function PayTaxCalc() {
             onRemove={inst.key !== '' ? () => removeInstance(inst.key) : null}
             theme={theme}
             isComparison={isMulti}
+            seed={inst.seed}
+            onStateChange={(st) => { stateRef.current[inst.key] = st; }}
           />
         ))}
         {instances.length < 3 && (
-          <button className="compare-card" onClick={addInstance}>
+          <button className="compare-card" onClick={() => addInstance(instances[instances.length - 1].key)}>
             <span className="compare-card-plus">+</span>
             <span className="compare-card-title">Compare</span>
-            <span className="compare-card-sub">Add a new scenario for side by side comparison</span>
+            <span className="compare-card-sub">Copies {LABELS[instances[instances.length - 1].key]} so you can change one thing</span>
           </button>
         )}
       </div>

@@ -4,17 +4,29 @@ import {
   Tooltip, ResponsiveContainer, Cell,
 } from 'recharts';
 import { calcPayTax, byFreq, toAnnual, grossFromNet } from './lib/paytax.js';
+import { availableFinancialYears, financialYearRange, financialYear } from './lib/rates/index.js';
+import { fmt, fmtPct } from './lib/format.js';
+import { num, bool, enumOf, writeUrl } from './lib/urlState.js';
 import AdUnit from './AdUnit.jsx';
 
 const AD_SLOT_INLINE = 'XXXXXXXXXX';
 const AD_SLOT_CHART  = 'XXXXXXXXXX';
 
-const fmt = (n) => '$' + Math.round(n).toLocaleString('en-AU');
-const fmtPct = (n) => (n * 100).toFixed(1) + '%';
-
 const FREQ_LABELS = { annual: 'Annual', monthly: 'Monthly', fortnightly: 'Fortnightly', weekly: 'Weekly' };
 
+const YEARS = availableFinancialYears();
+const CURRENT_FY = financialYear(new Date());
+const DEFAULT_FY = YEARS.includes(CURRENT_FY) ? CURRENT_FY : YEARS[0];
+
+// A date inside the chosen year, so every rate resolves against it.
+function dateForFy(fy) {
+  const { from, to } = financialYearRange(fy);
+  const today = new Date().toISOString().slice(0, 10);
+  return today >= from && today <= to ? today : from;
+}
+
 const DEFAULTS = {
+  financialYear: DEFAULT_FY,
   incomeAmount: 90000,
   entryFreq: 'annual',
   entryType: 'gross',
@@ -26,6 +38,7 @@ const DEFAULTS = {
   hecsBalance: 0,
   sgRate: 12,
   salarySacrifice: 0,
+  workExpenses: 0,
 };
 
 function encodeInputs(inp) {
@@ -41,6 +54,8 @@ function encodeInputs(inp) {
   p.set('hb', inp.hecsBalance);
   p.set('sg', inp.sgRate);
   p.set('ss', inp.salarySacrifice);
+  p.set('we', inp.workExpenses);
+  p.set('fy', inp.financialYear);
   return p.toString();
 }
 
@@ -49,18 +64,22 @@ function decodeParams(search) {
   const frMap = { a: 'annual', m: 'monthly', f: 'fortnightly', w: 'weekly' };
   const reMap = { r: 'resident', f: 'foreign', h: 'holiday' };
 
+  const fy = YEARS.includes(p.get('fy')) ? p.get('fy') : DEFAULT_FY;
+
   // Support legacy URLs that used 'gi' for annual gross income
   if (p.has('gi') && !p.has('ia')) {
     return {
-      incomeAmount:    parseFloat(p.get('gi')) || DEFAULTS.incomeAmount,
+      financialYear:   fy,
+      incomeAmount:    num(p.get('gi'), DEFAULTS.incomeAmount),
       entryFreq:       'annual',
       entryType:       'gross',
-      freq:            frMap[p.get('fr')] ?? 'annual',
-      residency:       reMap[p.get('re')] ?? 'resident',
-      hasPrivateCover: p.get('pc') === '1',
-      hecsBalance:     parseFloat(p.get('hb')) || 0,
-      sgRate:          parseFloat(p.get('sg')) || 12,
-      salarySacrifice: parseFloat(p.get('ss')) || 0,
+      freq:            enumOf(p.get('fr'), frMap, 'annual'),
+      residency:       enumOf(p.get('re'), reMap, 'resident'),
+      hasPrivateCover: bool(p.get('pc'), false),
+      hecsBalance:     num(p.get('hb'), 0),
+      sgRate:          num(p.get('sg'), 12),
+      salarySacrifice: num(p.get('ss'), 0),
+      workExpenses:    num(p.get('we'), 0),
       bonusAmount:     0,
       bonusFreq:       'annual',
     };
@@ -68,42 +87,61 @@ function decodeParams(search) {
 
   if (!p.has('ia')) return {};
   return {
-    incomeAmount:    parseFloat(p.get('ia')) || DEFAULTS.incomeAmount,
-    entryFreq:       frMap[p.get('ef')] ?? 'annual',
+    financialYear:   fy,
+    incomeAmount:    num(p.get('ia'), DEFAULTS.incomeAmount),
+    entryFreq:       enumOf(p.get('ef'), frMap, 'annual'),
     entryType:       p.get('et') === 'n' ? 'net' : 'gross',
-    bonusAmount:     parseFloat(p.get('ba')) || 0,
-    bonusFreq:       frMap[p.get('bf')] ?? 'annual',
-    freq:            frMap[p.get('fr')] ?? 'annual',
-    residency:       reMap[p.get('re')] ?? 'resident',
-    hasPrivateCover: p.get('pc') === '1',
-    hecsBalance:     parseFloat(p.get('hb')) || 0,
-    sgRate:          parseFloat(p.get('sg')) || 12,
-    salarySacrifice: parseFloat(p.get('ss')) || 0,
+    bonusAmount:     num(p.get('ba'), 0),
+    bonusFreq:       enumOf(p.get('bf'), frMap, 'annual'),
+    freq:            enumOf(p.get('fr'), frMap, 'annual'),
+    residency:       enumOf(p.get('re'), reMap, 'resident'),
+    hasPrivateCover: bool(p.get('pc'), false),
+    hecsBalance:     num(p.get('hb'), 0),
+    sgRate:          num(p.get('sg'), 12),
+    salarySacrifice: num(p.get('ss'), 0),
+    workExpenses:    num(p.get('we'), 0),
   };
 }
 
-export default function PayTaxInstance({ instanceKey = '', label, onRemove, theme = 'light', isComparison = false }) {
-  const [inputs, setInputs] = useState(() =>
-    instanceKey === '' ? { ...DEFAULTS, ...decodeParams(window.location.search) } : { ...DEFAULTS }
-  );
+export default function PayTaxInstance({
+  instanceKey = '', label, onRemove, theme = 'light', isComparison = false,
+  seed = null, onStateChange = null,
+}) {
+  const [inputs, setInputs] = useState(() => {
+    if (seed) return { ...seed };
+    return instanceKey === ''
+      ? { ...DEFAULTS, ...decodeParams(window.location.search) }
+      : { ...DEFAULTS };
+  });
 
   const set = (key, val) => setInputs(s => ({ ...s, [key]: val }));
   const setNum = (key) => (e) => set(key, parseFloat(e.target.value) || 0);
 
   useEffect(() => {
     if (instanceKey !== '') return;
-    window.history.replaceState(null, '', `${window.location.pathname}?${encodeInputs(inputs)}`);
+    writeUrl(new URLSearchParams(encodeInputs(inputs)));
   }, [inputs, instanceKey]);
+
+  useEffect(() => { onStateChange?.(inputs); }, [inputs, onStateChange]);
+
+  // Every rate resolves against a date inside the selected financial year, so
+  // switching years re-resolves brackets, HELP thresholds and caps together.
+  const asAtDate = useMemo(() => dateForFy(inputs.financialYear), [inputs.financialYear]);
 
   // Derive annual gross from what the user entered (base salary only, then add bonus)
   const annualBonus = toAnnual(inputs.bonusAmount || 0, inputs.bonusFreq);
   const annualGross = useMemo(() => {
     const annual = toAnnual(inputs.incomeAmount, inputs.entryFreq);
-    const base = inputs.entryType === 'net' ? grossFromNet(annual, inputs) : annual;
+    const base = inputs.entryType === 'net'
+      ? grossFromNet(annual, { ...inputs, date: asAtDate })
+      : annual;
     return base + toAnnual(inputs.bonusAmount || 0, inputs.bonusFreq);
-  }, [inputs]);
+  }, [inputs, asAtDate]);
 
-  const result = useMemo(() => calcPayTax({ ...inputs, grossIncome: annualGross }), [inputs, annualGross]);
+  const result = useMemo(
+    () => calcPayTax({ ...inputs, grossIncome: annualGross, date: asAtDate }),
+    [inputs, annualGross, asAtDate]
+  );
 
   const showFreq = inputs.freq;
   const fv = (annual) => fmt(byFreq(annual, showFreq));
@@ -175,7 +213,9 @@ export default function PayTaxInstance({ instanceKey = '', label, onRemove, them
         <div className="calc-heading">
           <h1>Pay / Tax Calculator<br /><span className="calc-heading-sub">Income Tax + Medicare + Super</span></h1>
           <p>Gross or net to take-home pay. Includes income tax (2026–27), Medicare levy, HECS/HELP repayment and employer super.</p>
-          <a className="desktop-cta" href={window.location.href} target="_blank" rel="noreferrer">
+          <a className="desktop-cta"
+            href={window.location.href + (window.location.search ? '&vd=1' : '?vd=1')}
+            target="_blank" rel="noreferrer">
             Open desktop site to compare up to 3 scenarios →
           </a>
         </div>
@@ -189,6 +229,25 @@ export default function PayTaxInstance({ instanceKey = '', label, onRemove, them
         <div className="panel">
           <div className="panel-section">
             <div className="section-title">Income</div>
+
+            {YEARS.length > 1 && (
+              <div className="field">
+                <label>Financial year</label>
+                <div className="segmented">
+                  {YEARS.map((y) => (
+                    <button key={y} className={inputs.financialYear === y ? 'active' : ''}
+                      onClick={() => set('financialYear', y)}>
+                      {y}
+                    </button>
+                  ))}
+                </div>
+                {inputs.financialYear !== CURRENT_FY && (
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                    Showing a future year. The second tax bracket drops to 14% on 1 July 2027.
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="field">
               <label>Pay period</label>
@@ -278,6 +337,22 @@ export default function PayTaxInstance({ instanceKey = '', label, onRemove, them
                 Medicare Levy Surcharge applies if income &gt; $100,000
               </p>
             )}
+          </div>
+
+          <div className="panel-section">
+            <div className="section-title">Deductions</div>
+            <div className="field">
+              <label>Work-related expenses you can substantiate</label>
+              <div className="input-wrap has-prefix">
+                <span className="input-prefix">$</span>
+                <input type="number" value={inputs.workExpenses || ''} onChange={setNum('workExpenses')} min="0" step="100" placeholder="0" />
+              </div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                {result.usedStandardDeduction
+                  ? 'Below the $1,000 standard deduction, so the standard amount is claimed instead — no receipts needed.'
+                  : `Above the $1,000 standard deduction, so your substantiated amount is claimed. Total deduction ${fmt(result.deductionClaimed)}.`}
+              </div>
+            </div>
           </div>
 
           <div className="panel-section">
@@ -377,6 +452,27 @@ export default function PayTaxInstance({ instanceKey = '', label, onRemove, them
             <div className="rate-callout">
               <strong>Bonus / commission: {fmt(annualBonus)}/yr</strong>
               Taxed as ordinary income at your marginal rate ({fmtPct(result.marginalRate)}). After-tax bonus: {fmt(annualBonus * (1 - result.marginalRate))}/yr.
+            </div>
+          )}
+
+          {inputs.salarySacrifice > 0 && result.helpRepayment > 0 && (
+            <div className="rate-callout">
+              <strong>Salary sacrifice does not reduce your HELP repayment</strong>
+              Reportable super contributions are added back when working out repayment income, so yours is {fmt(result.repaymentIncome)} rather than your taxable income of {fmt(result.taxableIncome)}. The same add-back applies to the Medicare levy surcharge. Sacrificing to reduce a HELP bill is a common piece of bad advice.
+            </div>
+          )}
+
+          {result.division293 > 0 && (
+            <div className="rate-callout" style={{ borderColor: 'var(--red)', background: 'rgba(224,82,82,0.06)' }}>
+              <strong>Division 293 applies — an extra {fmt(result.division293)}/yr</strong>
+              Your income plus concessional contributions of {fmt(result.concessionalContributions)} exceeds $250,000, so those contributions are taxed at 30% rather than 15%. Any salary sacrifice saves you your marginal rate less 30%, not less 15%.
+            </div>
+          )}
+
+          {result.concessionalCapExceeded && (
+            <div className="rate-callout" style={{ borderColor: 'var(--red)', background: 'rgba(224,82,82,0.06)' }}>
+              <strong>Concessional cap exceeded</strong>
+              Employer super plus salary sacrifice comes to {fmt(result.concessionalContributions)}, above the {fmt(result.concessionalCap)} cap. The excess is included in your assessable income and taxed at your marginal rate with a 15% offset, plus an excess contributions charge.
             </div>
           )}
 
