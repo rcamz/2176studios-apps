@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import SalarySacrificeInstance from './SalarySacrificeInstance.jsx';
 import AdUnit from './AdUnit.jsx';
+import { VersionFooter } from './VersionFooter.jsx';
 import './SalarySacrificeCalc.css';
 
 const AD_SLOT_BANNER  = 'XXXXXXXXXX';
@@ -51,6 +52,8 @@ export default function SalarySacrificeCalc() {
       <div className="ad-bar-float ad-bar-desktop-hide">
         <AdUnit slotId={AD_SLOT_BANNER} format="horizontal" />
       </div>
+      <VersionFooter calcId="salarysacrifice" />
+
       {modal && (
         <div className="modal-overlay" onClick={() => setModal(null)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>

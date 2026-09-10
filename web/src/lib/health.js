@@ -337,9 +337,12 @@ export function calcHealth(inputs = {}) {
     return {
       ageBlocked: true,
       ageBlockMessage:
-        'This calculator is for adults only. The Mifflin-St Jeor equation is not valid under 18, ' +
-        'and calorie targets for children and teenagers must come from paediatric growth references. ' +
-        'Speak to a GP, a paediatric dietitian, or use paediatric BMI-for-age charts instead.',
+        age > 0
+          ? 'This calculator is for adults only. The Mifflin-St Jeor equation is not valid under 18, ' +
+            'and calorie targets for children and teenagers must come from paediatric growth references. ' +
+            'Speak to a GP, a paediatric dietitian, or use paediatric BMI-for-age charts instead.'
+          : 'Enter your age to see results. This calculator is for adults — the equation behind it is ' +
+            'not valid under 18.',
       bmr: null,
       maintenanceCalories: null,
       bmi: null,

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import PayTaxInstance from './PayTaxInstance.jsx';
 import AdUnit from './AdUnit.jsx';
+import { VersionFooter } from './VersionFooter.jsx';
 import './PayTaxCalc.css';
 
 const AD_SLOT_BANNER  = 'XXXXXXXXXX';
@@ -134,6 +135,8 @@ export default function PayTaxCalc() {
       <div className={`ad-bar-float${!isMulti ? ' ad-bar-desktop-hide' : ''}`}>
         <AdUnit slotId={AD_SLOT_BANNER} format="horizontal" />
       </div>
+
+      <VersionFooter calcId="paytax" />
 
       {modal && (
         <div className="modal-overlay" onClick={() => setModal(null)}>

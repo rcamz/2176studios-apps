@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import RedundancyInstance from './RedundancyInstance.jsx';
 import AdUnit from './AdUnit.jsx';
+import { VersionFooter } from './VersionFooter.jsx';
 import './RedundancyCalc.css';
 
 const AD_SLOT_BANNER  = 'XXXXXXXXXX';
@@ -51,6 +52,8 @@ export default function RedundancyCalc() {
       <div className="ad-bar-float ad-bar-desktop-hide">
         <AdUnit slotId={AD_SLOT_BANNER} format="horizontal" />
       </div>
+      <VersionFooter calcId="redundancy" />
+
       {modal && (
         <div className="modal-overlay" onClick={() => setModal(null)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import CGTInstance from './CGTInstance.jsx';
 import AdUnit from './AdUnit.jsx';
+import { VersionFooter } from './VersionFooter.jsx';
 import './CGTCalc.css';
 
 const AD_SLOT_BANNER  = 'XXXXXXXXXX';
@@ -79,6 +80,8 @@ export default function CGTCalc() {
       <div className="ad-bar-float ad-bar-desktop-hide">
         <AdUnit slotId={AD_SLOT_BANNER} format="horizontal" />
       </div>
+
+      <VersionFooter calcId="cgt" />
 
       {modal && (
         <div className="modal-overlay" onClick={() => setModal(null)}>

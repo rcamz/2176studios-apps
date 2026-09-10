@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { VersionStocktake } from './VersionFooter.jsx';
 import './Home.css';
 
 const IconBubble = () => (
@@ -26,7 +27,7 @@ const APPS = [
   {
     name: 'Mortgage Repayments',
     sub: 'Offset + Split + Multi-Scenario',
-    desc: 'Variable, fixed & split loans, offset account, extra repayments, lump sums.',
+    desc: 'Variable, fixed & split loans, offset, fortnightly repayments, interest-only, LMI and rate sensitivity.',
     href: '/mortgagecalc',
     live: true,
     color: '#378ADD',
@@ -55,8 +56,8 @@ const APPS = [
   },
   {
     name: 'Borrowing Power Calculator',
-    sub: 'APRA Buffer + HEM + Serviceability',
-    desc: 'Income, expenses, existing debts and HECS impact on your max loan estimate.',
+    sub: 'APRA Buffer + Deposit + LMI',
+    desc: 'Serviceability and deposit limits, existing debts, HELP impact, LMI and rate sensitivity.',
     href: '/borrowingpowercalc',
     live: true,
     color: '#D85A30',
@@ -85,8 +86,8 @@ const APPS = [
   },
   {
     name: 'Rent vs. Buy Calculator',
-    sub: 'Stamp Duty + Opportunity Cost',
-    desc: 'Stamp duty, opportunity cost of deposit, rent vs. property growth assumptions.',
+    sub: 'Stamp Duty + CGT Exemption',
+    desc: 'Stamp duty for your state, LMI, deposit opportunity cost, and the CGT a renter pays but an owner does not.',
     href: '/rentvbuycalc',
     live: true,
     color: '#1D9E75',
@@ -96,7 +97,7 @@ const APPS = [
   {
     name: 'Capital Gains Tax Calculator',
     sub: '50% Discount + Marginal Rate',
-    desc: 'Purchase price, holding period, 50% CGT discount and marginal tax rate.',
+    desc: 'Holding period, 50% discount, main residence exemption and the six-year absence rule.',
     href: '/cgtcalc',
     live: true,
     color: '#D4537E',
@@ -116,7 +117,7 @@ const APPS = [
   {
     name: 'Salary Sacrifice Calculator',
     sub: 'Tax Savings + Super Projection',
-    desc: 'Tax saved vs. take-home hit, modelled against the $30k concessional cap.',
+    desc: 'Tax saved vs. take-home hit, Division 293, carry-forward and the $32,500 concessional cap.',
     href: '/salarysacrificecalc',
     live: true,
     color: '#888780',
@@ -193,6 +194,8 @@ export default function Home() {
             : <div key={app.name} className="app-card-link app-card-link--disabled">{card}</div>;
         })}
       </div>
+
+      <VersionStocktake />
     </div>
   );
 }

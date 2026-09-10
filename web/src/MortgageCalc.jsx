@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import CalcInstance from './CalcInstance.jsx';
 import AdUnit from './AdUnit.jsx';
+import { VersionFooter } from './VersionFooter.jsx';
 import './MortgageCalc.css';
 
 const AD_SLOT_BANNER  = 'XXXXXXXXXX';
@@ -150,6 +151,8 @@ export default function MortgageCalc() {
       <div className={`ad-bar-float${!isMulti ? ' ad-bar-desktop-hide' : ''}`}>
         <AdUnit slotId={AD_SLOT_BANNER} format="horizontal" />
       </div>
+
+      <VersionFooter calcId="mortgage" />
 
       {modal && (
         <div className="modal-overlay" onClick={() => setModal(null)}>

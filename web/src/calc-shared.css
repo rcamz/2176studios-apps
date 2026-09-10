@@ -780,3 +780,37 @@ select.field-select {
   margin-bottom: 10px;
   line-height: 1.5;
 }
+
+/* ─── Version footer ──────────────────────────────────────────────────── */
+.version-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 18px 18px 96px;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border);
+  margin-top: 32px;
+}
+@media (min-width: 980px) {
+  .version-footer { padding-bottom: 28px; }
+}
+.version-badge {
+  font-family: var(--mono);
+  font-weight: 500;
+  color: var(--accent);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 1px 6px;
+}
+.version-sep { opacity: 0.4; }
+.version-commit { font-family: var(--mono); }
+.version-dirty {
+  font-family: var(--mono);
+  color: var(--red);
+  border: 1px solid var(--red);
+  border-radius: var(--radius-sm);
+  padding: 1px 5px;
+}

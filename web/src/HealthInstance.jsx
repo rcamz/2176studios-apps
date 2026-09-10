@@ -242,8 +242,8 @@ export default function HealthInstance({ instanceKey = '', label, onRemove, them
         <div className="calc-body">
           {inputPanel}
           <div className="results-panel">
-            <div className="rate-callout" style={BLOCK_STYLE}>
-              <strong>No results shown — this calculator is for adults</strong>
+            <div className="rate-callout" style={inputs.age > 0 ? BLOCK_STYLE : undefined}>
+              <strong>{inputs.age > 0 ? 'No results shown — this calculator is for adults' : 'Enter your age'}</strong>
               {result.ageBlockMessage}
             </div>
             <div className="disclaimer">
