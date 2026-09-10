@@ -29,7 +29,7 @@ export const SITE_ORIGIN = 'https://2176studios.com';
 export const SUPPORT_EMAIL = 'support@2176studios.com';
 
 /** Buy Me a Coffee. Change the handle here and every page follows. */
-export const SUPPORT_URL = 'https://buymeacoffee.com/donateandsee';
+export const SUPPORT_URL = 'https://buymeacoffee.com/2176studios';
 
 export const routeFor = (id) => APP_ROUTES.find((r) => r.id === id) ?? null;
 export const idForPath = (path) => APP_ROUTES.find((r) => r.href === path)?.id ?? null;

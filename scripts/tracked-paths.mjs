@@ -26,6 +26,7 @@ export const SHARED_PATHS = [
   'core/src/stampduty.js', 'core/src/lmi.js', 'core/src/format.js',
   'core/src/workings.js', 'core/src/vectors',
   'web/src/lib/urlState.js', 'web/src/SiteFooter.jsx',
+  'core/src/appRoutes.js', 'core/src/appMeta.js',
   'web/src/calc-shared.css', 'web/src/base.css',
 ];
 

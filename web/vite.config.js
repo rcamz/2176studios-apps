@@ -12,6 +12,11 @@ export default defineConfig({
   test: {
     // The calculation tests moved to the core package with the code they
     // cover; vitest is installed here, so it reaches across to find them.
-    include: ['src/**/*.test.{js,jsx}', '../core/src/**/*.test.{js,jsx}'],
+    include: [
+      'src/**/*.test.{js,jsx}',
+      '../core/src/**/*.test.{js,jsx}',
+      '../scripts/**/*.test.mjs',
+      '../scripts/**/*.test.js',
+    ],
   },
 });

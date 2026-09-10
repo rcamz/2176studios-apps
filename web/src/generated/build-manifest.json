@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-09-10T11:59:50.951Z",
-  "generatedFrom": "8edc6d0",
+  "generatedAt": "2026-09-10T12:06:51.499Z",
+  "generatedFrom": "a953858",
   "files": {
     "web/src/Home.jsx": {
       "lastCommit": "8edc6d0",
@@ -219,9 +219,9 @@
       "commits": 5
     },
     "web/src/About.jsx": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T11:59:50.951Z",
-      "lastSubject": "Uncommitted at snapshot time",
+      "lastCommit": "a953858",
+      "lastDate": "2026-09-10T12:01:38+00:00",
+      "lastSubject": "Add a Buy Me a Coffee link to the footer and the About page",
       "commits": 2
     },
     "web/src/About.css": {
@@ -285,9 +285,21 @@
       "commits": 1
     },
     "web/src/SiteFooter.jsx": {
+      "lastCommit": "a953858",
+      "lastDate": "2026-09-10T12:01:38+00:00",
+      "lastSubject": "Add a Buy Me a Coffee link to the footer and the About page",
+      "commits": 2
+    },
+    "core/src/appRoutes.js": {
       "lastCommit": "pending",
-      "lastDate": "2026-09-10T11:59:50.951Z",
+      "lastDate": "2026-09-10T12:06:51.499Z",
       "lastSubject": "Uncommitted at snapshot time",
+      "commits": 4
+    },
+    "core/src/appMeta.js": {
+      "lastCommit": "8edc6d0",
+      "lastDate": "2026-09-10T11:49:21+00:00",
+      "lastSubject": "Add an About, Contact and Privacy page linked from every footer",
       "commits": 2
     },
     "web/src/calc-shared.css": {
@@ -297,9 +309,9 @@
       "commits": 28
     },
     "web/src/base.css": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T11:59:50.951Z",
-      "lastSubject": "Uncommitted at snapshot time",
+      "lastCommit": "a953858",
+      "lastDate": "2026-09-10T12:01:38+00:00",
+      "lastSubject": "Add a Buy Me a Coffee link to the footer and the About page",
       "commits": 8
     }
   }
