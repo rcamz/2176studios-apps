@@ -163,7 +163,17 @@ export const waDuty = [
   { input: { value: 360000 }, expected: 11115.0, source: 'calc' },
   { input: { value: 650000 }, expected: 24890.0, source: 'calc' },
   { input: { value: 725000 }, expected: 28452.5, source: 'calc' },
-  { input: { value: 800000 }, expected: 32315.5, source: 'calc' },
+  {
+    input: { value: 800000 },
+    expected: 32315.0,
+    source: 'calc',
+    note:
+      'CORRECTED from the source audit, which states $32,315.50 — a 50c arithmetic error. ' +
+      '$28,452.50 + ceil(75,000/100) × $5.15 = $28,452.50 + $3,862.50 = $32,315.00. The scale is ' +
+      'self-consistent at both band boundaries ($360,000 → $11,115 and $725,000 → $28,452.50, each ' +
+      'matching the next band’s base), and the audit’s other two WA anchors reconcile exactly, so ' +
+      'the error is in this figure alone. Do not revert.',
+  },
   {
     input: { value: 600000, firstHomeOwnerRate: true, transactionDate: 'on or after 2026-05-07' },
     expected: 0,
