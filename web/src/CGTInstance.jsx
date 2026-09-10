@@ -3,7 +3,8 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Cell,
 } from 'recharts';
-import { calcCGT } from './lib/cgt.js';
+import { calcCGT, explainCGT } from './lib/cgt.js';
+import Workings from './Workings.jsx';
 import { fmt, fmtPct } from './lib/format.js';
 import { num, bool, enumOf, writeUrl } from './lib/urlState.js';
 import AdUnit from './AdUnit.jsx';
@@ -158,6 +159,8 @@ export default function CGTInstance({ instanceKey = '', label, onRemove, theme =
     // stale setting leak across an asset-type switch.
     mainResidenceStatus: isProperty && isIndividual ? inputs.mainResidenceStatus : 'never',
   }), [inputs, isProperty, isIndividual]);
+
+  const explanation = useMemo(() => explainCGT(result, inputs), [result, inputs]);
 
   const chartAccent  = theme === 'dark' ? '#C9F23A' : '#4B7B00';
   const chartGrid    = theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)';
@@ -542,6 +545,8 @@ export default function CGTInstance({ instanceKey = '', label, onRemove, theme =
               </ResponsiveContainer>
             </div>
           )}
+
+          <Workings data={explanation} />
 
           <div className="disclaimer">
             Estimates only — not financial advice. Based on {result.financialYear} ATO rates, resolved against the sale

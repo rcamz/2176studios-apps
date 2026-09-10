@@ -449,3 +449,186 @@ export function calcRedundancy(inputs = {}) {
     rates,
   };
 }
+
+// ─── Explanation ─────────────────────────────────────────────────────────────
+
+import { workings, section, step, subtotal, total, note } from './workings.js';
+
+const money = (n) => '$' + Math.round(n).toLocaleString('en-AU');
+const pct = (r) => (r * 100).toFixed(r * 100 % 1 === 0 ? 0 : 1) + '%';
+
+// The band of the s119 scale a given service length falls in, read back out of
+// the registry rather than restated here.
+function nesBandFor(yearsOfService, rates) {
+  const y = Math.max(0, yearsOfService || 0);
+  return rates.termination.nes.weeks.find(
+    (row) => y >= row.minYears && (row.maxYears === null || y < row.maxYears)
+  ) ?? null;
+}
+
+function bandLabel(band) {
+  if (!band) return 'Outside the scale';
+  if (band.maxYears === null) return `${band.minYears} years and over`;
+  return `${band.minYears} to under ${band.maxYears} years`;
+}
+
+/**
+ * Build a step-by-step account of a calcRedundancy result.
+ *
+ * Separate from calcRedundancy so the hot path stays free of presentation
+ * concerns. Every figure comes from the result object or the inputs.
+ */
+export function explainRedundancy(result, inputs = {}) {
+  const r = result;
+  const rates = r.rates;
+  const t = rates.termination;
+  const leaveTax = t.leaveTax;
+  const yearsService = inputs.yearsService ?? 0;
+  const band = nesBandFor(yearsService, rates);
+  const peak = [...t.nes.weeks].reduce((a, b) => (b.weeks > a.weeks ? b : a));
+  const topBand = t.nes.weeks.find((w) => w.maxYears === null);
+
+  // ── NES entitlement ───────────────────────────────────────────────────────
+  const nesSection = section('Redundancy pay under the NES', [
+    step('Continuous service', `${yearsService} ${yearsService === 1 ? 'year' : 'years'}`),
+    step('Service band', bandLabel(band), { muted: true }),
+    !r.nesEntitled && r.nesWeeksIfEntitled > 0 && step(
+      'Weeks the scale would give', `${r.nesWeeksIfEntitled} weeks`, { muted: true }
+    ),
+    step('Weeks of redundancy pay', `${r.redundancyWeeks} weeks`, {
+      note: r.nesEntitled ? null : 'Not payable — see below',
+    }),
+    step('Base rate of pay per week', r.baseRate, {
+      note: `Redundancy pay uses the ${r.redundancyPayBasis} rate; notice uses the ${r.noticePayBasis} rate`,
+    }),
+    total('Redundancy pay', r.redundancyPay),
+    topBand && peak && topBand.weeks < peak.weeks && note(
+      `The scale is not a ladder. It peaks at ${peak.weeks} weeks for ${bandLabel(peak).toLowerCase()}, then ` +
+      `DROPS to ${topBand.weeks} weeks at ${topBand.minYears} years and stays there. Staying past ` +
+      `${peak.maxYears} years reduces the NES entitlement — it never increases it.`
+    ),
+    !r.nesEntitled && r.nes.reasons.length > 0 && note(
+      `No NES redundancy pay: ${r.nes.reasons.join(' ')}`
+    ),
+  ]);
+
+  // ── Tax-free limit ────────────────────────────────────────────────────────
+  const g = t.genuineRedundancy;
+  const completedYears = Math.max(0, Math.floor(yearsService || 0));
+  const limitSection = section('Genuine redundancy tax-free limit', [
+    r.isGenuineRedundancy && step('Base amount', g.baseLimit),
+    r.isGenuineRedundancy && step(
+      `plus ${money(g.perYearOfService)} for each of ${completedYears} completed ${completedYears === 1 ? 'year' : 'years'}`,
+      g.perYearOfService * completedYears,
+      { note: 'Completed years only — a part year adds nothing' }
+    ),
+    total('Tax-free limit', r.taxFreeLimit),
+    !r.isGenuineRedundancy && note(
+      r.underAgePensionAge
+        ? 'The tax-free limit applies only to a genuine redundancy. This payment does not qualify, so the whole ETP is taxable.'
+        : `The tax-free limit requires being under Age Pension age (${r.agePensionAge}) at dismissal. Past that the payment is still made, but it is taxed as an ordinary ETP.`
+    ),
+  ]);
+
+  // ── ETP split ─────────────────────────────────────────────────────────────
+  const etpSection = section('Employment termination payment', [
+    step('Redundancy pay', r.redundancyPay),
+    r.otherEtpAmount > 0 && step('plus ex gratia / severance', r.otherEtpAmount),
+    subtotal('ETP gross', r.etpGross),
+    step('Tax-free portion', r.taxFreeAmount, {
+      note: r.taxFreeLimit > 0 ? `Capped at the ${money(r.taxFreeLimit)} limit` : null,
+    }),
+    step('Concessionally taxed portion', r.etpWithinCap, {
+      note: `Held to ${pct(r.concessionalRate)} because you are ${
+        r.concessionalRate === t.etp.rateAtPreservationAge ? 'at or over' : 'under'
+      } preservation age (${r.preservationAge}) at 30 June`,
+    }),
+    r.etpAboveCap > 0 && step('Portion above the cap', r.etpAboveCap, {
+      note: `Taxed at ${pct(t.etp.rateAboveCap)} with no offset`,
+    }),
+    subtotal('Taxable ETP', r.taxableETP, {
+      note: `${money(r.taxFreeAmount)} tax-free plus ${money(r.taxableETP)} taxable is the whole ${money(r.etpGross)}`,
+    }),
+    step('Cap applied', r.applicableCap, {
+      muted: true,
+      note: r.capBinding === 'wholeOfIncomeCap'
+        ? `The whole-of-income cap binds — ${money(r.wholeOfIncomeCap)} less the other taxable income already counted leaves ${money(r.wholeOfIncomeCapRemaining)}`
+        : `The ${money(r.etpCap)} ETP cap binds`,
+    }),
+    step('Tax on the concessional portion', r.etpTaxWithinCap),
+    r.etpAboveCap > 0 && step('Tax on the portion above the cap', r.etpTaxAboveCap),
+    total('ETP tax', r.etpTax),
+    note(
+      `The concessional rate is a CEILING, not a flat rate. Someone whose marginal rate sits below ` +
+      `${pct(r.concessionalRate)} pays the lower amount — the offset only ever brings the tax down.`
+    ),
+  ]);
+
+  // ── Leave, and what the 32% ceiling is worth ──────────────────────────────
+  const alRedundancyRate = leaveTax.annualLeave.postAug1993.redundancy;
+  const lslRedundancyRate = leaveTax.longServiceLeave.postAug1993.redundancy;
+  const cappedRate = typeof alRedundancyRate === 'number' ? alRedundancyRate : lslRedundancyRate;
+
+  const leaveSection = (r.annualLeavePay > 0 || r.lslPay > 0 || r.noticePay > 0)
+    ? section('Unused leave and notice', [
+        r.noticePay > 0 && step(`Payment in lieu of notice — ${r.noticeWeeks} weeks at ${money(r.fullRate)}`, r.noticePay, {
+          note: 'Salary and wages, always taxed at marginal rates — no ceiling applies',
+        }),
+        r.annualLeavePre1993 > 0 && step('Annual leave accrued before 18 August 1993', r.annualLeavePre1993, {
+          note: `Held to ${pct(leaveTax.annualLeave.preAug1993.normal)} whatever the reason for leaving`,
+        }),
+        r.annualLeavePost1993 > 0 && step('Annual leave accrued after 17 August 1993', r.annualLeavePost1993, {
+          note: r.annualLeaveCapped
+            ? `Held to ${pct(alRedundancyRate)} because this is a genuine redundancy`
+            : 'Taxed at your marginal rate',
+        }),
+        r.lslPre1978 > 0 && step('Long service leave accrued before 16 August 1978', r.lslPre1978, {
+          note: `Only 5% of it — ${money(r.lslPre1978Assessable)} — is assessable, at marginal rates`,
+        }),
+        r.lsl1978to1993 > 0 && step('Long service leave accrued 16 Aug 1978 to 17 Aug 1993', r.lsl1978to1993, {
+          note: `Held to ${pct(leaveTax.longServiceLeave.aug1978Aug1993.normal)} whatever the reason for leaving`,
+        }),
+        r.lslPost1993 > 0 && step('Long service leave accrued after 17 August 1993', r.lslPost1993, {
+          note: r.lslPost1993Capped
+            ? `Held to ${pct(lslRedundancyRate)} because this is a genuine redundancy`
+            : 'Taxed at your marginal rate',
+        }),
+        subtotal('Gross leave and notice', r.annualLeavePay + r.lslPay + r.noticePay),
+        step('Tax on notice', r.noticeTax),
+        step('Tax on annual leave', r.annualLeaveTax),
+        step('Tax on long service leave', r.lslTax),
+        total('Tax on leave and notice', r.noticeTax + r.annualLeaveTax + r.lslTax),
+        r.isGenuineRedundancy && (r.annualLeaveCapped || r.lslPost1993Capped) && note(
+          `Because this is a genuine redundancy, post-August-1993 leave is held to ${pct(cappedRate)}. ` +
+          'On any other kind of termination — a resignation, or a redundancy that is not genuine — the same ' +
+          'leave would be taxed at your full marginal rate plus Medicare. That single distinction is usually ' +
+          'worth more than the concessional ETP rate.'
+        ),
+        !r.isGenuineRedundancy && (r.annualLeavePost1993 > 0 || r.lslPost1993 > 0) && note(
+          `This is not a genuine redundancy, so post-August-1993 leave is taxed at your full marginal rate. ` +
+          `Were it genuine, the same leave would be held to ${pct(cappedRate)}.`
+        ),
+      ])
+    : null;
+
+  // ── Totals ────────────────────────────────────────────────────────────────
+  const totals = section('What you take home', [
+    step('ETP gross', r.etpGross),
+    step('Annual leave', r.annualLeavePay),
+    step('Long service leave', r.lslPay),
+    step('Payment in lieu of notice', r.noticePay),
+    subtotal('Total gross', r.totalGross),
+    step('less ETP tax', -r.etpTax),
+    step('less tax on annual leave', -r.annualLeaveTax),
+    step('less tax on long service leave', -r.lslTax),
+    step('less tax on notice', -r.noticeTax),
+    subtotal('Total tax', r.totalTax),
+    total('Net take-home', r.netTakeHome),
+    step('Effective tax rate', pct(r.effectiveTaxRate), { muted: true }),
+  ]);
+
+  return workings([nesSection, limitSection, etpSection, leaveSection, totals], {
+    source: 'Fair Work Act NES minimums and Australian Taxation Office rates',
+    asAt: rates.__fy ? `FY${rates.__fy}` : null,
+  });
+}

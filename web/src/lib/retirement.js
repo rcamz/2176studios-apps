@@ -708,3 +708,186 @@ export function calcRetirement(inputs = {}) {
     rates,
   };
 }
+
+// ─── Explanation ─────────────────────────────────────────────────────────────
+
+import { workings, section, step, subtotal, total, note } from './workings.js';
+
+const money = (n) => '$' + Math.round(n).toLocaleString('en-AU');
+// Takes a PERCENTAGE (7, 0.5), not a fraction.
+const pctNum = (n) => `${Math.round(n * 100) / 100}%`;
+// Takes a FRACTION (0.15).
+const pctFrac = (f) => `${Math.round(f * 10000) / 100}%`;
+
+/**
+ * Build a step-by-step account of a calcRetirement result.
+ *
+ * Separate from calcRetirement so the projection stays free of presentation
+ * concerns. Every figure comes out of `result` or the inputs it was given —
+ * nothing is recomputed and nothing is invented.
+ */
+export function explainRetirement(result, inputs = {}) {
+  const r = result;
+  const s = r.rates.superannuation;
+  const contributionsTax = s.contributionsTax;
+
+  const investmentReturn = inputs.investmentReturn ?? 7;
+  const feePercent = inputs.feePercent ?? inputs.fees ?? 0.5;
+  const feeFlat = Math.max(0, inputs.feeFlat ?? 100);
+  const insurancePremium = Math.max(0, inputs.insurancePremium ?? 0);
+  const inflationRate = inputs.inflationRate ?? 2.5;
+  const sgRate = inputs.sgRate ?? 12;
+  const extraIsPreTax = inputs.extraIsPreTax ?? true;
+  const extraContributions = Math.max(0, inputs.extraContributions ?? 0);
+
+  const firstYear = r.path[0] ?? null;
+  const openingBalance = firstYear ? firstYear.balance : 0;
+  const accumulating = firstYear?.phase === 'accumulation';
+
+  // ── Year one, line by line ──
+  const employer = r.sgContributionYearOne;
+  const concessional = r.contributionCap.totalConcessional;
+  const personalPreTax = Math.max(0, concessional - employer);
+  const personalPostTax = extraIsPreTax ? 0 : extraContributions;
+  const contributionsTaxYearOne = concessional * contributionsTax;
+  const intoFundYearOne = concessional - contributionsTaxYearOne + personalPostTax;
+
+  const contributions = accumulating ? section('Contributions in year one', [
+    step('Your salary', firstYear.salary),
+    step(`Employer super at ${pctNum(sgRate)}`, employer, {
+      note: 'Paid on top of your salary, not out of it',
+    }),
+    personalPreTax > 0 && step('Your before-tax contributions', personalPreTax),
+    subtotal('Concessional contributions', concessional),
+    step(`less contributions tax at ${pctFrac(contributionsTax)}`, -contributionsTaxYearOne, {
+      note: 'Taken by the fund on the way in, not by you at tax time',
+    }),
+    personalPostTax > 0 && step('plus your after-tax contributions', personalPostTax, {
+      note: 'Already taxed as income, so the fund takes nothing further',
+    }),
+    total('Into your fund in year one', intoFundYearOne),
+    note(
+      `Salary grows at ${pctNum(r.salaryGrowth)} a year in this projection, so every later year `
+      + `contributes more than this one — by ${r.accessAge} the salary is ${money(r.finalSalary)}. `
+      + 'A projection that holds salary flat understates the whole thing.'
+    ),
+  ]) : null;
+
+  // ── The return ──
+  const flatDrag = feeFlat + insurancePremium;
+  const returns = section('The return the balance earns', [
+    step('Investment return', pctNum(investmentReturn)),
+    step('less investment fees', pctNum(-feePercent)),
+    total('Net return used in the projection', pctNum(investmentReturn - feePercent)),
+    flatDrag > 0 && step('plus fixed fees and insurance each year', -flatDrag, {
+      note: 'Charged in dollars rather than as a percentage, so they bite hardest on a small balance',
+    }),
+  ], {
+    note: 'Fees are subtracted from the return before anything compounds. Half a per cent sounds '
+      + 'like nothing and is not: over a working life it is compounding you never see.',
+  });
+
+  // ── Compounding ──
+  // Growth is stated as the residual so the three lines reconcile against the
+  // projected balance exactly rather than approximately.
+  const growth = r.projectedBalance - openingBalance - r.totalContributions;
+  const compounding = section(`Compounding to age ${r.accessAge}`, [
+    step('Starting balance', openingBalance),
+    step(`Contributions over ${r.yearsToAccess} years, after contributions tax`, r.totalContributions),
+    step('Investment growth after fees', growth),
+    total(`Balance at ${r.accessAge}`, r.projectedBalance),
+    r.totalContributionsTax > 0 && step('Contributions tax paid along the way', r.totalContributionsTax, {
+      muted: true,
+      note: 'Never in your account, so it never compounds either',
+    }),
+  ]);
+
+  // ── Nominal against real ──
+  const realSec = section("What that is worth in today's money", [
+    step(`Balance at ${r.accessAge}, nominal`, r.projectedBalance, {
+      note: 'The figure that will be printed on the statement in that year',
+    }),
+    step(
+      `less what inflation takes out over ${r.yearsToAccess} years`,
+      -(r.projectedBalance - r.realBalance),
+      { note: `Prices multiply by ${(Math.round(r.inflationFactor * 100) / 100).toFixed(2)} at ${pctNum(inflationRate)} a year` }
+    ),
+    total("In today's dollars, real", r.realBalance),
+  ], {
+    note: 'Inflation is the entire difference between these two lines. The nominal figure is the '
+      + 'one people fixate on; the real one is what it actually buys, and it is the only one worth '
+      + 'comparing against what you spend today.',
+  });
+
+  // ── Age Pension ──
+  const ap = r.agePension;
+  let pensionSections = [];
+
+  if (!r.includeAgePension) {
+    pensionSections = [section('Age Pension', [
+      note('Not included in this projection. Turn it on to see both means tests.'),
+    ])];
+  } else if (ap && ap.estimateUnavailable) {
+    pensionSections = [section('Age Pension', [note(ap.reason)])];
+  } else if (ap) {
+    const it = ap.incomeTest;
+    const at = ap.assetsTest;
+
+    const incomeSec = section('Age Pension — the income test', [
+      step('Maximum rate per fortnight', ap.maxRateFortnightly),
+      step('Assessable income per fortnight', it.assessableIncome, {
+        note: `Includes ${money(it.deemedFortnight)} a fortnight of deemed income — financial assets `
+          + 'are assumed to earn a set rate whatever they actually earn',
+      }),
+      step('less the income free area', -it.freeArea),
+      subtotal('Income above the free area', it.excess),
+      step(
+        `Reduction at ${Math.round(it.taperPerDollar * 100)}c in the dollar`,
+        -it.reduction
+      ),
+      total('Income test result', it.result),
+    ]);
+
+    const assetsSec = section('Age Pension — the assets test', [
+      step('Maximum rate per fortnight', ap.maxRateFortnightly),
+      step('Assessable assets', at.assets, {
+        note: "In today's dollars. The family home is exempt and is not counted here.",
+      }),
+      step('less the assets free area', -at.freeArea),
+      subtotal('Assets above the free area', at.excess),
+      step(
+        `Reduction at $${at.taperPerThousand} a fortnight per $1,000 over`,
+        -at.reduction
+      ),
+      total('Assets test result', at.result),
+    ]);
+
+    const bindingLabel = ap.bindingTest === 'income' ? 'income test'
+      : ap.bindingTest === 'assets' ? 'assets test'
+      : ap.bindingTest === 'equal' ? 'two tests, which land on the same figure'
+      : 'age test';
+
+    const bindingSec = section('Which test binds', [
+      step('Income test', it.result),
+      step('Assets test', at.result),
+      total('Age Pension paid, per fortnight', ap.fortnightly),
+      step('Over a year', ap.annual, { muted: true }),
+      ap.status === 'couple' && step('Each, per fortnight', ap.perPersonFortnight, { muted: true }),
+      !ap.eligibleByAge && note(`Not yet payable — Age Pension age is ${ap.pensionAge}.`),
+      note(
+        `Both tests are worked out in full and the LOWER of the two is what is paid. Here it is the `
+        + `${bindingLabel}. Improving the other one changes nothing until it becomes the lower.`
+      ),
+    ]);
+
+    pensionSections = [incomeSec, assetsSec, bindingSec];
+  }
+
+  return workings(
+    [contributions, returns, compounding, realSec, ...pensionSections],
+    {
+      source: 'ATO superannuation rules and Services Australia Age Pension rates',
+      asAt: r.rates.__fy ? `FY${r.rates.__fy}` : null,
+    }
+  );
+}

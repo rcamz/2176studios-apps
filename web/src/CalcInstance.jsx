@@ -3,8 +3,9 @@ import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ResponsiveContainer, Cell,
 } from 'recharts';
-import { amortize, summarize, rateSensitivity, PERIODS_PER_YEAR } from './lib/amortize.js';
+import { amortize, summarize, rateSensitivity, explainAmortisation, PERIODS_PER_YEAR } from './lib/amortize.js';
 import { estimateLmi, LMI_DISCLOSURE } from './lib/lmi.js';
+import Workings from './Workings.jsx';
 import { fmt, fmtShort, monthsToLabel } from './lib/format.js';
 import { num, bool, enumOf, writeUrl } from './lib/urlState.js';
 import AdUnit from './AdUnit.jsx';
@@ -147,7 +148,7 @@ export default function CalcInstance({
 
   const perYear = PERIODS_PER_YEAR[inputs.paymentFrequency] ?? 12;
 
-  const { withRows, withSummary, baseSummary, chartData, rateSwitchPeriod, sensitivity, lmi } =
+  const { withRows, withSummary, baseSummary, offsetOnlySummary, chartData, rateSwitchPeriod, sensitivity, lmi } =
     useMemo(() => {
       const isSplit = inputs.rateType === 'split';
       const fixedAmt = isSplit
@@ -200,7 +201,10 @@ export default function CalcInstance({
         });
       };
 
-      let withRows, baseRows;
+      // Offset on, extras off. Without this third run the interest saved by the
+      // offset cannot be told apart from the interest saved by extra
+      // repayments, and the explanation has to lump them together.
+      let withRows, baseRows, offsetOnlyRows;
       if (isSplit) {
         // Offset and extra repayments apply to the variable portion only —
         // standard for AU lenders on a split facility.
@@ -226,6 +230,12 @@ export default function CalcInstance({
           extraRecurring: 0, extraLumps: [], includeOffset: false, includeExtras: false,
         });
         baseRows = mergeRows(fixedBase, varBase);
+
+        const varOffsetOnly = amortize({
+          ...shared, loanAmount: varAmt, annualRatePercent: inputs.splitVariableRatePercent,
+          extraRecurring: 0, extraLumps: [], includeOffset: true, includeExtras: false,
+        });
+        offsetOnlyRows = mergeRows(fixedRows, varOffsetOnly);
       } else {
         withRows = amortize(baseCfg);
         baseRows = amortize({
@@ -234,10 +244,15 @@ export default function CalcInstance({
           extraRecurring: 0, extraLumps: [],
           includeOffset: false, includeExtras: false,
         });
+        offsetOnlyRows = amortize({
+          ...baseCfg,
+          extraRecurring: 0, extraLumps: [], includeExtras: false,
+        });
       }
 
       const withSummary = summarize(withRows, inputs.paymentFrequency);
       const baseSummary = summarize(baseRows, inputs.paymentFrequency);
+      const offsetOnlySummary = summarize(offsetOnlyRows, inputs.paymentFrequency);
 
       // Rows are 1-indexed by period, so the balance at the end of year Y is
       // index (Y × periodsPerYear) − 1. Indexing by the period number directly
@@ -264,8 +279,16 @@ export default function CalcInstance({
         ? estimateLmi({ loanAmount: inputs.loanAmount, propertyValue: inputs.propertyValue })
         : null;
 
-      return { withRows, withSummary, baseSummary, chartData, rateSwitchPeriod, sensitivity, lmi };
+      return { withRows, withSummary, baseSummary, offsetOnlySummary, chartData, rateSwitchPeriod, sensitivity, lmi };
     }, [inputs, perYear]);
+
+  const explanation = useMemo(
+    () => explainAmortisation(
+      { withRows, withSummary, baseSummary, offsetOnlySummary, rateSwitchPeriod, lmi },
+      inputs
+    ),
+    [withRows, withSummary, baseSummary, offsetOnlySummary, rateSwitchPeriod, lmi, inputs]
+  );
 
   const interestSaved = baseSummary.totalInterest - withSummary.totalInterest;
   const monthsSaved = baseSummary.payoffMonths - withSummary.payoffMonths;
@@ -752,6 +775,8 @@ export default function CalcInstance({
               </>
             )}
           </div>
+
+          <Workings data={explanation} />
 
           <div className="disclaimer">
             Estimates only — not financial advice. Interest calculated per repayment period (lenders use daily). Offset assumed 100% effective on the variable portion. Fortnightly and weekly repayments assume half or a quarter of the monthly amount, which is standard practice but confirm with your lender. Does not include lender fees or stamp duty.

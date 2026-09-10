@@ -379,6 +379,9 @@ export function calcFHSSS(inputs = {}) {
 
     // withdrawal
     assessableAmount,
+    incomeTaxOnRelease,
+    medicareOnRelease,
+    offsetOnRelease,
     withdrawalTax,
     netDeposit,
     withholdingRate,
@@ -401,6 +404,176 @@ export function calcFHSSS(inputs = {}) {
     excludedFromMlsIncome: f.excludedFromMlsIncome,
     annualLimit: f.annualLimit,
     lifetimeLimit: f.lifetimeLimit,
+    breakdown,
     rates,
   };
+}
+
+// ─── Explanation ─────────────────────────────────────────────────────────────
+
+import { workings, section, step, subtotal, total, note } from './workings.js';
+
+const money = (n) => '$' + Math.round(n).toLocaleString('en-AU');
+const pct = (r) => (r * 100).toFixed(r * 100 % 1 === 0 ? 0 : 1) + '%';
+
+/**
+ * Build a step-by-step account of a calcFHSSS result.
+ *
+ * Separate from calcFHSSS so the hot path stays free of presentation concerns.
+ * Every figure comes from the result object or the inputs.
+ */
+export function explainFHSSS(result, inputs = {}) {
+  const r = result;
+  const rates = r.rates;
+  const f = rates.fhsss;
+  const b = r.breakdown;
+  const annualConcessional = inputs.annualConcessional ?? 0;
+  const annualNonConcessional = inputs.annualNonConcessional ?? 0;
+  const contributedPerYear = annualConcessional + annualNonConcessional;
+
+  // ── Contributions, year by year ───────────────────────────────────────────
+  const perYear = section('Contributions counted, year by year', [
+    step('Contributed each year', contributedPerYear, {
+      muted: true,
+      note: annualConcessional > 0 && annualNonConcessional > 0
+        ? `${money(annualConcessional)} concessional plus ${money(annualNonConcessional)} non-concessional`
+        : null,
+    }),
+    step('Annual limit on counted contributions', f.annualLimit, { muted: true }),
+    ...b.byYear.map((y) => step(
+      `Year ${y.year} counted`,
+      y.countedConcessional + y.countedNonConcessional,
+      {
+        note: y.countedNonConcessional > 0
+          ? `${money(y.countedConcessional)} concessional, ${money(y.countedNonConcessional)} non-concessional`
+          : null,
+      }
+    )),
+    total('Total counted contributions', r.countedContributions),
+    contributedPerYear > f.annualLimit && note(
+      `You put in ${money(contributedPerYear)} a year but only ${money(f.annualLimit)} of it can ever count. ` +
+      'The rest stays in super until preservation age like any other contribution.'
+    ),
+    r.concessionalCapExceeded && note(
+      `Your salary sacrifice plus ${money(r.sgContribution)} of employer contributions exceeds the ` +
+      `${money(r.concessionalCap)} concessional cap. Only ${money(r.concessionalHeadroom)} of headroom is ` +
+      'available, and contributions beyond the cap are not eligible for release.'
+    ),
+  ]);
+
+  // ── The ordering trap ─────────────────────────────────────────────────────
+  const cappedYearRelease = f.annualLimit * f.concessionalReleasableRate;
+  const orderingError = f.annualLimit - cappedYearRelease;
+
+  const haircut = section(`The limits first, then the ${pct(f.concessionalReleasableRate)}`, [
+    step('Concessional contributions counted', b.countedConcessional, { muted: true }),
+    step(
+      `Releasable at ${pct(f.concessionalReleasableRate)}`,
+      b.releasableConcessional,
+      { note: `The fund already took ${pct(1 - f.concessionalReleasableRate)} contributions tax on the way in` }
+    ),
+    step('Non-concessional contributions counted', b.countedNonConcessional, { muted: true }),
+    step(
+      `Releasable at ${pct(f.nonConcessionalReleasableRate)}`,
+      b.releasableNonConcessional,
+      { note: 'Already taxed as your own after-tax money, so all of it is releasable' }
+    ),
+    total('Releasable contributions', r.totalReleasable),
+    note(
+      `The ${money(f.annualLimit)} limit is applied to the CONTRIBUTION, and only then is the ` +
+      `${pct(f.concessionalReleasableRate)} rate applied to what counted. Doing it the other way round — ` +
+      `taking ${pct(f.concessionalReleasableRate)} first and capping afterwards — releases ` +
+      `${money(f.annualLimit)} instead of ${money(cappedYearRelease)} on a fully capped concessional year, ` +
+      `overstating it by ${money(orderingError)}.`
+    ),
+  ]);
+
+  // ── Associated earnings ───────────────────────────────────────────────────
+  const earnings = section('Associated earnings', [
+    step('Releasable contributions', r.totalReleasable),
+    step('plus associated earnings', r.totalEarnings, {
+      note: `Deemed earnings at the shortfall interest charge, compounded daily from 1 July of each contribution year to ${r.determinationDate}`,
+    }),
+    total('Total available for release', r.totalWithEarnings),
+    r.sicRatesUsed.length > 0 && step(
+      'Shortfall interest charge rates used',
+      r.sicRatesUsed.map((q) => pct(q.annualRate)).join(', '),
+      { muted: true }
+    ),
+    r.sicProjected && note(
+      'Some quarters are not yet published, so the most recent known rate is held forward. Those earnings ' +
+      'are a projection, not a determination.'
+    ),
+    note(
+      'Earnings are deemed, not actual. What the money really earned inside your fund makes no difference ' +
+      'to the amount released.'
+    ),
+  ]);
+
+  // ── Lifetime cap ──────────────────────────────────────────────────────────
+  const lifetime = section('Lifetime limit', [
+    step('Counted contributions so far', r.countedContributions),
+    step('Lifetime limit on counted contributions', r.lifetimeLimit, { muted: true }),
+    step('Room left', Math.max(0, r.lifetimeLimit - r.countedContributions)),
+    r.lifetimeLimitReached && note(
+      `You have reached the ${money(r.lifetimeLimit)} lifetime limit. Contributing more will not increase ` +
+      'the release, and the scheme can only be used once even if you release less than the maximum.'
+    ),
+  ]);
+
+  // ── Withdrawal tax ────────────────────────────────────────────────────────
+  // The offset is non-refundable, so the tax floors at nil. Where that floor
+  // bites, the amount it clawed back is shown rather than left as a gap.
+  const rawWithdrawalTax = r.incomeTaxOnRelease + r.medicareOnRelease - r.offsetOnRelease;
+  const offsetFloored = r.withdrawalTax - rawWithdrawalTax;
+
+  const withdrawal = section('Tax when it is released', [
+    step('Released concessional contributions', r.releasableConcessional),
+    step('plus associated earnings', r.totalEarnings),
+    subtotal('Assessable on release', r.assessableAmount, {
+      note: r.releasableNonConcessional > 0
+        ? `Released non-concessional contributions of ${money(r.releasableNonConcessional)} are not assessable`
+        : null,
+    }),
+    step('Income tax on the released amount', r.incomeTaxOnRelease, {
+      note: `Worked by differencing across the brackets, not at a flat ${pct(r.marginalRate)}`,
+    }),
+    r.medicareRate > 0 && step(`plus Medicare levy at ${pct(r.medicareRate)}`, r.medicareOnRelease),
+    step(`less the ${pct(f.withdrawalOffset)} FHSS tax offset`, -r.offsetOnRelease),
+    offsetFloored > 0 && step('Offset limited to the tax payable', offsetFloored, {
+      note: 'The offset can reduce the tax to nil but is not refundable beyond that',
+    }),
+    total('Withdrawal tax', r.withdrawalTax),
+    step('Headline withholding rate', pct(r.withholdingRate), {
+      muted: true,
+      note: `Your marginal rate plus Medicare, less the ${pct(f.withdrawalOffset)} offset`,
+    }),
+    step('Effective rate on the assessable amount', pct(r.effectiveWithdrawalRate), { muted: true }),
+    r.excludedFromHelpIncome && note(
+      'The released amount is excluded from HELP repayment income and from Medicare levy surcharge income, ' +
+      'so it does not drag either of those up with it.'
+    ),
+  ]);
+
+  // ── What lands in the deposit ─────────────────────────────────────────────
+  const outcome = section('What reaches your deposit', [
+    step('Total available for release', r.totalWithEarnings),
+    step('less withdrawal tax', -r.withdrawalTax),
+    total('Net towards your deposit', r.netDeposit),
+    r.annualTaxSaving !== 0 && step('Tax saved while contributing', r.totalTaxSaving, {
+      muted: true,
+      note: `${money(r.annualTaxSaving)} a year across ${r.contributingYears} ${r.contributingYears === 1 ? 'year' : 'years'}${r.division293Applies ? ', after Division 293' : ''}`,
+    }),
+    !r.eligibility.eligible && note(
+      `${r.eligibility.blocking.length} eligibility ${r.eligibility.blocking.length === 1 ? 'condition is' : 'conditions are'} not met. ` +
+      (r.eligibility.criticalFailure
+        ? 'One of them is the determination timing — request it before your interest in the land is registered, or the whole benefit is lost.'
+        : 'Every condition must be met before a release can be made.')
+    ),
+  ]);
+
+  return workings([perYear, haircut, earnings, lifetime, withdrawal, outcome], {
+    source: 'Australian Taxation Office FHSSS rules',
+    asAt: rates.__fy ? `FY${rates.__fy}` : null,
+  });
 }

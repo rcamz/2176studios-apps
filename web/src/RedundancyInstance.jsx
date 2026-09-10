@@ -3,7 +3,8 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Cell,
 } from 'recharts';
-import { calcRedundancy } from './lib/redundancy.js';
+import { calcRedundancy, explainRedundancy } from './lib/redundancy.js';
+import Workings from './Workings.jsx';
 import { fmt, fmtPct } from './lib/format.js';
 import { num, bool, enumOf, parseInput, writeUrl } from './lib/urlState.js';
 import AdUnit from './AdUnit.jsx';
@@ -113,6 +114,8 @@ export default function RedundancyInstance({ instanceKey = '', label, onRemove, 
     lslPre1978Days: inputs.splitLsl ? inputs.lslPre1978Days : 0,
     lsl1978to1993Days: inputs.splitLsl ? inputs.lsl1978to1993Days : 0,
   }), [inputs]);
+
+  const explanation = useMemo(() => explainRedundancy(result, inputs), [result, inputs]);
 
   const isRedundancyReason = inputs.terminationReason === 'redundancy' || inputs.terminationReason === 'non-genuine';
 
@@ -495,6 +498,8 @@ export default function RedundancyInstance({ instanceKey = '', label, onRemove, 
               {result.caveats.map((c, i) => <div key={i}>• {c}</div>)}
             </div>
           )}
+
+          <Workings data={explanation} />
 
           <div className="disclaimer">
             Estimates only — not financial advice. Based on {result.rates.__fy.replace('-', '–')} ATO rates and Fair Work Act NES minimums: ETP cap {fmt(result.etpCap)}, whole-of-income cap {fmt(result.wholeOfIncomeCap)} (not indexed), genuine redundancy tax-free limit {fmt(result.rates.termination.genuineRedundancy.baseLimit)} plus {fmt(result.rates.termination.genuineRedundancy.perYearOfService)} per completed year. Awards and enterprise agreements can improve on the NES minimum. Assumes Australian residency, no offsets other than the ETP and unused-leave offsets, and no other ETPs received this year. For personal financial decisions, consult a licensed adviser.

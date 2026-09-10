@@ -3,7 +3,8 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ReferenceLine, ResponsiveContainer,
 } from 'recharts';
-import { calcSalarySacrifice } from './lib/salarysacrifice.js';
+import { calcSalarySacrifice, explainSalarySacrifice } from './lib/salarysacrifice.js';
+import Workings from './Workings.jsx';
 import { fmt, fmtShort, fmtPct } from './lib/format.js';
 import { num, bool, writeUrl } from './lib/urlState.js';
 import AdUnit from './AdUnit.jsx';
@@ -70,6 +71,8 @@ export default function SalarySacrificeInstance({ instanceKey = '', label, onRem
   }, [inputs, instanceKey]);
 
   const result = useMemo(() => calcSalarySacrifice(inputs), [inputs]);
+
+  const explanation = useMemo(() => explainSalarySacrifice(result, inputs), [result, inputs]);
 
   const chartAccent  = theme === 'dark' ? '#C9F23A' : '#4B7B00';
   const chartGhost   = theme === 'dark' ? 'rgba(240,239,233,0.18)' : 'rgba(13,13,16,0.18)';
@@ -288,6 +291,8 @@ export default function SalarySacrificeInstance({ instanceKey = '', label, onRem
               Apples to apples: &ldquo;without sacrifice&rdquo; is your super plus the {fmt(result.netTakeHomeCost)}/yr of extra take-home pay invested outside super. Super earnings are taxed at 15% ({fmtPct(result.superReturn)} net), outside earnings at your marginal rate ({fmtPct(result.outsideReturn)} net). Difference after {inputs.horizonYears} years: {fmt(result.projectionDelta)}.
             </p>
           </div>
+
+          <Workings data={explanation} />
 
           <div className="disclaimer">
             Estimates only — not financial advice. Based on the 2026–27 concessional cap of {fmt(result.concessionalCap)}, 15% contributions tax, and Division 293 at 15% above {fmt(result.division293Threshold)}. Compulsory SG is capped at the maximum contribution base. Carry-forward assumes unused cap from the last {result.carryForward.lookbackYears} years and a total super balance under {fmt(result.carryForward.balanceTest)} at 30 June of the prior year. Projection assumes constant salary, return and contributions, and ignores insurance premiums and administration fees. Super is preserved until age {result.preservationAge}. Division 296 is flagged, not modelled. For personal financial decisions, consult a licensed adviser.

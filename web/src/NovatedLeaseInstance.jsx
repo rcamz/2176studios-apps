@@ -3,7 +3,8 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
-import { calcNovatedLease } from './lib/novatedlease.js';
+import { calcNovatedLease, explainNovatedLease } from './lib/novatedlease.js';
+import Workings from './Workings.jsx';
 import { fmt, fmtShort, fmtPct } from './lib/format.js';
 import { num, bool, enumOf, writeUrl } from './lib/urlState.js';
 import AdUnit from './AdUnit.jsx';
@@ -127,6 +128,7 @@ export default function NovatedLeaseInstance({ instanceKey = '', label, onRemove
   }, [inputs, instanceKey]);
 
   const result = useMemo(() => calcNovatedLease(inputs), [inputs]);
+  const explanation = useMemo(() => explainNovatedLease(result, inputs), [result, inputs]);
 
   const chartAccent  = theme === 'dark' ? '#C9F23A' : '#4B7B00';
   const chartGrid    = theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)';
@@ -531,6 +533,8 @@ export default function NovatedLeaseInstance({ instanceKey = '', label, onRemove
               </>
             )}
           </div>
+
+          <Workings data={explanation} />
 
           <div className="disclaimer">
             Estimates only — not financial advice. Based on {result.financialYear} ATO rates resolved against the lease

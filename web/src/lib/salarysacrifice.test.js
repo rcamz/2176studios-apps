@@ -3,7 +3,7 @@
 // 293, carry-forward, the excess-contribution treatment and the projection.
 
 import { describe, it, expect } from 'vitest';
-import { calcSalarySacrifice, carryForwardAvailable, sgContributionFor } from './salarysacrifice.js';
+import { calcSalarySacrifice, carryForwardAvailable, sgContributionFor, explainSalarySacrifice } from './salarysacrifice.js';
 import { maxContributionBase, division296 } from './vectors/super.vectors.js';
 import { ratesFor } from './rates/index.js';
 
@@ -254,5 +254,52 @@ describe('return shape', () => {
   it('uses age rather than carrying it as a dead input', () => {
     const older = calcSalarySacrifice({ ...base, grossSalary: 100000, sacrificeAmount: 5000, age: 58 });
     expect(older.yearsToPreservation).not.toBe(r.yearsToPreservation);
+  });
+});
+
+// ─── Workings ────────────────────────────────────────────────────────────────
+describe('explainSalarySacrifice', () => {
+  const inputs = { grossSalary: 120000, sacrificeAmount: 15000, sgRate: 12, superBalance: 90000 };
+  const r = calcSalarySacrifice(inputs);
+  const w = explainSalarySacrifice(r, inputs);
+  const sec = (re) => w.sections.find((s) => re.test(s.heading));
+  const totalOf = (re) => sec(re)?.steps.find((s) => s.kind === 'total')?.value;
+  const allSteps = () => w.sections.flatMap((s) => s.steps);
+
+  it('reports the annual tax saving', () => {
+    expect(totalOf(/^The saving$/i)).toBeCloseTo(r.annualTaxSaving, 2);
+  });
+
+  it('reports the cost to take-home pay', () => {
+    expect(totalOf(/take-home/i)).toBeCloseTo(r.netTakeHomeCost, 2);
+  });
+
+  it('reports the concessional cap', () => {
+    expect(totalOf(/cap/i)).toBeCloseTo(r.effectiveCap ?? r.concessionalCap, 2);
+  });
+
+  it('emits only finite numbers', () => {
+    for (const s of allSteps()) {
+      if (typeof s.value === 'number') expect(Number.isFinite(s.value), s.label).toBe(true);
+    }
+  });
+
+  it('names Division 293 for a high earner', () => {
+    const high = { grossSalary: 300000, sacrificeAmount: 15000, sgRate: 12, superBalance: 90000 };
+    const hw = explainSalarySacrifice(calcSalarySacrifice(high), high);
+    expect(JSON.stringify(hw)).toMatch(/293/);
+  });
+
+  it('mentions Division 293 as context below the threshold, but charges nothing', () => {
+    const low = { grossSalary: 90000, sacrificeAmount: 5000, sgRate: 12, superBalance: 20000 };
+    const lr = calcSalarySacrifice(low);
+    const lw = explainSalarySacrifice(lr, low);
+    // Named so the reader knows the boundary exists, but not applied.
+    expect(JSON.stringify(lw)).toMatch(/293/);
+    expect(lr.division293 ?? 0).toBe(0);
+    const charged = lw.sections
+      .flatMap((x) => x.steps)
+      .find((x) => x.kind !== 'note' && /division 293/i.test(x.label));
+    expect(charged).toBeUndefined();
   });
 });

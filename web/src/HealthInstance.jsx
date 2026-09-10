@@ -3,7 +3,8 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, ReferenceLine,
 } from 'recharts';
-import { calcHealth, ACTIVITY_LEVELS } from './lib/health.js';
+import { calcHealth, explainHealth, ACTIVITY_LEVELS } from './lib/health.js';
+import Workings from './Workings.jsx';
 import { fmtKcal, fmtKg } from './lib/format.js';
 import { num, enumOf, writeUrl } from './lib/urlState.js';
 import AdUnit from './AdUnit.jsx';
@@ -87,6 +88,7 @@ export default function HealthInstance({ instanceKey = '', label, onRemove, them
   }, [inputs, instanceKey]);
 
   const result = useMemo(() => calcHealth(inputs), [inputs]);
+  const explanation = useMemo(() => explainHealth(result, inputs), [result, inputs]);
 
   const chartAccent  = theme === 'dark' ? '#C9F23A' : '#4B7B00';
   const chartGrid    = theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)';
@@ -423,6 +425,8 @@ export default function HealthInstance({ instanceKey = '', label, onRemove, them
               </ResponsiveContainer>
             </div>
           )}
+
+          <Workings data={explanation} />
 
           <div className="disclaimer">
             Estimates only — not medical advice.{' '}

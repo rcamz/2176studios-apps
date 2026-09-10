@@ -570,3 +570,185 @@ export function calcCGT(inputs = {}) {
 }
 
 export default calcCGT;
+
+// ─── Explanation ─────────────────────────────────────────────────────────────
+
+import { workings, section, step, subtotal, total, note } from './workings.js';
+
+const money = (n) => '$' + Math.round(n).toLocaleString('en-AU');
+const pct = (r) => (r * 100).toFixed(r * 100 % 1 === 0 ? 0 : 1) + '%';
+const days = (n) => `${Math.round(n).toLocaleString('en-AU')} days`;
+
+// How close to the 12-month line counts as "worth telling them about".
+const BOUNDARY_WINDOW_DAYS = 45;
+
+/**
+ * Build a step-by-step account of a calcCGT result.
+ *
+ * Separate from calcCGT so the hot path stays free of presentation concerns.
+ * Every figure here comes from the result object or the inputs — nothing is
+ * recomputed and nothing is invented.
+ */
+export function explainCGT(result, inputs = {}) {
+  const r = result;
+  const {
+    purchasePrice = 0,
+    purchaseCosts = 0,
+    improvements = 0,
+    salePrice = 0,
+    saleCosts = 0,
+  } = inputs;
+
+  const mr = r.mainResidence;
+  const exemptApplies = r.mainResidenceStatus !== 'never' && mr.ownershipDays > 0;
+  const individual = r.entity === 'individual';
+
+  // ── Cost base ─────────────────────────────────────────────────────────────
+  const costBase = section('Cost base', [
+    step('Purchase price', purchasePrice),
+    purchaseCosts > 0 && step('plus purchase costs', purchaseCosts, {
+      note: 'Stamp duty, legal fees, agent and transfer costs on the way in',
+    }),
+    improvements > 0 && step('plus capital improvements', improvements, {
+      note: 'Structural work that added value — not repairs or maintenance, which are deductible instead',
+    }),
+    total('Cost base', r.costBase),
+  ]);
+
+  // ── Proceeds and gross gain ───────────────────────────────────────────────
+  const proceeds = section(r.grossGain < 0 ? 'Proceeds and gross loss' : 'Proceeds and gross gain', [
+    step('Sale price', salePrice),
+    saleCosts > 0 && step('less selling costs', -saleCosts, {
+      note: 'Agent commission, marketing and legal costs on the way out',
+    }),
+    subtotal('Net sale proceeds', r.netSaleProceeds),
+    step('less cost base', -r.costBase),
+    total(r.grossGain < 0 ? 'Gross capital loss' : 'Gross capital gain', r.grossGain),
+  ]);
+
+  // ── Holding period ────────────────────────────────────────────────────────
+  const shortBy = r.minimumOwnershipDays - r.holdingDays;
+  const clearedBy = r.holdingDays - r.minimumOwnershipDays;
+  const holding = r.datesEntered ? section('Holding period', [
+    step('Days owned', days(r.ownershipDays), {
+      note: 'Counted from the acquisition contract date to the CGT event date, both included',
+    }),
+    step('Days counted for the discount test', days(r.holdingDays), {
+      note: 'The test excludes both the acquisition day and the CGT event day',
+    }),
+    step('Days required', days(r.minimumOwnershipDays), { muted: true }),
+    step(
+      r.heldLongEnough ? 'Twelve-month test' : 'Twelve-month test',
+      r.heldLongEnough ? 'Passed' : 'Not met'
+    ),
+    !r.heldLongEnough && shortBy > 0 && shortBy <= BOUNDARY_WINDOW_DAYS && note(
+      `You are ${shortBy} ${shortBy === 1 ? 'day' : 'days'} short. Because neither the acquisition day nor the ` +
+      'event day counts, an asset held for exactly 364 counted days gets no discount at all. Signing the sale ' +
+      `contract ${shortBy} ${shortBy === 1 ? 'day' : 'days'} later clears the test.`
+    ),
+    r.heldLongEnough && clearedBy >= 0 && clearedBy <= BOUNDARY_WINDOW_DAYS && note(
+      `You cleared the test by ${clearedBy} ${clearedBy === 1 ? 'day' : 'days'}. It is the contract date that ` +
+      'counts on both ends, not settlement — a contract signed earlier than you think can lose the discount.'
+    ),
+  ]) : null;
+
+  // ── Main residence ────────────────────────────────────────────────────────
+  const mainResidence = exemptApplies ? section('Main residence exemption', [
+    step('Days as your main residence', days(mr.mainResidenceDays), {
+      note: mr.absences.length
+        ? 'Includes absences covered by the six-year rule, which resets each time you move back in'
+        : null,
+    }),
+    step('Days assessable', days(mr.nonMainResidenceDays)),
+    subtotal('Exempt fraction', `${pct(mr.exemptFraction)} of ${days(mr.ownershipDays)}`),
+    step('Gross gain', r.grossGain),
+    step('less exempt portion', -r.mainResidenceExemptAmount, {
+      note: `${pct(mr.exemptFraction)} of the gain`,
+    }),
+    total('Gain after the exemption', r.gainAfterExemption),
+    r.foreignResidentDenied && note(
+      'Residency is tested at the sale contract date. A foreign resident at that moment loses the exemption ' +
+      'entirely — it is a cliff, not an apportionment.'
+    ),
+    mr.limitExceeded && note(
+      'One absence ran past the six-year limit. The limit is per absence and resets on each return to ' +
+      'occupancy, so it is the length of a single absence that matters, not the total time away.'
+    ),
+  ]) : null;
+
+  // ── Losses, then the discount, in that order ──────────────────────────────
+  const discountLabel = r.discountRate > 0 ? `less the ${pct(r.discountRate)} CGT discount` : 'CGT discount';
+  const lossesAndDiscount = section('Losses, then the discount', [
+    step(exemptApplies ? 'Gain after the exemption' : 'Gross capital gain', r.gainAfterExemption),
+    step('less capital losses applied', -r.lossesApplied, {
+      note: r.capitalLosses > 0
+        ? `${money(r.capitalLosses)} available`
+        : 'No capital losses entered',
+    }),
+    subtotal('Gain after losses', r.gainAfterLosses),
+    r.gainAfterLosses > 0 && (r.discountRate > 0
+      ? step(discountLabel, -r.discountAmount)
+      : step(discountLabel, 0, { muted: true })),
+    r.gainAfterLosses <= 0 && note(
+      'There is no gain left to discount, so nothing is assessable this year.'
+    ),
+    total('Assessable capital gain', r.assessableGain),
+    note(
+      'Capital losses come off BEFORE the discount, never after. Discounting first and then deducting the ' +
+      'loss understates the gain — on a $100,000 gain with a $40,000 loss the error is $20,000.'
+    ),
+    !r.cgtDiscountEligible && r.discountIneligibleReason && note(r.discountIneligibleReason),
+    r.netCapitalLossCarriedForward > 0 && step(
+      'Net capital loss carried forward', r.netCapitalLossCarriedForward,
+      { note: 'Carried to future years — a capital loss cannot be offset against ordinary income' }
+    ),
+  ]);
+
+  // ── Tax on the gain ───────────────────────────────────────────────────────
+  const taxSection = individual && r.baseTax && r.withGainTax
+    ? section('Tax on the gain', [
+        step('Taxable income without the gain', r.baseTax.taxableIncome, { muted: true }),
+        step('Taxable income with the gain', r.withGainTax.taxableIncome, { muted: true }),
+        step('Extra income tax', r.incomeTaxOnGain, {
+          note: `Income tax rises from ${money(r.baseTax.incomeTax)} to ${money(r.withGainTax.incomeTax)}`,
+        }),
+        step('Extra Medicare levy', r.medicareLevyOnGain, {
+          note: 'The gain is ordinary taxable income, so the levy rides along with it',
+        }),
+        r.mlsOnGain !== 0 && step('Extra Medicare levy surcharge', r.mlsOnGain),
+        total('CGT payable', r.cgtPayable),
+        r.helpRepaymentOnGain > 0 && step('Extra study loan repayment', r.helpRepaymentOnGain, {
+          note: 'Not CGT, but it falls due in the same year because the gain lifts your repayment income',
+        }),
+        note(
+          'Worked by differencing the whole tax position with and without the gain, not by applying a single ' +
+          'marginal rate. A gain that straddles a bracket is taxed partly at each.'
+        ),
+      ])
+    : section('Tax on the gain', [
+        step('Assessable capital gain', r.assessableGain),
+        step(`Tax at ${pct(r.marginalRate)}`, r.incomeTaxOnGain, {
+          note: r.entity === 'super'
+            ? 'A complying fund pays a flat rate on the discounted gain'
+            : 'Companies get no discount and pay the company rate on the whole gain',
+        }),
+        total('CGT payable', r.cgtPayable),
+      ]);
+
+  // ── Outcome ───────────────────────────────────────────────────────────────
+  const outcome = section('What you keep', [
+    step('Net sale proceeds', r.netSaleProceeds),
+    step('less CGT payable', -r.cgtPayable),
+    total('After-tax proceeds', r.afterTaxProceeds),
+    r.grossGain > 0 && step('Effective rate on the gross gain', pct(r.effectiveCGTRate), { muted: true }),
+    r.assessableGain > 0 && step('Effective rate on the assessable gain', pct(r.effectiveRateOnAssessable), { muted: true }),
+  ]);
+
+  return workings(
+    [costBase, proceeds, holding, mainResidence, lossesAndDiscount, taxSection, outcome],
+    {
+      source: 'Australian Taxation Office rates, resolved against the sale contract date',
+      asAt: r.financialYear ? `FY${r.financialYear}` : null,
+    }
+  );
+}

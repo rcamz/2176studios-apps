@@ -3,7 +3,8 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ReferenceLine, ResponsiveContainer,
 } from 'recharts';
-import { calcRentVsBuy } from './lib/rentvbuy.js';
+import { calcRentVsBuy, explainRentVsBuy } from './lib/rentvbuy.js';
+import Workings from './Workings.jsx';
 import { JURISDICTIONS } from './lib/stampduty.js';
 import { LMI_DISCLOSURE } from './lib/lmi.js';
 import { fmt, fmtShort, fmtPct } from './lib/format.js';
@@ -116,6 +117,7 @@ export default function RentVBuyInstance({
   useEffect(() => { onStateChange?.(inputs); }, [inputs, onStateChange]);
 
   const result = useMemo(() => calcRentVsBuy(inputs), [inputs]);
+  const explanation = useMemo(() => explainRentVsBuy(result, inputs), [result, inputs]);
 
   const chartAccent  = theme === 'dark' ? '#C9F23A' : '#4B7B00';
   const chartBlue    = theme === 'dark' ? '#5BA4E8' : '#378ADD';
@@ -406,6 +408,8 @@ export default function RentVBuyInstance({
               </LineChart>
             </ResponsiveContainer>
           </div>
+
+          <Workings data={explanation} />
 
           <div className="disclaimer">
             Estimates only — not financial advice. Stamp duty verified 10 September 2026 and keyed to your contract date. Assumes the renter invests the cash the buyer spends upfront plus any difference in running costs, and draws down when rent exceeds the cost of owning. The owner-occupier main residence CGT exemption is applied; the renter's portfolio is taxed on realisation with the 50% discount. Does not include land tax, lender fees beyond LMI, or any change to your borrowing capacity.

@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-09-10T04:01:06.182Z",
-  "generatedFrom": "c290dc8",
+  "generatedAt": "2026-09-10T04:29:51.392Z",
+  "generatedFrom": "766abde",
   "files": {
     "web/src/Home.jsx": {
       "lastCommit": "2ab3af8",
@@ -15,10 +15,10 @@
       "commits": 3
     },
     "web/src/CalcInstance.jsx": {
-      "lastCommit": "0ef3910",
-      "lastDate": "2026-09-10T02:44:45+00:00",
-      "lastSubject": "Mortgage: fix offset and extras bugs, add fortnightly repayments and LMI",
-      "commits": 8
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T04:29:51.392Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 9
     },
     "web/src/MortgageCalc.jsx": {
       "lastCommit": "2ab3af8",
@@ -27,10 +27,10 @@
       "commits": 33
     },
     "web/src/PayTaxInstance.jsx": {
-      "lastCommit": "5a34c08",
-      "lastDate": "2026-09-10T03:13:56+00:00",
-      "lastSubject": "Borrowing Power rebuild; Pay/Tax year selector and deductions",
-      "commits": 8
+      "lastCommit": "766abde",
+      "lastDate": "2026-09-10T04:01:19+00:00",
+      "lastSubject": "Add the show-the-workings panel, starting with Pay/Tax",
+      "commits": 9
     },
     "web/src/PayTaxCalc.jsx": {
       "lastCommit": "2ab3af8",
@@ -51,16 +51,16 @@
       "commits": 2
     },
     "web/src/lib/borrowingpower.js": {
-      "lastCommit": "5a34c08",
-      "lastDate": "2026-09-10T03:13:56+00:00",
-      "lastSubject": "Borrowing Power rebuild; Pay/Tax year selector and deductions",
-      "commits": 2
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T04:29:51.392Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 3
     },
     "web/src/RentVBuyInstance.jsx": {
-      "lastCommit": "d1eef8e",
-      "lastDate": "2026-09-10T03:05:21+00:00",
-      "lastSubject": "Rewrite eight calculators against the verified rates",
-      "commits": 2
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T04:29:51.392Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 3
     },
     "web/src/RentVBuyCalc.jsx": {
       "lastCommit": "2ab3af8",
@@ -69,16 +69,16 @@
       "commits": 2
     },
     "web/src/lib/rentvbuy.js": {
-      "lastCommit": "d1eef8e",
-      "lastDate": "2026-09-10T03:05:21+00:00",
-      "lastSubject": "Rewrite eight calculators against the verified rates",
-      "commits": 2
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T04:29:51.392Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 3
     },
     "web/src/CGTInstance.jsx": {
-      "lastCommit": "d1eef8e",
-      "lastDate": "2026-09-10T03:05:21+00:00",
-      "lastSubject": "Rewrite eight calculators against the verified rates",
-      "commits": 2
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T04:29:51.392Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 3
     },
     "web/src/CGTCalc.jsx": {
       "lastCommit": "2ab3af8",
@@ -87,16 +87,16 @@
       "commits": 2
     },
     "web/src/lib/cgt.js": {
-      "lastCommit": "d1eef8e",
-      "lastDate": "2026-09-10T03:05:21+00:00",
-      "lastSubject": "Rewrite eight calculators against the verified rates",
-      "commits": 2
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T04:29:51.392Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 3
     },
     "web/src/RedundancyInstance.jsx": {
-      "lastCommit": "d1eef8e",
-      "lastDate": "2026-09-10T03:05:21+00:00",
-      "lastSubject": "Rewrite eight calculators against the verified rates",
-      "commits": 2
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T04:29:51.392Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 3
     },
     "web/src/RedundancyCalc.jsx": {
       "lastCommit": "2ab3af8",
@@ -105,16 +105,16 @@
       "commits": 2
     },
     "web/src/lib/redundancy.js": {
-      "lastCommit": "d1eef8e",
-      "lastDate": "2026-09-10T03:05:21+00:00",
-      "lastSubject": "Rewrite eight calculators against the verified rates",
-      "commits": 2
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T04:29:51.392Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 3
     },
     "web/src/SalarySacrificeInstance.jsx": {
-      "lastCommit": "d1eef8e",
-      "lastDate": "2026-09-10T03:05:21+00:00",
-      "lastSubject": "Rewrite eight calculators against the verified rates",
-      "commits": 2
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T04:29:51.392Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 3
     },
     "web/src/SalarySacrificeCalc.jsx": {
       "lastCommit": "2ab3af8",
@@ -123,16 +123,16 @@
       "commits": 2
     },
     "web/src/lib/salarysacrifice.js": {
-      "lastCommit": "d1eef8e",
-      "lastDate": "2026-09-10T03:05:21+00:00",
-      "lastSubject": "Rewrite eight calculators against the verified rates",
-      "commits": 2
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T04:29:51.392Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 3
     },
     "web/src/FHSSSInstance.jsx": {
-      "lastCommit": "d1eef8e",
-      "lastDate": "2026-09-10T03:05:21+00:00",
-      "lastSubject": "Rewrite eight calculators against the verified rates",
-      "commits": 2
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T04:29:51.392Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 3
     },
     "web/src/FHSSSCalc.jsx": {
       "lastCommit": "2ab3af8",
@@ -141,16 +141,16 @@
       "commits": 2
     },
     "web/src/lib/fhsss.js": {
-      "lastCommit": "d1eef8e",
-      "lastDate": "2026-09-10T03:05:21+00:00",
-      "lastSubject": "Rewrite eight calculators against the verified rates",
-      "commits": 2
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T04:29:51.392Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 3
     },
     "web/src/RetirementInstance.jsx": {
-      "lastCommit": "b8cfab9",
-      "lastDate": "2026-09-10T03:26:01+00:00",
-      "lastSubject": "Retirement: rebuild Age Pension, add salary growth and decumulation",
-      "commits": 2
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T04:29:51.392Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 3
     },
     "web/src/RetirementCalc.jsx": {
       "lastCommit": "2ab3af8",
@@ -159,16 +159,16 @@
       "commits": 2
     },
     "web/src/lib/retirement.js": {
-      "lastCommit": "b8cfab9",
-      "lastDate": "2026-09-10T03:26:01+00:00",
-      "lastSubject": "Retirement: rebuild Age Pension, add salary growth and decumulation",
-      "commits": 2
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T04:29:51.392Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 3
     },
     "web/src/NovatedLeaseInstance.jsx": {
-      "lastCommit": "d1eef8e",
-      "lastDate": "2026-09-10T03:05:21+00:00",
-      "lastSubject": "Rewrite eight calculators against the verified rates",
-      "commits": 2
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T04:29:51.392Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 3
     },
     "web/src/NovatedLeaseCalc.jsx": {
       "lastCommit": "2ab3af8",
@@ -177,16 +177,16 @@
       "commits": 2
     },
     "web/src/lib/novatedlease.js": {
-      "lastCommit": "d1eef8e",
-      "lastDate": "2026-09-10T03:05:21+00:00",
-      "lastSubject": "Rewrite eight calculators against the verified rates",
-      "commits": 2
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T04:29:51.392Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 3
     },
     "web/src/SavingsInstance.jsx": {
-      "lastCommit": "d1eef8e",
-      "lastDate": "2026-09-10T03:05:21+00:00",
-      "lastSubject": "Rewrite eight calculators against the verified rates",
-      "commits": 2
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T04:29:51.392Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 3
     },
     "web/src/SavingsCalc.jsx": {
       "lastCommit": "2ab3af8",
@@ -195,16 +195,16 @@
       "commits": 2
     },
     "web/src/lib/savings.js": {
-      "lastCommit": "d1eef8e",
-      "lastDate": "2026-09-10T03:05:21+00:00",
-      "lastSubject": "Rewrite eight calculators against the verified rates",
-      "commits": 2
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T04:29:51.392Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 3
     },
     "web/src/HealthInstance.jsx": {
-      "lastCommit": "2ab3af8",
-      "lastDate": "2026-09-10T03:29:51+00:00",
-      "lastSubject": "Add per-calculator versioning and a build stocktake",
-      "commits": 3
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T04:29:51.392Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 4
     },
     "web/src/HealthCalc.jsx": {
       "lastCommit": "2ab3af8",
@@ -213,10 +213,10 @@
       "commits": 2
     },
     "web/src/lib/health.js": {
-      "lastCommit": "2ab3af8",
-      "lastDate": "2026-09-10T03:29:51+00:00",
-      "lastSubject": "Add per-calculator versioning and a build stocktake",
-      "commits": 3
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T04:29:51.392Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 4
     },
     "web/src/lib/rates": {
       "lastCommit": "d1eef8e",
@@ -225,16 +225,16 @@
       "commits": 2
     },
     "web/src/lib/paytax.js": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T04:01:06.182Z",
-      "lastSubject": "Uncommitted at snapshot time",
+      "lastCommit": "766abde",
+      "lastDate": "2026-09-10T04:01:19+00:00",
+      "lastSubject": "Add the show-the-workings panel, starting with Pay/Tax",
       "commits": 6
     },
     "web/src/lib/amortize.js": {
-      "lastCommit": "0ef3910",
-      "lastDate": "2026-09-10T02:44:45+00:00",
-      "lastSubject": "Mortgage: fix offset and extras bugs, add fortnightly repayments and LMI",
-      "commits": 3
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T04:29:51.392Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 4
     },
     "web/src/lib/stampduty.js": {
       "lastCommit": "a5ef7fc",
@@ -267,9 +267,9 @@
       "commits": 2
     },
     "web/src/calc-shared.css": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T04:01:06.182Z",
-      "lastSubject": "Uncommitted at snapshot time",
+      "lastCommit": "766abde",
+      "lastDate": "2026-09-10T04:01:19+00:00",
+      "lastSubject": "Add the show-the-workings panel, starting with Pay/Tax",
       "commits": 4
     },
     "web/src/base.css": {

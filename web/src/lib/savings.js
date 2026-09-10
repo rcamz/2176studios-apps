@@ -343,5 +343,129 @@ export function calcSavings(inputs = {}) {
       taxBasis: 'Deducted each year on that year\'s interest, so it reduces the compounding base.',
       goalBasis: 'Net of tax — the same basis as the balance above.',
     },
+
+    // Unrounded engine output plus the resolved inputs. The headline fields
+    // above are each rounded independently, so opening + contributions +
+    // interest − tax does not land exactly on `finalBalance`. The workings
+    // panel has to reconcile, so it reads from here.
+    exact: {
+      initialDeposit,
+      contributions: run.totalContributed - initialDeposit,
+      totalContributed: run.totalContributed,
+      totalInterest: run.totalInterest,
+      totalTax: run.totalTax,
+      finalBalance,
+      grossFinalBalance,
+      realBalance,
+      inflationFactor,
+      months,
+      termYears,
+      annualRate,
+      monthlyContribution,
+      inflationRate,
+      taxOnInterest,
+      compoundFreq,
+      contributionGrowth,
+      contributionTiming,
+    },
   };
+}
+
+// ─── Explanation ─────────────────────────────────────────────────────────────
+
+import { workings, section, step, subtotal, total, note } from './workings.js';
+
+const money = (n) => '$' + Math.round(n).toLocaleString('en-AU');
+
+function monthsLabel(m) {
+  if (m === 0) return 'Immediately';
+  const y = Math.floor(m / 12);
+  const mo = m % 12;
+  if (y && mo) return `${y} yr ${mo} mo`;
+  if (y) return `${y} yr`;
+  return `${mo} mo`;
+}
+
+const FREQ_WORD = { monthly: 'monthly', quarterly: 'quarterly', annually: 'annually' };
+
+/**
+ * Build a step-by-step account of a calcSavings result.
+ *
+ * Reads the unrounded totals from `result.exact` so the opening balance,
+ * contributions, interest and tax reconcile onto the closing balance exactly
+ * rather than to within a dollar of independent rounding.
+ */
+export function explainSavings(result, inputs = {}) {
+  const e = result.exact;
+
+  const balance = section(`Where the balance comes from over ${e.termYears} years`, [
+    step('Opening balance', e.initialDeposit),
+    step(
+      `Contributions, ${money(e.monthlyContribution)} a month at the ${e.contributionTiming === 'start' ? 'start' : 'end'} of each month`,
+      e.contributions,
+      {
+        note: e.contributionGrowth > 0
+          ? `Indexed at ${e.contributionGrowth}% a year, so the last year's contribution is larger than the first's`
+          : null,
+      }
+    ),
+    subtotal('Total paid in', e.totalContributed),
+    step(`Interest credited at ${e.annualRate}%, compounded ${FREQ_WORD[e.compoundFreq] ?? e.compoundFreq}`, e.totalInterest),
+    e.taxOnInterest > 0 && step(`less tax on interest at ${e.taxOnInterest}%`, -e.totalTax, {
+      note: 'Deducted each year on that year\'s interest, so it stops compounding from then on rather than being taken as a lump at the end',
+    }),
+    total('Closing balance', e.finalBalance),
+  ], {
+    note: e.totalInterest > e.contributions
+      ? 'Interest has out-earned the contributions over this term. That crossover is the whole point of starting early.'
+      : 'Most of this balance is money you put in. Interest overtakes contributions only over a long enough term or a high enough rate.',
+  });
+
+  const real = section("What that is worth in today's money", [
+    step('Closing balance, nominal', e.finalBalance),
+    step(
+      `less what inflation takes out over ${e.termYears} years`,
+      -(e.finalBalance - e.realBalance),
+      { note: `Prices multiply by ${(Math.round(e.inflationFactor * 1000) / 1000).toFixed(3)} at ${e.inflationRate}% a year` }
+    ),
+    total("In today's dollars, real", e.realBalance),
+  ], {
+    note: 'Inflation is the entire difference between these two lines. The nominal figure is what the '
+      + 'statement will say; the real one is what it will buy.',
+  });
+
+  // ── The goal, if one was set ──
+  const target = Number(inputs.goalAmount) || 0;
+  let goal = null;
+
+  if (target > 0) {
+    const goalYears = Number(inputs.goalYears) > 0 ? Number(inputs.goalYears) : e.termYears;
+    const time = result.monthsToTarget(target);
+    const realTime = result.realMonthsToTarget(target);
+    const need = result.requiredMonthlyContribution(target, goalYears);
+
+    goal = section('Your goal', [
+      step('Goal', target),
+      step('Closing balance on this plan', e.finalBalance, { muted: true }),
+      time.reachable
+        ? step('Time to reach it at this contribution', monthsLabel(time.months))
+        : step('Time to reach it at this contribution', 'Not reached', { note: time.reason }),
+      realTime.reachable
+        ? step("Time to reach it in today's dollars", monthsLabel(realTime.months), {
+            note: 'Inflation moves the finishing line while you are running at it',
+          })
+        : step("Time to reach it in today's dollars", 'Not reached', { note: realTime.reason }),
+      need.achievable
+        ? step(`Monthly contribution to land on it in ${goalYears} years`, need.monthly, {
+            note: need.reason ?? `${money(need.totalOutOfPocket ?? need.monthly * Math.round(goalYears * 12))} out of pocket over the term`,
+          })
+        : step(`Monthly contribution to land on it in ${goalYears} years`, 'Out of range', { note: need.reason }),
+      note('Every goal figure runs through the same engine as the balance above, on the same '
+        + 'compounding frequency and net of the same tax — so they cannot contradict each other.'),
+    ]);
+  }
+
+  return workings([balance, real, goal], {
+    source: 'Compound interest, computed month by month',
+  });
 }

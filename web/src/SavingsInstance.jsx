@@ -3,7 +3,8 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
-import { calcSavings } from './lib/savings.js';
+import { calcSavings, explainSavings } from './lib/savings.js';
+import Workings from './Workings.jsx';
 import { fmt, fmtShort, yearsAndMonths } from './lib/format.js';
 import { num, enumOf, writeUrl } from './lib/urlState.js';
 import AdUnit from './AdUnit.jsx';
@@ -82,6 +83,7 @@ export default function SavingsInstance({ instanceKey = '', label, onRemove, the
   }, [inputs, instanceKey]);
 
   const result = useMemo(() => calcSavings(inputs), [inputs]);
+  const explanation = useMemo(() => explainSavings(result, inputs), [result, inputs]);
 
   const chartAccent  = theme === 'dark' ? '#C9F23A' : '#4B7B00';
   const chartGhost   = theme === 'dark' ? 'rgba(240,239,233,0.18)' : 'rgba(13,13,16,0.18)';
@@ -337,6 +339,8 @@ export default function SavingsInstance({ instanceKey = '', label, onRemove, the
               </LineChart>
             </ResponsiveContainer>
           </div>
+
+          <Workings data={explanation} />
 
           <div className="disclaimer">
             Estimates only. Contributions are made monthly at the {inputs.contributionTiming === 'start' ? 'start' : 'end'} of

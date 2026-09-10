@@ -9,6 +9,7 @@ import {
   nesRedundancyEligibility,
   genuineRedundancyTaxFreeLimit,
   wholeOfIncomeCapRemaining,
+  explainRedundancy,
 } from './redundancy.js';
 import {
   genuineRedundancyTaxFreeLimit as taxFreeLimitVectors,
@@ -487,5 +488,53 @@ describe('result shape', () => {
     expect(r.totalTax).toBe(0);
     expect(r.netTakeHome).toBe(0);
     expect(r.effectiveTaxRate).toBe(0);
+  });
+});
+
+// ─── Workings ────────────────────────────────────────────────────────────────
+describe('explainRedundancy', () => {
+  const inputs = {
+    weeklyGross: 2000, yearsService: 8, terminationReason: 'redundancy',
+    unusedAnnualLeaveDays: 15, noticePaidWeeks: 4, age: 45, grossAnnualIncome: 104000,
+  };
+  const r = calcRedundancy(inputs);
+  const w = explainRedundancy(r, inputs);
+  const sec = (re) => w.sections.find((s) => re.test(s.heading));
+  const totalOf = (re) => sec(re)?.steps.find((s) => s.kind === 'total')?.value;
+  const allSteps = () => w.sections.flatMap((s) => s.steps);
+  const noteText = () => JSON.stringify(w);
+
+  it('reports the NES redundancy pay', () => {
+    expect(totalOf(/NES/i)).toBeCloseTo(r.redundancyPay, 2);
+  });
+
+  it('reports the tax-free limit', () => {
+    expect(totalOf(/tax-free limit/i)).toBeCloseTo(r.taxFreeLimit, 2);
+  });
+
+  it('reports the net take-home', () => {
+    expect(totalOf(/take home/i)).toBeCloseTo(r.netTakeHome, 2);
+  });
+
+  it('explains that the NES scale drops at ten years', () => {
+    // The non-monotonic step is the thing users disbelieve, so it must be said.
+    expect(noteText()).toMatch(/drops|falls|16 weeks|decreas/i);
+  });
+
+  it('emits only finite numbers', () => {
+    for (const s of allSteps()) {
+      if (typeof s.value === 'number') expect(Number.isFinite(s.value), s.label).toBe(true);
+    }
+  });
+
+  it('explains why a resignation gets no tax-free amount, rather than hiding it', () => {
+    // Omitting the section would leave someone who resigned wondering where
+    // their tax-free amount went. Showing it at zero with the reason is better.
+    const resign = { ...inputs, terminationReason: 'resignation' };
+    const rw = explainRedundancy(calcRedundancy(resign), resign);
+    const s = rw.sections.find((x) => /tax-free limit/i.test(x.heading));
+    expect(s).toBeTruthy();
+    expect(s.steps.find((x) => x.kind === 'total')?.value ?? 0).toBe(0);
+    expect(JSON.stringify(s)).toMatch(/genuine redundancy/i);
   });
 });

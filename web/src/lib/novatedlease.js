@@ -572,3 +572,187 @@ export function calcNovatedLease(inputs = {}) {
     warnings,
   };
 }
+
+// ─── Explanation ─────────────────────────────────────────────────────────────
+
+import { workings, section, step, subtotal, total, note } from './workings.js';
+
+const money = (n) => '$' + Math.round(n).toLocaleString('en-AU');
+// Takes a FRACTION (0.20 → '20%').
+const pctFrac = (f) => `${Math.round(f * 10000) / 100}%`;
+
+/**
+ * Build a step-by-step account of a calcNovatedLease result.
+ *
+ * Separate from the calculation so the hot path stays free of presentation
+ * concerns. Every figure comes from `result` or the inputs it was given.
+ */
+export function explainNovatedLease(result, inputs = {}) {
+  const r = result;
+  const f = r.fbtRates;
+  const term = r.termYears;
+
+  const startISO = typeof inputs.startDate === 'string'
+    ? inputs.startDate.slice(0, 10)
+    : inputs.startDate instanceof Date
+      ? inputs.startDate.toISOString().slice(0, 10)
+      : null;
+
+  const TYPE_LABELS = {
+    bev: 'Battery electric',
+    fcev: 'Hydrogen fuel cell',
+    phev: 'Plug-in hybrid',
+    ice: 'Petrol or diesel',
+  };
+
+  // ── 1. What the car actually costs, before anything is financed ──
+  const price = section('The vehicle price, decomposed', [
+    step('Drive-away price', r.driveAwayPrice, { note: 'GST inclusive, as quoted' }),
+    step('less on-road costs', -r.onRoadCosts, {
+      note: 'Stamp duty, registration and CTP. No claimable GST, and they are outside the FBT base value and the residual base.',
+    }),
+    subtotal('Vehicle base price, GST inclusive', r.basePriceIncGst),
+    step(`less GST at ${pctFrac(GST_RATE)}`, -r.gstSavingOnVehicle),
+    total('Base price, GST exclusive', r.basePriceExGst),
+  ], {
+    note: 'Three different prices, each used for something different: the GST-inclusive base price '
+      + 'sets the FBT taxable value and the luxury car tax test, the GST-exclusive base price sets '
+      + 'the residual, and the drive-away price is what a private buyer would hand over.',
+  });
+
+  // ── 2. The lease, written on the ex-GST amount ──
+  const finance = section('What gets financed', [
+    step('Base price, GST exclusive', r.basePriceExGst),
+    step('plus on-road costs', r.onRoadCosts),
+    total('Amount financed', r.amountFinanced),
+    step('Residual owing at the end of the term', r.residualValue, {
+      muted: true,
+      note: `${pctFrac(r.residual.pct)} of the ex-GST base price over ${term} year${term === 1 ? '' : 's'} — an ATO minimum, not a fixed figure. GST of ${money(r.residual.gstOnPayout)} is added on payout.`,
+    }),
+    step('Monthly rental', r.monthlyRental, { muted: true }),
+    step('Annual lease rental', r.annualLeaseRental),
+  ], {
+    note: `The employer claims the GST input tax credit, so the lease is written on the price without GST. `
+      + `That alone takes ${money(r.gstSavingOnVehicle)} out of the amount financed before a single tax `
+      + 'saving is counted, and it is one of the main reasons novating beats a car loan.',
+  });
+
+  // ── 3. Why this statutory rate and not another ──
+  const statutory = section('The statutory rate, and why', [
+    step('Vehicle type', TYPE_LABELS[r.vehicleType] ?? r.vehicleType),
+    step('Vehicle price against the fuel-efficient LCT threshold',
+      `${money(r.basePriceIncGst)} v ${money(r.lctThreshold)}`, {
+        note: r.aboveLctThreshold
+          ? 'At or above the threshold, so the EV exemption is unavailable'
+          : 'Below the threshold',
+      }),
+    startISO && step('Lease commences', startISO, {
+      note: 'The FBT treatment is fixed at commencement, and the rules change on 1 April 2027 and again on 1 April 2029',
+    }),
+    r.vehicleType === 'phev' && step('Plug-in hybrid grandfathering',
+      r.phevGrandfathered ? 'Both limbs met' : 'Not grandfathered', {
+        note: 'The plug-in hybrid exemption ended on 1 April 2025. Grandfathering needs exempt use before that date AND a binding commitment that continues unchanged.',
+      }),
+    total('Statutory rate applied', pctFrac(r.statutoryRate)),
+    note(r.statutoryRateLabel),
+  ]);
+
+  // ── 4. FBT, or the employee contribution — never both ──
+  const netTaxableValue = r.fbtTaxableValue - r.postTaxContribution;
+  const fbt = section('FBT, or the employee contribution', [
+    step(`Base value x statutory rate of ${pctFrac(r.statutoryRate)}`, r.fbtTaxableValue),
+    r.ecmApplied && step('less post-tax employee contribution', -r.postTaxContribution),
+    r.ecmApplied && subtotal('Net taxable value', netTaxableValue),
+    !r.ecmApplied && r.ecmAvailable && step(
+      `Grossed up at ${r.grossUpApplied} and taxed at ${pctFrac(f.rate)}`,
+      r.fbtPayable - r.fbtTaxableValue,
+      { note: `${money(r.fbtTaxableValue)} of taxable value becomes ${money(r.fbtPayable)} of FBT` }
+    ),
+    total('FBT payable for the year', r.fbtPayable),
+    r.ecmApplied && note(
+      `A post-tax contribution of ${money(r.postTaxContribution)} equal to the taxable value reduces the `
+      + `FBT to nil. The ${money(r.fbtIfNoContribution)} that would otherwise be payable is not also charged — `
+      + 'it is one or the other, never both.'
+    ),
+    r.isExempt && note(
+      'The car benefit is FBT-exempt, so there is no taxable value and nothing for a contribution to do. '
+      + 'The exemption removes the tax. It does not remove the reporting.'
+    ),
+    !r.ecmApplied && r.ecmAvailable && note(
+      'FBT is funded from pre-tax salary as a cost of the package. Because of the gross-up, $1 of FBT '
+      + 'costs more than $1 of post-tax contribution — which is why the contribution method is usually cheaper.'
+    ),
+  ]);
+
+  // ── 5. The salary reduction and what it saves ──
+  const rawPreTax = r.totalPackagedCost - r.postTaxContribution + r.fbtPayable;
+  const salary = section('What comes out of your salary', [
+    step('Annual lease rental', r.annualLeaseRental),
+    step('Running costs and administration, as packaged', r.operatingPackaged, {
+      note: inputs.employerClaimsGstOnRunningCosts === false
+        ? 'GST inclusive — the employer is not claiming the credit'
+        : `GST claimed by the employer, worth ${money(r.gstSavingOnRunning)} a year`,
+    }),
+    subtotal('Total packaged cost', r.totalPackagedCost),
+    r.postTaxContribution > 0 && step('less the part taken from post-tax pay', -r.postTaxContribution),
+    r.fbtPayable > 0 && step('plus FBT, funded pre-tax', r.fbtPayable),
+    r.packageExceedsSalary && step('capped at your gross salary', -(rawPreTax - r.preTaxDeduction), {
+      note: 'The package costs more than the salary it comes out of',
+    }),
+    total('Pre-tax salary reduction', r.preTaxDeduction),
+    r.postTaxDeduction > 0 && step('Post-tax deduction', r.postTaxDeduction, { muted: true }),
+    step('Income tax and levies saved, net of the reportable amount', r.annualTaxSaving),
+    r.superReduction > 0 && step('less employer super you no longer receive', -r.superReduction, {
+      muted: true,
+      note: 'SG is calculated on the reduced salary unless your employer agrees otherwise',
+    }),
+  ]);
+
+  // ── 6. The reportable amount — the trap ──
+  const rfbaSec = r.rfbaApplies ? section('The reportable fringe benefits amount', [
+    step('Reportable taxable value', r.reportableTaxableValue, {
+      note: r.isExempt
+        ? `Worked out on the ordinary ${pctFrac(f.statutoryFractionStandard)} statutory fraction even though the car is FBT-exempt`
+        : 'The taxable value of the benefit',
+    }),
+    step(`Grossed up at ${f.grossUpType2}`, r.rfba - r.reportableTaxableValue),
+    subtotal('Reportable amount on your income statement', r.rfba),
+    step('Medicare levy surcharge it adds', r.rfbaMlsCost),
+    step('HELP repayment it adds', r.rfbaHelpCost),
+    step('Division 293 it adds', r.rfbaDivision293Cost),
+    total('What the reportable amount costs you a year', r.rfbaCost),
+  ], {
+    note: 'This is the biggest trap in the product. An FBT-exempt electric vehicle still generates a '
+      + 'reportable amount. It is not income and no tax is charged on it directly, but it flows into '
+      + 'the Medicare levy surcharge, HELP repayment income and Division 293 — and into Family Tax '
+      + 'Benefit, child support, the private health rebate and the super co-contribution, which are '
+      + 'not modelled here and can add more.',
+  }) : section('The reportable fringe benefits amount', [
+    step('Reportable taxable value', r.reportableTaxableValue),
+    step('Reporting threshold', r.rfbaThreshold, { muted: true }),
+    note(
+      `Below the ${money(r.rfbaThreshold)} threshold, so nothing is reported and none of the downstream `
+      + 'income tests move. Above it, the whole amount is reported, not just the excess.'
+    ),
+  ]);
+
+  // ── 7. The bottom line ──
+  const cashWithout = r.baseline.takeHome - r.division293Without;
+  const cashWith = r.withLease.takeHome - r.postTaxDeduction - r.division293With;
+  const bottom = section('What the car costs you in cash', [
+    step('Take-home pay without the car', cashWithout),
+    step('Take-home pay with the car packaged', cashWith, {
+      note: 'After the pre-tax reduction, the post-tax contribution and the reportable amount',
+    }),
+    total('Net cost of the car a year', r.netAnnualCost),
+    step('Per fortnight', r.fortnightlyOutOfPocket, { muted: true }),
+  ]);
+
+  return workings(
+    [price, finance, statutory, fbt, salary, rfbaSec, bottom],
+    {
+      source: 'ATO fringe benefits tax and income tax rates',
+      asAt: r.financialYear ? `FY${r.financialYear}` : null,
+    }
+  );
+}

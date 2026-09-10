@@ -3,7 +3,8 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
-import { calcFHSSS, ELIGIBILITY_ITEMS } from './lib/fhsss.js';
+import { calcFHSSS, explainFHSSS, ELIGIBILITY_ITEMS } from './lib/fhsss.js';
+import Workings from './Workings.jsx';
 import { fmt, fmtPct } from './lib/format.js';
 import { num, writeUrl } from './lib/urlState.js';
 import AdUnit from './AdUnit.jsx';
@@ -71,6 +72,8 @@ export default function FHSSSInstance({ instanceKey = '', label, onRemove, theme
   }, [inputs, instanceKey]);
 
   const result = useMemo(() => calcFHSSS(inputs), [inputs]);
+
+  const explanation = useMemo(() => explainFHSSS(result, inputs), [result, inputs]);
 
   const chartAccent  = theme === 'dark' ? '#C9F23A' : '#4B7B00';
   const chartGrid    = theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)';
@@ -274,6 +277,8 @@ export default function FHSSSInstance({ instanceKey = '', label, onRemove, theme
               </BarChart>
             </ResponsiveContainer>
           </div>
+
+          <Workings data={explanation} />
 
           <div className="disclaimer">
             Estimates only — not financial advice. Based on 2026–27 ATO FHSSS rules: {fmt(result.annualLimit)}/yr and {fmt(result.lifetimeLimit)} lifetime limits on counted contributions, with 85% of concessional and 100% of non-concessional contributions releasable — the limits apply before the 85% rate, not after. Associated earnings use the shortfall interest charge, set quarterly and compounded daily. Released concessional amounts and earnings are assessable with a 30% offset and Medicare applies; released non-concessional contributions are tax-free. FHSS released amounts are excluded from both HELP repayment income and Medicare levy surcharge income. Assumes level contributions each year and a determination requested at the end of the final year. For personal decisions, consult a licensed adviser.

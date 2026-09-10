@@ -87,6 +87,8 @@ export function calcRentVsBuy(inputs = {}) {
   let portfolioCostBase = buyerUpfrontCash;
 
   let propertyValue = purchasePrice;
+  let finalBalance = loanAmount;
+  let finalSellingCostAmount = 0;
   let currentRent = annualRent;
   let currentOngoing = ongoingCosts;
   let cumulativeRent = 0;
@@ -127,6 +129,8 @@ export function calcRentVsBuy(inputs = {}) {
     // Buyer sells: no CGT, because the main residence is exempt.
     const sellingCostAmount = propertyValue * (sellingCosts / 100);
     const buyerEquity = propertyValue - balance - sellingCostAmount;
+    finalBalance = balance;
+    finalSellingCostAmount = sellingCostAmount;
 
     // Renter liquidates: CGT applies to the gain, with the 50% discount since
     // the holding period exceeds 12 months.
@@ -175,6 +179,12 @@ export function calcRentVsBuy(inputs = {}) {
     wealthGap: buyerEquity - renterWealth,
     breakEvenYear,
 
+    // Kept so the explanation can show how equity at the horizon is reached
+    // without re-deriving it by subtraction.
+    mortgageBalance: finalBalance,
+    sellingCostAmount: finalSellingCostAmount,
+    renterCostBase: portfolioCostBase,
+
     cumulativeInterest: Math.round(cumulativeInterest),
     cumulativeRent: Math.round(cumulativeRent),
     cumulativeOwnerOutgoings: Math.round(cumulativeOwnerOutgoings),
@@ -198,4 +208,147 @@ function netOfCgt(value, costBase, marginalRate, rates) {
   const assessable = gain * (1 - discount);
   const tax = assessable * (marginalRate + rates.medicare.levyRate);
   return value - tax;
+}
+
+// ─── Explanation ─────────────────────────────────────────────────────────────
+
+import {
+  workings, section, step, subtotal, total, note,
+} from './workings.js';
+
+const money = (n) => '$' + Math.round(n).toLocaleString('en-AU');
+const pct = (r) => (r * 100).toFixed(1) + '%';
+const trim = (n) => String(Number(Number(n).toFixed(2)));
+
+/**
+ * Build a step-by-step account of a calcRentVsBuy result.
+ *
+ * Separate from the calculation so the projection loop stays free of
+ * presentation concerns.
+ */
+export function explainRentVsBuy(result, inputs = {}) {
+  const r = result;
+  const {
+    purchasePrice = 800000,
+    state = 'NSW',
+    firstHomeBuyer = false,
+    deposit = 160000,
+    purchaseCosts = 3000,
+    capitaliseStampDuty = false,
+    mortgageRate = 6.0,
+    loanTerm = 30,
+    propertyGrowth = 4,
+    sellingCosts = 2,
+    annualRent = 36000,
+    investmentReturn = 7,
+    comparisonYears = 10,
+  } = inputs;
+
+  const years = comparisonYears;
+  const baseLoan = Math.max(0, purchasePrice - deposit);
+  const contributions = r.renterCostBase - r.buyerUpfrontCash;
+  const portfolioGrowth = r.renterPortfolioGross - r.renterCostBase;
+  const propertyGain = r.projectedPropertyValue - purchasePrice;
+
+  // ─── Upfront ───────────────────────────────────────────────────────────────
+  const upfront = section('Cash the buyer needs upfront', [
+    step('Deposit', deposit),
+    !capitaliseStampDuty && step(`Stamp duty, ${state}`, r.stampDuty, {
+      note: firstHomeBuyer && r.stampDuty === 0 ? 'Exempt as a first home buyer at this price' : null,
+    }),
+    step('Purchase costs', purchaseCosts, { note: 'Conveyancing, building and pest, loan fees' }),
+    total('Cash needed at settlement', r.buyerUpfrontCash),
+    capitaliseStampDuty && note(
+      `Stamp duty of ${money(r.stampDuty)} is capitalised into the loan here rather than paid in cash, so it is not part of the cash needed at settlement — the buyer borrows it and pays interest on it for the life of the loan. Most lenders require duty to be paid in cash.`
+    ),
+  ], {
+    note: 'This is the number the comparison turns on. The renter never spends it, so the model hands the renter exactly this amount as starting capital on day one — the opportunity cost of the deposit, which a rent-versus-buy comparison that ignores it will always get wrong.',
+  });
+
+  // ─── The loan ──────────────────────────────────────────────────────────────
+  const loan = section('The loan', [
+    step('Purchase price', purchasePrice),
+    step('less deposit', -deposit),
+    subtotal('Base loan', baseLoan),
+    r.lmiPremium > 0 && step('plus LMI, capitalised', r.lmiPremium),
+    capitaliseStampDuty && step('plus stamp duty, capitalised', r.stampDuty),
+    total('Loan amount', r.loanAmount),
+    step('Loan to value ratio', r.lvr !== null ? pct(r.lvr) : '—', { muted: true }),
+    step('Monthly repayment', r.monthlyMortgage, {
+      note: `${trim(mortgageRate)}% p.a. over ${trim(loanTerm)} years`,
+    }),
+  ], {
+    note: r.lmiPayable
+      ? 'LMI insures the lender, not the buyer. Capitalising it means paying interest on the premium for the whole term, so it costs considerably more than the sticker price.'
+      : 'No LMI at this deposit — the loan to value ratio is at or below 80%.',
+  });
+
+  // ─── Cashflow along the way ────────────────────────────────────────────────
+  const cashflow = section(`Cash out over ${years} years`, [
+    step('Owner outgoings', r.cumulativeOwnerOutgoings, {
+      note: 'Mortgage repayments plus rates, strata, insurance and maintenance',
+    }),
+    step('less rent the renter pays instead', -r.cumulativeRent),
+    total('Difference the renter invests', r.cumulativeOwnerOutgoings - r.cumulativeRent),
+    step('Of the owner outgoings, interest', r.cumulativeInterest, { muted: true }),
+  ], {
+    note: 'A negative figure means rent costs more than owning, and the renter draws the difference out of the portfolio rather than adding to it. Both directions are modelled — flooring this at zero would quietly flatter renting in expensive rental markets.',
+  });
+
+  // ─── Buyer at the horizon ──────────────────────────────────────────────────
+  const buyer = section(`Buyer equity after ${years} years`, [
+    step(`Property value, growing at ${trim(propertyGrowth)}% a year`, r.projectedPropertyValue, {
+      note: `From ${money(purchasePrice)}`,
+    }),
+    step('less mortgage balance', -r.mortgageBalance),
+    step(`less selling costs at ${trim(sellingCosts)}%`, -r.sellingCostAmount),
+    total('Buyer equity', r.buyerEquity),
+  ], {
+    note: 'The mortgage balance falls faster each year, because a fixed repayment covers less interest and more principal as the balance shrinks. Interest is the price of the loan, not a component of equity.',
+  });
+
+  // ─── Renter at the horizon ─────────────────────────────────────────────────
+  const renter = section(`Renter wealth after ${years} years`, [
+    step('Starting capital', r.buyerUpfrontCash, {
+      note: 'The cash the buyer spends at settlement, invested instead',
+    }),
+    step(contributions >= 0 ? 'Contributions from the cost difference' : 'Drawdowns to cover rent', contributions),
+    subtotal('Cost base', r.renterCostBase, { note: 'What the renter has actually put in' }),
+    step(`Investment growth at ${trim(investmentReturn)}% a year`, portfolioGrowth),
+    subtotal('Portfolio value', r.renterPortfolioGross),
+    step('less capital gains tax on the gain', -r.renterCgt, {
+      note: `50% discount for holding over 12 months, then ${pct(r.marginalRate)} plus Medicare on what is left`,
+    }),
+    total('Renter wealth', r.renterWealth),
+  ], {
+    note: 'Tax lands on the return, not on the contributions — money invested is already after-tax. Taxing the contribution instead is a common modelling error and it understates renter wealth badly over a long horizon.',
+  });
+
+  // ─── The asymmetry ─────────────────────────────────────────────────────────
+  const cgt = section('Capital gains tax — the asymmetry', [
+    step('Growth on the home', propertyGain),
+    step('Tax the buyer pays on it', 0, { note: 'Main residence exemption — none' }),
+    step('Gain on the portfolio', portfolioGrowth),
+    step('Tax the renter pays on it', r.renterCgt, {
+      note: `At a marginal rate of ${pct(r.marginalRate)} plus the Medicare levy, after the 50% discount`,
+    }),
+  ], {
+    note: 'The main residence exemption is the single largest tax concession available to an individual in Australia, and it is the part of this comparison people most often leave out. The renter is investing in a taxed environment; the buyer is not. Two assets can return the same percentage and still leave the owner ahead purely on this.',
+  });
+
+  // ─── The verdict ───────────────────────────────────────────────────────────
+  const verdict = section('The difference', [
+    step('Buyer equity', r.buyerEquity),
+    step('less renter wealth', -r.renterWealth),
+    total('Buyer ahead by', r.wealthGap, {
+      note: r.wealthGap >= 0 ? null : 'A negative figure means renting and investing wins over this horizon',
+    }),
+    step('Break-even', r.breakEvenYear ? `Year ${r.breakEvenYear}` : 'Beyond this horizon', { muted: true }),
+  ], {
+    note: 'Both sides are measured after liquidating — the buyer after selling costs, the renter after tax. Comparing gross property value against a net portfolio would overstate buying.',
+  });
+
+  return workings([upfront, loan, cashflow, buyer, renter, cgt, verdict], {
+    source: `Stamp duty for ${state}`,
+  });
 }

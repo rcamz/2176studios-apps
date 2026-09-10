@@ -635,3 +635,163 @@ export function calcHealth(inputs = {}) {
     },
   };
 }
+
+// ─── Explanation ─────────────────────────────────────────────────────────────
+
+import { workings, section, step, total, note } from './workings.js';
+
+// The Workings component renders bare numbers as CURRENCY, which would be
+// nonsense here. Every value in this explanation is therefore a formatted
+// string carrying its own unit.
+const n2 = (n) => (Math.round(n * 100) / 100).toLocaleString('en-AU', { maximumFractionDigits: 2 });
+const kcal = (n) => `${n2(n)} kcal`;
+const kcalDay = (n) => `${n2(n)} kcal/day`;
+const kg = (n) => `${n2(n)} kg`;
+const kgWeek = (n) => `${n2(n)} kg/week`;
+
+/**
+ * Build a step-by-step account of a calcHealth result.
+ *
+ * The hard blocks carry through: where a target was withheld by §7.4 this
+ * explains WHY it was withheld and does not restate the figure. A warning
+ * beside a displayed number does not satisfy that decision, and neither would
+ * a workings panel that quietly prints it.
+ */
+export function explainHealth(result, inputs = {}) {
+  const r = result;
+
+  // Under 18 there is no BMR and no BMI — nothing to show workings for.
+  if (r.ageBlocked) return workings([]);
+
+  // calcHealth resolves its own rates from the same `date`; nothing here is
+  // date-sensitive today, but resolving the same way keeps it that way.
+  const rates = inputs.rates ?? (inputs.date ? ratesFor(inputs.date) : DEFAULT_RATES);
+  const h = rates.health;
+  const c = h.bmrCoefficients;
+
+  const weightKg = inputs.weightKg ?? 80;
+  const heightCm = inputs.heightCm ?? 175;
+  const age = inputs.age ?? 30;
+  const sex = normaliseSex(inputs.sex ?? 'male');
+
+  const wTerm = c.weight * weightKg;
+  const hTerm = c.height * heightCm;
+  const aTerm = c.age * age;
+  const constant = sex === 'male' ? c.maleConstant : c.femaleConstant;
+
+  // ── 1. BMR, with the coefficients substituted ──
+  const bmrSec = section('Resting metabolism (Mifflin-St Jeor)', [
+    step(`${c.weight} x ${n2(weightKg)} kg`, kcal(wTerm)),
+    step(`+ ${c.height} x ${n2(heightCm)} cm`, kcal(hTerm)),
+    step(`- ${c.age} x ${n2(age)} years`, kcal(-aTerm)),
+    step(
+      constant >= 0 ? `+ ${constant} (${sex} constant)` : `- ${Math.abs(constant)} (${sex} constant)`,
+      kcal(constant)
+    ),
+    total('BMR', kcalDay(r.bmr)),
+  ], {
+    note: 'This is what the body burns doing nothing at all. It is an estimate from height, weight, '
+      + 'age and sex — not a measurement, and it was never validated outside Caucasian populations.',
+  });
+
+  // ── 2. Activity multiplier to maintenance ──
+  const maintenanceSec = section('Maintenance calories', [
+    step('BMR', kcalDay(wTerm + hTerm - aTerm + constant)),
+    step(`x ${r.activityMultiplier} (${r.activityLabel})`, `x ${r.activityMultiplier}`),
+    total('Maintenance, or TDEE', kcalDay(r.maintenanceCalories)),
+  ], {
+    note: 'The multiplier is the least precise part of the whole calculation. One step up or down '
+      + `moves maintenance by several hundred calories a day, and the honest use of it is as a `
+      + 'starting point you adjust from after two or three weeks of real weight data.',
+  });
+
+  const sections = [bmrSec, maintenanceSec];
+
+  // ── 3a. HARD BLOCK — explain the withholding, print no target ──
+  if (r.goalBlocked) {
+    const req = r.requested;
+    const rateBlocked = r.blockReasons.some((b) => b.code === 'RATE_ABOVE_SAFE_BAND');
+    const floorBlocked = r.blockReasons.some((b) => b.code === 'BELOW_MINIMUM_INTAKE');
+
+    sections.push(section('Your goal — no target is shown', [
+      step('Current weight', kg(weightKg)),
+      step('Goal weight', kg(inputs.goalWeightKg)),
+      step('Over', `${req.goalWeeks} weeks`),
+      step('Rate that would need', kgWeek(req.rateKgPerWeek), {
+        note: `${n2(req.ratePercentOfBodyweight)}% of your bodyweight a week`,
+      }),
+      rateBlocked && step(
+        `Ceiling at ${n2(h.maxSafeLossRate * 100)}% of bodyweight`,
+        kgWeek(req.safeRateCeilingKgPerWeek)
+      ),
+      floorBlocked && step(
+        `Minimum intake for ${sex === 'male' ? 'men' : 'women'} dieting unsupervised`,
+        kcalDay(r.minIntake)
+      ),
+      ...r.blockReasons.map((b) => note(`${b.title}. ${b.message}`)),
+      note('The calorie target for this plan is deliberately not shown, here or anywhere else on the '
+        + 'page. Printing it beside a warning would still be printing it. Lengthen the timeframe or '
+        + 'reduce the goal and the workings will show the arithmetic in full.'),
+    ]));
+
+    return workings(sections, { source: 'Mifflin-St Jeor; WHO and NHMRC intake floors' });
+  }
+
+  // ── 3b. No goal set, or a goal whose direction does not match ──
+  if (r.goalCalories == null) {
+    sections.push(section('Your goal', [
+      note(r.requested
+        ? 'The goal weight does not match the goal direction, so no target has been worked out.'
+        : 'No goal set — the figures above are what it takes to hold your current weight.'),
+    ]));
+    return workings(sections, { source: 'Mifflin-St Jeor; WHO and NHMRC intake floors' });
+  }
+
+  // ── 4. The deficit or surplus ──
+  const delta = r.calorieDeficitOrSurplus; // signed
+  const losing = delta < 0;
+  const goalSec = section(losing ? 'The deficit' : 'The surplus', [
+    step('Maintenance', kcalDay(r.maintenanceCalories)),
+    step(losing ? 'less your daily deficit' : 'plus your daily surplus', kcalDay(delta)),
+    total('Target intake', kcalDay(r.goalCalories)),
+    step('Safe minimum for you', kcalDay(r.minIntake), { muted: true }),
+  ], {
+    note: 'A deficit is the only thing that moves weight. Everything else — meal timing, macros, '
+      + 'which foods — changes how easy the deficit is to hold, not whether it works.',
+  });
+
+  // ── 5. Converting energy to weight ──
+  const weeklyEnergy = delta * 7;
+  const weeklySec = section('Turning that into weight', [
+    step('Daily energy gap', kcalDay(delta)),
+    step('x 7 days', kcal(weeklyEnergy)),
+    step(`÷ ${h.kcalPerKg.toLocaleString('en-AU')} kcal per kg of body tissue`, `÷ ${h.kcalPerKg.toLocaleString('en-AU')}`),
+    total('Weight change in the first week', kgWeek(r.weeklyWeightChange)),
+  ], {
+    note: `The ${h.kcalPerKg.toLocaleString('en-AU')} kcal/kg constant is a first-order approximation. `
+      + 'Real weight moves around it because of glycogen and fluid shifts, which is why the scale can '
+      + 'sit still for a fortnight and then drop a kilogram overnight.',
+  });
+
+  // ── 6. Why the projection slows ──
+  const p = r.projection;
+  const drop = p.bmrDrop;
+  const projSec = section('Why the projection slows down', [
+    step(`BMR at ${kg(weightKg)}`, kcalDay(p.startBmr)),
+    step(`BMR at ${kg(p.endWeightKg)}`, kcalDay(p.endBmr)),
+    total(drop >= 0 ? 'Fall in BMR over the projection' : 'Rise in BMR over the projection', kcalDay(drop)),
+    step('Weeks to reach the goal', r.projectedWeeks == null ? 'Not reached at this intake' : `${r.projectedWeeks} weeks`, {
+      note: r.projectedWeeks != null && inputs.goalWeeks && r.projectedWeeks > inputs.goalWeeks
+        ? `Longer than the ${inputs.goalWeeks} weeks you asked for, because maintenance does not stay where it started`
+        : null,
+    }),
+  ], {
+    note: 'A lighter body costs less to run, and weight lost is fat plus roughly a fifth lean mass, '
+      + 'so BMR falls as the weight comes off. Holding the same intake therefore produces a smaller '
+      + 'and smaller gap. A flat-TDEE projection hides this and over-predicts every plan.',
+  });
+
+  sections.push(goalSec, weeklySec, projSec);
+
+  return workings(sections, { source: 'Mifflin-St Jeor; WHO and NHMRC intake floors' });
+}

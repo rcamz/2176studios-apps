@@ -8,6 +8,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   calcSavings,
+  explainSavings,
   simulate,
   solveMonthsToTarget,
   solveMonthlyContribution,
@@ -373,5 +374,131 @@ describe('reporting', () => {
     const r = calcSavings({});
     expect(r.assumptions.taxBasis).toMatch(/each year/);
     expect(r.assumptions.goalBasis).toMatch(/Net of tax/);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Workings — "show me how you got there".
+//
+// The reconciliation here is the whole point of the panel: opening balance,
+// contributions, interest and tax have to land exactly on the closing balance,
+// or the user is right not to believe any of it.
+
+const allSteps = (w) => w.sections.flatMap((s) => s.steps);
+const headings = (w) => w.sections.map((s) => s.heading);
+const sec = (w, re) => w.sections.find((s) => re.test(s.heading));
+const find = (w, re) => allSteps(w).find((s) => re.test(s.label));
+
+const savingsInputs = {
+  initialDeposit: 10000, monthlyContribution: 500, annualRate: 5, termYears: 10,
+  compoundFreq: 'monthly', inflationRate: 2.5, taxOnInterest: 32,
+};
+
+describe('explainSavings', () => {
+  const result = calcSavings(savingsInputs);
+  const w = explainSavings(result, savingsInputs);
+
+  it('produces the balance and real-value sections', () => {
+    expect(headings(w)).toContain('Where the balance comes from over 10 years');
+    expect(headings(w)).toContain("What that is worth in today's money");
+  });
+
+  it('opening, contributions, interest and tax reconcile exactly onto the closing balance', () => {
+    const s = sec(w, /^Where the balance comes from/);
+    const opening = s.steps.find((x) => /^Opening balance$/.test(x.label)).value;
+    const contributions = s.steps.find((x) => /^Contributions,/.test(x.label)).value;
+    const paidIn = s.steps.find((x) => x.kind === 'subtotal').value;
+    const interest = s.steps.find((x) => /^Interest credited/.test(x.label)).value;
+    const tax = s.steps.find((x) => /^less tax on interest/.test(x.label)).value;
+    const closing = s.steps.find((x) => x.kind === 'total').value;
+
+    expect(opening + contributions).toBe(paidIn);
+    expect(opening + contributions + interest + tax).toBeCloseTo(closing, 9);
+  });
+
+  it('the totals are the ones the result reports', () => {
+    const s = sec(w, /^Where the balance comes from/);
+    const g = (re) => s.steps.find((x) => re.test(x.label)).value;
+    expect(Math.round(g(/^Opening balance$/))).toBe(savingsInputs.initialDeposit);
+    expect(Math.round(s.steps.find((x) => x.kind === 'subtotal').value)).toBe(result.totalContributed);
+    expect(Math.round(g(/^Interest credited/))).toBe(result.totalInterest);
+    expect(Math.round(-g(/^less tax on interest/))).toBe(result.interestTax);
+    expect(Math.round(s.steps.find((x) => x.kind === 'total').value)).toBe(result.finalBalance);
+  });
+
+  it('drops the tax line when no tax rate is set, and still reconciles', () => {
+    const inp = { ...savingsInputs, taxOnInterest: 0 };
+    const r = calcSavings(inp);
+    const ww = explainSavings(r, inp);
+    const s = sec(ww, /^Where the balance comes from/);
+    expect(s.steps.some((x) => /tax on interest/.test(x.label))).toBe(false);
+    const above = s.steps.filter((x) => typeof x.value === 'number' && x.kind === 'line')
+      .reduce((a, x) => a + x.value, 0);
+    expect(above).toBeCloseTo(s.steps.find((x) => x.kind === 'total').value, 9);
+  });
+
+  it('nominal less what inflation takes out is the real balance, exactly', () => {
+    const s = sec(w, /today's money/);
+    const nominal = s.steps[0].value;
+    const eaten = s.steps[1];
+    const real = s.steps.find((x) => x.kind === 'total').value;
+    expect(nominal + eaten.value).toBeCloseTo(real, 9);
+    expect(Math.round(real)).toBe(result.realBalance);
+    expect(eaten.note).toMatch(/Prices multiply by/);
+    expect(s.note).toMatch(/[Ii]nflation/);
+  });
+
+  it('no goal section unless a goal was set', () => {
+    expect(headings(w)).not.toContain('Your goal');
+  });
+
+  it('a goal shows the time to reach it and the contribution it would take', () => {
+    const inp = { ...savingsInputs, goalAmount: 100000, goalYears: 10 };
+    const ww = explainSavings(calcSavings(inp), inp);
+    const s = sec(ww, /^Your goal$/);
+    expect(s).toBeTruthy();
+    expect(s.steps.find((x) => /^Goal$/.test(x.label)).value).toBe(100000);
+    expect(s.steps.find((x) => /^Time to reach it at this contribution$/.test(x.label)).value)
+      .toMatch(/yr|mo/);
+    const needed = s.steps.find((x) => /^Monthly contribution to land on it in 10 years$/.test(x.label));
+    expect(needed.value).toBe(calcSavings(inp).requiredMonthlyContribution(100000, 10).monthly);
+    // Reaching it later than the term means more than the current contribution.
+    expect(needed.value).toBeGreaterThan(savingsInputs.monthlyContribution);
+  });
+
+  it('reports an unreachable goal as unreachable rather than dropping it', () => {
+    const inp = { ...savingsInputs, monthlyContribution: 0, annualRate: 0, goalAmount: 1000000 };
+    const ww = explainSavings(calcSavings(inp), inp);
+    const line = find(ww, /^Time to reach it at this contribution$/);
+    expect(line.value).toBe('Not reached');
+    expect(line.note).toMatch(/never changes/);
+  });
+
+  it('the real-basis goal takes at least as long as the nominal one', () => {
+    const inp = { ...savingsInputs, goalAmount: 100000, goalYears: 10 };
+    const ww = explainSavings(calcSavings(inp), inp);
+    const nominal = find(ww, /^Time to reach it at this contribution$/).value;
+    const real = find(ww, /today's dollars$/).value;
+    expect(real).not.toBe(nominal);
+  });
+
+  it('every numeric step is finite', () => {
+    for (const inp of [savingsInputs, { ...savingsInputs, goalAmount: 100000 },
+                       { ...savingsInputs, compoundFreq: 'quarterly', termYears: 10.5 },
+                       { ...savingsInputs, initialDeposit: 0, monthlyContribution: 0, annualRate: 0 }]) {
+      const ww = explainSavings(calcSavings(inp), inp);
+      for (const s of allSteps(ww)) {
+        if (typeof s.value === 'number') expect(Number.isFinite(s.value), s.label).toBe(true);
+      }
+    }
+  });
+
+  it('reconciles on a part-year term and a non-monthly compounding frequency', () => {
+    const inp = { ...savingsInputs, compoundFreq: 'quarterly', termYears: 10.5 };
+    const r = calcSavings(inp);
+    const s = sec(explainSavings(r, inp), /^Where the balance comes from/);
+    const lines = s.steps.filter((x) => typeof x.value === 'number' && x.kind === 'line');
+    expect(lines.reduce((a, x) => a + x.value, 0))
+      .toBeCloseTo(s.steps.find((x) => x.kind === 'total').value, 9);
   });
 });

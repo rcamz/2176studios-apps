@@ -12,6 +12,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   calcRetirement,
+  explainRetirement,
   agePensionEntitlement,
   deemedIncome,
   minimumDrawdownFactor,
@@ -681,5 +682,186 @@ describe('milestones and housekeeping', () => {
       drawdownMode: 'target', targetIncome: 90000, includeAgePension: false, planToAge: 95,
     });
     for (const p of r.path) expect(p.balance).toBeGreaterThanOrEqual(0);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Workings — "show me how you got there".
+//
+// Two things are asserted throughout: that the panel's totals are the SAME
+// numbers the result object carries (no second, quietly divergent calculation),
+// and that wherever component lines sit above a total, they add up to it.
+
+const allSteps = (w) => w.sections.flatMap((s) => s.steps);
+const headings = (w) => w.sections.map((s) => s.heading);
+const sec = (w, re) => w.sections.find((s) => re.test(s.heading));
+const find = (w, re) => allSteps(w).find((s) => re.test(s.label));
+const inSec = (w, sre, lre) => sec(w, sre).steps.find((s) => lre.test(s.label));
+const notesOf = (w) => allSteps(w).filter((s) => s.kind === 'note').map((s) => s.label).join(' ');
+
+describe('explainRetirement', () => {
+  const inputs = {
+    ...base, currentAge: 35, retirementAge: 65, currentBalance: 80000,
+    grossSalary: 90000, extraContributions: 5000, feeFlat: 100, investmentReturn: 7,
+    feePercent: 0.5, inflationRate: 2.5,
+  };
+  const result = calcRetirement(inputs);
+  const w = explainRetirement(result, inputs);
+
+  it('produces the sections the panel needs', () => {
+    expect(headings(w)).toContain('Contributions in year one');
+    expect(headings(w)).toContain('The return the balance earns');
+    expect(headings(w)).toContain(`Compounding to age ${result.accessAge}`);
+    expect(headings(w)).toContain("What that is worth in today's money");
+    expect(headings(w)).toContain('Age Pension — the income test');
+    expect(headings(w)).toContain('Age Pension — the assets test');
+    expect(headings(w)).toContain('Which test binds');
+  });
+
+  it('year one: employer plus personal reconciles to the concessional subtotal', () => {
+    const employer = find(w, /^Employer super/).value;
+    const personal = find(w, /^Your before-tax contributions$/).value;
+    const sub = find(w, /^Concessional contributions$/).value;
+    expect(employer + personal).toBeCloseTo(sub, 6);
+    expect(sub).toBeCloseTo(result.contributionCap.totalConcessional, 6);
+    expect(employer).toBeCloseTo(result.sgContributionYearOne, 6);
+  });
+
+  it('year one: the 15% contributions tax takes the subtotal to the amount landing in the fund', () => {
+    const sub = find(w, /^Concessional contributions$/).value;
+    const tax = find(w, /contributions tax at/).value;
+    const into = find(w, /^Into your fund in year one$/).value;
+    expect(tax).toBeCloseTo(-sub * result.rates.superannuation.contributionsTax, 6);
+    expect(sub + tax).toBeCloseTo(into, 6);
+    // And it is the same figure the projection actually credited.
+    expect(into).toBeCloseTo(result.path[0].contribution, 0);
+  });
+
+  it('nets the fee percentage off the investment return', () => {
+    const pctOf = (s) => parseFloat(String(s.value));
+    expect(pctOf(find(w, /^Investment return$/))).toBeCloseTo(7, 6);
+    expect(pctOf(find(w, /^less investment fees$/))).toBeCloseTo(-0.5, 6);
+    expect(pctOf(find(w, /^Net return/))).toBeCloseTo(6.5, 6);
+  });
+
+  it('the compounding lines add up to the projected balance exactly', () => {
+    const s = sec(w, /^Compounding to age/);
+    const start = s.steps.find((x) => /^Starting balance$/.test(x.label)).value;
+    const contrib = s.steps.find((x) => /^Contributions over/.test(x.label)).value;
+    const growth = s.steps.find((x) => /^Investment growth/.test(x.label)).value;
+    const tot = s.steps.find((x) => x.kind === 'total').value;
+    expect(start + contrib + growth).toBe(tot);
+    expect(tot).toBe(result.projectedBalance);
+    expect(contrib).toBe(result.totalContributions);
+  });
+
+  it('shows nominal and real side by side, with inflation as the only thing between them', () => {
+    const nominal = inSec(w, /today's money/, /nominal$/).value;
+    const eaten = inSec(w, /today's money/, /^less what inflation takes out/);
+    const real = inSec(w, /today's money/, /real$/).value;
+    expect(nominal).toBe(result.projectedBalance);
+    expect(real).toBe(result.realBalance);
+    // The two lines above the total add up to it exactly.
+    expect(nominal + eaten.value).toBe(real);
+    expect(real).toBeLessThan(nominal);
+    // And the erosion is genuinely the inflation factor, not a fudge.
+    expect(nominal / result.inflationFactor).toBeCloseTo(real, -1);
+    expect(eaten.note).toMatch(/Prices multiply by/);
+    expect(sec(w, /today's money/).note).toMatch(/[Ii]nflation/);
+  });
+
+  it('the income test lines reconcile to the income test result', () => {
+    const s = sec(w, /income test$/);
+    const maxRate = s.steps.find((x) => /^Maximum rate/.test(x.label)).value;
+    const income = s.steps.find((x) => /^Assessable income/.test(x.label)).value;
+    const free = s.steps.find((x) => /income free area$/.test(x.label)).value;
+    const excess = s.steps.find((x) => x.kind === 'subtotal').value;
+    const reduction = s.steps.find((x) => /^Reduction at/.test(x.label)).value;
+    const res = s.steps.find((x) => x.kind === 'total').value;
+
+    expect(Math.max(0, income + free)).toBeCloseTo(excess, 1);
+    expect(-reduction).toBeCloseTo(excess * result.agePension.incomeTest.taperPerDollar, 1);
+    expect(Math.max(0, maxRate + reduction)).toBeCloseTo(res, 1);
+    expect(res).toBe(result.agePension.incomeTest.result);
+  });
+
+  it('the assets test lines reconcile to the assets test result', () => {
+    const s = sec(w, /assets test$/);
+    const maxRate = s.steps.find((x) => /^Maximum rate/.test(x.label)).value;
+    const assets = s.steps.find((x) => /^Assessable assets$/.test(x.label)).value;
+    const free = s.steps.find((x) => /assets free area$/.test(x.label)).value;
+    const excess = s.steps.find((x) => x.kind === 'subtotal').value;
+    const reduction = s.steps.find((x) => /^Reduction at/.test(x.label)).value;
+    const res = s.steps.find((x) => x.kind === 'total').value;
+
+    expect(Math.max(0, assets + free)).toBeCloseTo(excess, 1);
+    expect(-reduction).toBeCloseTo(
+      (excess / 1000) * result.agePension.assetsTest.taperPerThousand, 1
+    );
+    // Past the published cut-off the taper is overridden and the answer is nil.
+    if (assets < result.agePension.assetsTest.cutOff) {
+      expect(Math.max(0, maxRate + reduction)).toBeCloseTo(res, 1);
+    } else {
+      expect(res).toBe(0);
+    }
+    expect(res).toBe(result.agePension.assetsTest.result);
+  });
+
+  it('pays the LOWER of the two tests and says which one binds', () => {
+    const s = sec(w, /^Which test binds$/);
+    const income = s.steps.find((x) => /^Income test$/.test(x.label)).value;
+    const assets = s.steps.find((x) => /^Assets test$/.test(x.label)).value;
+    const paid = s.steps.find((x) => x.kind === 'total').value;
+    const annual = s.steps.find((x) => /^Over a year$/.test(x.label)).value;
+
+    expect(paid).toBeCloseTo(Math.min(income, assets), 2);
+    expect(paid).toBe(result.agePension.fortnightly);
+    expect(annual).toBeCloseTo(paid * 26, 1);
+    expect(notesOf(w)).toMatch(/LOWER of the two/);
+  });
+
+  it('names the binding test in words', () => {
+    const modest = { ...inputs, currentBalance: 5000, grossSalary: 45000, extraContributions: 0 };
+    const mr = calcRetirement(modest);
+    const mw = explainRetirement(mr, modest);
+    const expected = mr.agePension.bindingTest === 'income' ? /income test/ : /assets test/;
+    expect(sec(mw, /^Which test binds$/).steps.filter((s) => s.kind === 'note').map((s) => s.label).join(' '))
+      .toMatch(expected);
+  });
+
+  it('every numeric step is finite', () => {
+    for (const s of allSteps(w)) {
+      if (typeof s.value === 'number') expect(Number.isFinite(s.value), s.label).toBe(true);
+    }
+  });
+
+  it('drops the year-one contributions section for someone already drawing down', () => {
+    const retired = { ...inputs, currentAge: 67, retirementAge: 65, grossSalary: 0 };
+    const rw = explainRetirement(calcRetirement(retired), retired);
+    expect(headings(rw)).not.toContain('Contributions in year one');
+    expect(headings(rw)).toContain('Compounding to age 67');
+  });
+
+  it('replaces the three pension sections with a single note when the pension is excluded', () => {
+    const noPension = { ...inputs, includeAgePension: false };
+    const nw = explainRetirement(calcRetirement(noPension), noPension);
+    expect(headings(nw)).toContain('Age Pension');
+    expect(headings(nw)).not.toContain('Age Pension — the income test');
+    expect(headings(nw)).not.toContain('Which test binds');
+  });
+
+  it('says so rather than inventing a rate where the registry has none', () => {
+    // The pre-20-September window is covered for singles only.
+    const couple = { ...inputs, rates: R_BEFORE, relationshipStatus: 'couple' };
+    const cr = calcRetirement(couple);
+    expect(cr.agePension.estimateUnavailable).toBe(true);
+    const cw = explainRetirement(cr, couple);
+    expect(headings(cw)).toContain('Age Pension');
+    expect(headings(cw)).not.toContain('Which test binds');
+    expect(sec(cw, /^Age Pension$/).steps[0].label).toMatch(/No published maximum rate/);
+  });
+
+  it('carries the financial year through to the panel footer', () => {
+    expect(w.asAt).toMatch(/^FY/);
   });
 });

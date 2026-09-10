@@ -16,6 +16,7 @@ import {
   dayIndex,
   fromDayIndex,
   addYears,
+  explainCGT,
 } from './cgt.js';
 import { ratesFor } from './rates/index.js';
 import vectors, {
@@ -33,6 +34,24 @@ const round2 = (n) => Math.round(n * 100) / 100;
 // A disposal inside the verified window, so the discount regime is in force.
 const SALE = '2026-11-20';
 const shift = (iso, days) => fromDayIndex(dayIndex(iso) + days);
+
+// Workings helpers. The panel is a flat list of steps once the sections are
+// unwrapped, so reconciliation is a filter and a sum.
+const allWorkingSteps = (w) => w.sections.flatMap((s) => s.steps);
+const findStep = (w, re) => allWorkingSteps(w).find((s) => re.test(s.label));
+const sumOf = (w, re) => allWorkingSteps(w)
+  .filter((s) => s.kind !== 'note' && re.test(s.label))
+  .reduce((a, s) => a + (typeof s.value === 'number' ? s.value : 0), 0);
+const sectionSteps = (w, heading) =>
+  (w.sections.find((s) => s.heading === heading)?.steps ?? []);
+const sumIn = (w, heading, re) => sectionSteps(w, heading)
+  .filter((s) => s.kind !== 'note' && re.test(s.label))
+  .reduce((a, s) => a + (typeof s.value === 'number' ? s.value : 0), 0);
+const notesText = (w) => [
+  ...allWorkingSteps(w).filter((s) => s.kind === 'note').map((s) => s.label),
+  ...allWorkingSteps(w).map((s) => s.note).filter(Boolean),
+  ...w.sections.map((s) => s.note).filter(Boolean),
+].join(' ');
 
 // ─────────────────────────────────────────────────────────────────────────────
 describe('§8.10 the 12-month test [ATO] [trap]', () => {
@@ -666,5 +685,158 @@ describe('every vector in the file is exercised', () => {
     expect(mainResidencePartialExemption).toHaveLength(1);
     expect(lossOrdering).toHaveLength(1);
     expect(sixYearRule).toHaveLength(1);
+  });
+});
+
+// ─── Workings ────────────────────────────────────────────────────────────────
+// The panel must reconcile: every set of component lines has to add up to the
+// total sitting under it, or the panel is worse than showing nothing.
+
+describe('explainCGT', () => {
+  const inputs = {
+    purchasePrice: 600000, purchaseCosts: 28000, improvements: 45000,
+    salePrice: 900000, saleCosts: 22000,
+    acquisitionDate: '2018-03-01', disposalDate: '2026-09-10',
+    grossIncome: 110000, capitalLosses: 30000, rates: FY2026,
+  };
+  const result = calcCGT(inputs);
+  const w = explainCGT(result, inputs);
+
+  it('produces the expected sections', () => {
+    const headings = w.sections.map((s) => s.heading);
+    expect(headings).toContain('Cost base');
+    expect(headings).toContain('Proceeds and gross gain');
+    expect(headings).toContain('Holding period');
+    expect(headings).toContain('Losses, then the discount');
+    expect(headings).toContain('Tax on the gain');
+    expect(headings).toContain('What you keep');
+  });
+
+  it('the cost base components reconcile to the cost base', () => {
+    const parts = sumIn(w, 'Cost base', /^(Purchase price|plus purchase costs|plus capital improvements)$/);
+    expect(parts).toBeCloseTo(result.costBase, 6);
+    expect(findStep(w, /^Cost base$/).value).toBeCloseTo(result.costBase, 6);
+  });
+
+  it('the proceeds lines reconcile to the gross gain', () => {
+    const parts = sumIn(w, 'Proceeds and gross gain', /^(Sale price|less selling costs|less cost base)$/);
+    expect(parts).toBeCloseTo(result.grossGain, 6);
+    expect(findStep(w, /^Net sale proceeds$/).value).toBeCloseTo(result.netSaleProceeds, 6);
+  });
+
+  it('losses come off before the discount and the lines reconcile', () => {
+    const sec = w.sections.find((s) => s.heading === 'Losses, then the discount');
+    const labels = sec.steps.map((s) => s.label);
+    const lossIdx = labels.findIndex((l) => /capital losses applied/.test(l));
+    const discIdx = labels.findIndex((l) => /CGT discount/.test(l));
+    expect(lossIdx).toBeGreaterThan(-1);
+    expect(discIdx).toBeGreaterThan(lossIdx);
+
+    const parts = sumIn(w, 'Losses, then the discount',
+      /^(Gross capital gain|Gain after the exemption|less capital losses applied|less the .* CGT discount)$/);
+    expect(parts).toBeCloseTo(result.assessableGain, 6);
+  });
+
+  it('the tax components reconcile to CGT payable', () => {
+    const parts = sumOf(w, /^Extra (income tax|Medicare levy|Medicare levy surcharge)$/);
+    expect(parts).toBeCloseTo(result.cgtPayable, 6);
+    expect(findStep(w, /^CGT payable$/).value).toBeCloseTo(result.cgtPayable, 6);
+  });
+
+  it('the outcome lines reconcile to the after-tax proceeds', () => {
+    const parts = sumIn(w, 'What you keep', /^(Net sale proceeds|less CGT payable)$/);
+    expect(parts).toBeCloseTo(result.afterTaxProceeds, 6);
+  });
+
+  it('shows the holding period in days and whether the test was cleared', () => {
+    expect(findStep(w, /^Days counted for the discount test$/).value)
+      .toBe(`${result.holdingDays.toLocaleString('en-AU')} days`);
+    expect(findStep(w, /^Twelve-month test$/).value).toBe('Passed');
+  });
+
+  it('says plainly how many days short a near-miss is', () => {
+    const near = { ...inputs, acquisitionDate: '2025-09-12', disposalDate: '2026-09-10' };
+    const nw = explainCGT(calcCGT(near), near);
+    expect(findStep(nw, /^Twelve-month test$/).value).toBe('Not met');
+    expect(notesText(nw)).toMatch(/3 days short/);
+    expect(notesText(nw)).toMatch(/364 counted days/);
+  });
+
+  it('warns that losses applied after the discount is the expensive error', () => {
+    expect(notesText(w)).toMatch(/BEFORE the discount/);
+  });
+
+  it('omits the main residence section when the asset was never a home', () => {
+    expect(w.sections.map((s) => s.heading)).not.toContain('Main residence exemption');
+  });
+
+  it('shows the apportionment when a main residence exemption applies', () => {
+    const mrInputs = {
+      ...inputs,
+      mainResidenceStatus: 'partial',
+      residencePeriods: [{ from: '2018-03-01', to: '2022-03-01' }],
+    };
+    const mrResult = calcCGT(mrInputs);
+    const mw = explainCGT(mrResult, mrInputs);
+    expect(mw.sections.map((s) => s.heading)).toContain('Main residence exemption');
+    const parts = sumIn(mw, 'Main residence exemption', /^(Gross gain|less exempt portion)$/);
+    expect(parts).toBeCloseTo(mrResult.gainAfterExemption, 6);
+    expect(findStep(mw, /^Gain after the exemption$/).value)
+      .toBeCloseTo(mrResult.gainAfterExemption, 6);
+  });
+
+  it('reconciles when the discount is not available', () => {
+    const short = { ...inputs, acquisitionDate: '2026-06-01' };
+    const sr = calcCGT(short);
+    const sw = explainCGT(sr, short);
+    expect(sr.discountRate).toBe(0);
+    expect(findStep(sw, /^Assessable capital gain$/).value).toBeCloseTo(sr.assessableGain, 6);
+    expect(notesText(sw)).toMatch(/fewer than 365 days/i);
+  });
+
+  it('handles a capital loss without claiming a phantom discount', () => {
+    const lossInputs = { ...inputs, salePrice: 400000 };
+    const lr = calcCGT(lossInputs);
+    const lw = explainCGT(lr, lossInputs);
+    expect(lr.isCapitalLoss).toBe(true);
+    expect(findStep(lw, /^Assessable capital gain$/).value).toBe(0);
+    expect(findStep(lw, /CGT discount/)).toBeUndefined();
+    expect(findStep(lw, /^Net capital loss carried forward$/).value)
+      .toBeCloseTo(lr.netCapitalLossCarriedForward, 6);
+  });
+
+  it('reconciles for a company, which gets no discount', () => {
+    const co = { ...inputs, entity: 'company' };
+    const cr = calcCGT(co);
+    const cw = explainCGT(cr, co);
+    expect(findStep(cw, /^CGT payable$/).value).toBeCloseTo(cr.cgtPayable, 6);
+    expect(sumIn(cw, 'What you keep', /^(Net sale proceeds|less CGT payable)$/))
+      .toBeCloseTo(cr.afterTaxProceeds, 6);
+  });
+
+  it('every numeric step is finite', () => {
+    const cases = [
+      inputs,
+      { ...inputs, entity: 'super' },
+      { ...inputs, entity: 'company' },
+      { ...inputs, salePrice: 400000 },
+      { ...inputs, acquisitionDate: '', disposalDate: '' },
+      { ...inputs, mainResidenceStatus: 'always' },
+    ];
+    for (const c of cases) {
+      for (const s of allWorkingSteps(explainCGT(calcCGT(c), c))) {
+        if (typeof s.value === 'number') expect(Number.isFinite(s.value), s.label).toBe(true);
+      }
+    }
+  });
+
+  it('drops the holding period section when no dates are entered', () => {
+    const noDates = { ...inputs, acquisitionDate: '', disposalDate: '' };
+    const nw = explainCGT(calcCGT(noDates), noDates);
+    expect(nw.sections.map((s) => s.heading)).not.toContain('Holding period');
+  });
+
+  it('carries the financial year', () => {
+    expect(w.asAt).toBe(`FY${result.financialYear}`);
   });
 });

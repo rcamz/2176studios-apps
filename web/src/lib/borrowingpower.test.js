@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { calcBorrowingPower, expenseBenchmark } from './borrowingpower.js';
+import { calcBorrowingPower, explainBorrowingPower, expenseBenchmark } from './borrowingpower.js';
 import { ratesFor } from './rates/index.js';
 
 const BASE = {
@@ -204,5 +204,61 @@ describe('no dead output', () => {
       expect(v, `${k} defined`).toBeDefined();
       if (typeof v === 'number') expect(Number.isFinite(v), `${k} finite`).toBe(true);
     }
+  });
+});
+
+// ─── Workings ────────────────────────────────────────────────────────────────
+// Sections here show comparisons and factors, not addends — "declared vs
+// benchmark", "serviceability vs deposit" — so the meaningful assertion is
+// that each section's total matches the corresponding result field, not that
+// the lines above it sum to it.
+
+describe('explainBorrowingPower', () => {
+  const inputs = { ...BASE, deposit: 120000, helpBalance1: 30000 };
+  const r = calcBorrowingPower(inputs);
+  const w = explainBorrowingPower(r, inputs);
+  const sec = (re) => w.sections.find((s) => re.test(s.heading));
+  const totalOf = (re) => sec(re)?.steps.find((s) => s.kind === 'total')?.value;
+  const allSteps = () => w.sections.flatMap((s) => s.steps);
+
+  it('reports the expense figure actually used', () => {
+    expect(totalOf(/Living expenses/i)).toBeCloseTo(r.effectiveExpenses, 2);
+  });
+
+  it('reports the monthly surplus', () => {
+    expect(totalOf(/Monthly surplus/i)).toBeCloseTo(r.monthlySurplus, 2);
+  });
+
+  it('reports the serviceability limit', () => {
+    expect(totalOf(/surplus borrows/i)).toBeCloseTo(r.maxByServiceability, 0);
+  });
+
+  it('reports the deposit limit', () => {
+    expect(totalOf(/deposit reaches/i)).toBeCloseTo(r.maxByDeposit, 0);
+  });
+
+  it('the binding section reports the lower of the two', () => {
+    const binding = totalOf(/binds/i);
+    expect(binding).toBeCloseTo(r.maxBorrowing, 0);
+    expect(binding).toBeCloseTo(Math.min(r.maxByServiceability, r.maxByDeposit), 0);
+  });
+
+  it('never calls the expense benchmark HEM', () => {
+    // Those tables are proprietary and unpublished; using the name would be a
+    // false claim about provenance.
+    const text = JSON.stringify(w);
+    expect(text).not.toMatch(/\bHEM\b/);
+  });
+
+  it('emits only finite numbers', () => {
+    for (const s of allSteps()) {
+      if (typeof s.value === 'number') expect(Number.isFinite(s.value), s.label).toBe(true);
+    }
+  });
+
+  it('drops the deposit sections when no deposit is entered', () => {
+    const noDep = calcBorrowingPower({ ...BASE, deposit: 0 });
+    const nw = explainBorrowingPower(noDep, { ...BASE, deposit: 0 });
+    expect(nw.sections.find((s) => /deposit reaches/i.test(s.heading))).toBeUndefined();
   });
 });

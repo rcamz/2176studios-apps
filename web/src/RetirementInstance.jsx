@@ -3,7 +3,8 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ReferenceLine, ResponsiveContainer,
 } from 'recharts';
-import { calcRetirement } from './lib/retirement.js';
+import { calcRetirement, explainRetirement } from './lib/retirement.js';
+import Workings from './Workings.jsx';
 import { fmt, fmtShort, fmtPct } from './lib/format.js';
 import { num, bool, enumOf, writeUrl } from './lib/urlState.js';
 import AdUnit from './AdUnit.jsx';
@@ -140,6 +141,7 @@ export default function RetirementInstance({
   useEffect(() => { onStateChange?.(inputs); }, [inputs, onStateChange]);
 
   const result = useMemo(() => calcRetirement(inputs), [inputs]);
+  const explanation = useMemo(() => explainRetirement(result, inputs), [result, inputs]);
 
   const chartAccent  = theme === 'dark' ? '#C9F23A' : '#4B7B00';
   const chartGhost   = theme === 'dark' ? 'rgba(240,239,233,0.18)' : 'rgba(13,13,16,0.18)';
@@ -616,6 +618,8 @@ export default function RetirementInstance({
               </p>
             </div>
           )}
+
+          <Workings data={explanation} />
 
           <div className="disclaimer">
             Estimates only — not financial advice. Based on 2026–27 super rules: {fmtPct(result.rates.superannuation.sgRate)} SG,

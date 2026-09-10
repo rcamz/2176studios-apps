@@ -271,3 +271,118 @@ export function calcSalarySacrifice(inputs = {}) {
     rates,
   };
 }
+
+// ─── Explanation ─────────────────────────────────────────────────────────────
+
+import { workings, section, step, subtotal, total, note } from './workings.js';
+
+const money = (n) => '$' + Math.round(n).toLocaleString('en-AU');
+const pct = (r) => (r * 100).toFixed(r * 100 % 1 === 0 ? 0 : 1) + '%';
+
+/**
+ * Build a step-by-step account of a calcSalarySacrifice result.
+ *
+ * Separate from calcSalarySacrifice so the hot path stays free of presentation
+ * concerns. Every figure comes from the result object or the inputs.
+ */
+export function explainSalarySacrifice(result, inputs = {}) {
+  const r = result;
+  const rates = r.rates;
+  const contributionsTaxRate = rates.superannuation.contributionsTax;
+  const d293Rate = rates.superannuation.division293.rate;
+  const marginal = r.withSacrifice.marginalRate;
+  const sgRate = inputs.sgRate ?? 12;
+  const cf = r.carryForward;
+  // Read back off the result rather than the inputs, so the line only ever
+  // appears when the cap actually moved.
+  const usingCarryForward = r.effectiveCap > r.concessionalCap;
+
+  // ── Tax with and without ──────────────────────────────────────────────────
+  const taxSection = section('Tax, with and without the sacrifice', [
+    step('Taxable income without sacrificing', r.withoutSacrifice.taxableIncome),
+    step('Taxable income after sacrificing', r.withSacrifice.taxableIncome, {
+      note: r.totalSacrifice > 0 ? `${money(r.totalSacrifice)} taken before tax` : null,
+    }),
+    step('Tax and levies without sacrificing', r.withoutSacrifice.totalTax),
+    step('less tax and levies after sacrificing', -r.withSacrifice.totalTax),
+    total('Personal tax saved', r.personalTaxSaved),
+  ], {
+    note: 'Income tax, Medicare and any surcharge or study loan repayment, all moved together.',
+  });
+
+  // ── What the fund takes ───────────────────────────────────────────────────
+  const insideSuper = section('What the fund takes on the way in', [
+    step('Amount sacrificed', r.totalSacrifice),
+    step(`less contributions tax at ${pct(contributionsTaxRate)}`, -r.contributionsTax),
+    total('Lands in super', r.superTaxedSacrifice),
+    r.division293Extra > 0 && step('Division 293 triggered by the sacrifice', r.division293Extra, {
+      note: `Charged personally, not by the fund — ${money(r.division293)} in total this year, against ${money(r.division293Without)} without sacrificing`,
+    }),
+  ]);
+
+  // ── The one honest saving figure ──────────────────────────────────────────
+  const savingSection = section('The saving', [
+    step('Personal tax saved', r.personalTaxSaved),
+    step(`less contributions tax at ${pct(contributionsTaxRate)}`, -r.contributionsTax),
+    r.division293Extra > 0 && step('less extra Division 293', -r.division293Extra),
+    total('Net saving for the year', r.annualTaxSaving),
+    r.totalSacrifice > 0 && step('Saving per dollar sacrificed', pct(r.savingRate), { muted: true }),
+    r.division293Applies
+      ? note(
+          `Division 293 applies, so the saving is your ${pct(marginal)} marginal rate minus ` +
+          `${pct(contributionsTaxRate + d293Rate)}, not minus ${pct(contributionsTaxRate)}. ` +
+          'Assuming the usual 15% roughly doubles the benefit you would actually get.'
+        )
+      : note(
+          `The sacrificed dollar avoids your ${pct(marginal)} marginal rate and pays ` +
+          `${pct(contributionsTaxRate)} inside super instead. Past ` +
+          `${money(r.division293Threshold)} of income plus contributions, Division 293 adds another ` +
+          `${pct(d293Rate)} and the saving becomes marginal minus ${pct(contributionsTaxRate + d293Rate)}.`
+        ),
+  ]);
+
+  // ── Cost to take-home ─────────────────────────────────────────────────────
+  const costSection = section('What it costs your take-home pay', [
+    step('Cash in hand without sacrificing', r.withoutSacrifice.takeHome - r.division293Without),
+    step('less cash in hand after sacrificing', -(r.withSacrifice.takeHome - r.division293), {
+      note: r.division293 > 0 ? 'Both figures are after Division 293, which is a personal bill' : null,
+    }),
+    total('Real cost for the year', r.netTakeHomeCost),
+    step('Per fortnight', r.fortnightlyCost, { muted: true }),
+    step('Per month', r.monthlyCost, { muted: true }),
+    r.totalSacrifice > 0 && note(
+      `You give up ${money(r.netTakeHomeCost)} of take-home pay and ${money(r.superTaxedSacrifice)} lands ` +
+      'in super. The gap between those two is the saving — it is not free money, it is deferred money taxed less.'
+    ),
+  ]);
+
+  // ── Cap and headroom ──────────────────────────────────────────────────────
+  const capSection = section('Concessional cap', [
+    step(`Employer contributions at ${sgRate}%`, r.sgContribution, {
+      note: 'Capped at the maximum contribution base',
+    }),
+    step('Your sacrifice and other concessional contributions', r.totalSacrifice),
+    subtotal('Total concessional contributions', r.totalConcessional),
+    step('Concessional cap', r.concessionalCap),
+    usingCarryForward && step('plus unused cap carried forward', r.effectiveCap - r.concessionalCap, {
+      note: `From the last ${cf.lookbackYears} years, available because your total super balance of ${money(cf.totalSuperBalance)} is under ${money(cf.balanceTest)} at 30 June of the prior year`,
+    }),
+    total('Effective cap', r.effectiveCap),
+    step('Headroom left after employer contributions', r.capHeadroom, { muted: true }),
+    r.capExceeded && step('Excess contributions', r.excessAmount, {
+      note: `Added to your assessable income and taxed at your marginal rate, with a ${pct(r.excessOffsetRate)} offset for the tax the fund already paid — about ${money(r.excessTaxEstimate)}`,
+    }),
+    !cf.eligible && cf.claimed > 0 && note(
+      `Carry-forward is switched off: a total super balance of ${money(cf.totalSuperBalance)} is at or over ` +
+      `the ${money(cf.balanceTest)} test at 30 June of the prior year.`
+    ),
+    cf.expired > 0 && note(
+      `${money(cf.expired)} of unused cap has expired — unused amounts last only ${cf.lookbackYears} years.`
+    ),
+  ]);
+
+  return workings([taxSection, insideSuper, savingSection, costSection, capSection], {
+    source: 'Australian Taxation Office rates',
+    asAt: rates.__fy ? `FY${rates.__fy}` : null,
+  });
+}

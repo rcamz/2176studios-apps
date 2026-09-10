@@ -104,7 +104,7 @@ export function calcBorrowingPower(inputs = {}) {
   });
   const tax2 = isJoint
     ? calcPayTax({ grossIncome: shaded2, helpBalance: helpBalance2, hasPrivateCover, date })
-    : { takeHome: 0, helpRepayment: 0 };
+    : { takeHome: 0, helpRepayment: 0, totalTax: 0, deductionClaimed: 0 };
 
   const netAnnualIncome = tax1.takeHome + tax2.takeHome;
   const netMonthlyIncome = netAnnualIncome / 12;
@@ -215,6 +215,19 @@ export function calcBorrowingPower(inputs = {}) {
     maxLvr,
     bindingConstraint,
 
+    // Income detail, so the explanation can show gross → shaded → net without
+    // re-running the tax engine or backing figures out by subtraction.
+    grossAnnualIncome: grossIncome1 + (isJoint ? grossIncome2 : 0) + rentalIncome + otherIncome,
+    shadedAnnualIncome: shaded1 + shaded2 + shadedRent + otherIncome,
+    annualTax: tax1.totalTax + tax2.totalTax,
+    annualDeduction: tax1.deductionClaimed + tax2.deductionClaimed,
+    netAnnualIncome,
+    shading: {
+      applicant1: shadeFor(employmentType1),
+      applicant2: isJoint ? shadeFor(employmentType2) : null,
+      rental: L.rentalIncomeShading,
+    },
+
     netMonthlyIncome,
     effectiveExpenses,
     expenseBenchmark: benchmark,
@@ -232,4 +245,185 @@ export function calcBorrowingPower(inputs = {}) {
     sensitivity,
     warnings,
   };
+}
+
+// ─── Explanation ─────────────────────────────────────────────────────────────
+
+import {
+  workings, section, step, subtotal, total, note,
+} from './workings.js';
+
+const money = (n) => '$' + Math.round(n).toLocaleString('en-AU');
+const pct = (r, dp = 1) => (r * 100).toFixed(dp).replace(/\.0$/, '') + '%';
+const trim = (n) => String(Number(Number(n).toFixed(2)));
+
+const EMPLOYMENT_LABEL = {
+  payg: 'PAYG',
+  contract: 'contract',
+  casual: 'casual',
+  'self-employed': 'self-employed',
+};
+
+/**
+ * Build a step-by-step account of a calcBorrowingPower result.
+ *
+ * Separate from the calculation so the assessment stays free of presentation
+ * concerns. Every figure here comes from the result or the inputs.
+ */
+export function explainBorrowingPower(result, inputs = {}) {
+  const r = result;
+  const {
+    grossIncome1 = 0,
+    grossIncome2 = 0,
+    applicantType = 'single',
+    employmentType1 = 'payg',
+    employmentType2 = 'payg',
+    rentalIncome = 0,
+    otherIncome = 0,
+    monthlyExpenses = 0,
+    dependants = 0,
+    creditCardLimits = 0,
+    personalLoanMonthly = 0,
+    carLoanMonthly = 0,
+    interestRate = 6.0,
+    termYears = 30,
+    repaymentType = 'pi',
+    interestOnlyYears = 0,
+    deposit = 0,
+  } = inputs;
+
+  const isJoint = applicantType === 'joint';
+  const shade1 = r.shading?.applicant1 ?? 1;
+  const shade2 = r.shading?.applicant2 ?? 1;
+  const rentalShade = r.shading?.rental ?? 1;
+  const io = repaymentType === 'io' ? interestOnlyYears : 0;
+  const factor = monthlyRepaymentFactor(r.bufferedRate, termYears, io);
+  const buffer = r.bufferedRate - interestRate;
+
+  // ─── Income ────────────────────────────────────────────────────────────────
+  const income = section('Income the lender will count', [
+    step(isJoint ? 'Applicant 1 gross income' : 'Gross income', grossIncome1),
+    shade1 < 1 && step(
+      `less ${pct(1 - shade1, 0)} shading, ${EMPLOYMENT_LABEL[employmentType1] ?? employmentType1} income`,
+      -(grossIncome1 * (1 - shade1)),
+      { note: 'Shaded on gross, before tax — lenders discount income they consider less certain' }
+    ),
+    isJoint && step('Applicant 2 gross income', grossIncome2),
+    isJoint && shade2 < 1 && step(
+      `less ${pct(1 - shade2, 0)} shading, ${EMPLOYMENT_LABEL[employmentType2] ?? employmentType2} income`,
+      -(grossIncome2 * (1 - shade2))
+    ),
+    rentalIncome > 0 && step('Rental income', rentalIncome),
+    rentalIncome > 0 && step(`less ${pct(1 - rentalShade, 0)} shading on rent`, -(rentalIncome * (1 - rentalShade)), {
+      note: 'APG 223 requires at least 20% to cover vacancy, agent fees and maintenance',
+    }),
+    otherIncome > 0 && step('Other income', otherIncome),
+    subtotal('Assessable gross income', r.shadedAnnualIncome),
+    step('less income tax, Medicare and any HELP repayment', -r.annualTax),
+    r.annualDeduction > 0 && step('less the standard work deduction', -r.annualDeduction, {
+      muted: true,
+      note: 'Tax is worked out on taxable income, which is after this deduction, so the net figure below sits slightly under the cash actually banked',
+    }),
+    total('Net income a year', r.netAnnualIncome),
+    step('Net income a month', r.netMonthlyIncome),
+  ], {
+    note: 'Other income is taxed, not added on tax-free at the end. Rental and investment income arriving untaxed is one of the most common ways an online estimate comes out well above what a lender will actually offer.',
+  });
+
+  // ─── Living expenses ───────────────────────────────────────────────────────
+  const expenses = section('Living expenses used', [
+    step('What you declared', monthlyExpenses, { muted: true }),
+    step('Our indicative benchmark for your household', r.expenseBenchmark, {
+      muted: true,
+      note: `${isJoint ? 'Couple' : 'Single'}${dependants > 0 ? ` with ${dependants} dependant${dependants === 1 ? '' : 's'}` : ''}, scaled by income, excluding housing`,
+    }),
+    total('Figure used in the assessment', r.effectiveExpenses, {
+      note: r.benchmarkApplied
+        ? 'The higher of the two — the benchmark, because your declared figure sits below it'
+        : 'The higher of the two — your declared figure',
+    }),
+  ], {
+    note: 'This benchmark is our own, and indicative only. Lenders use a licensed household expenditure dataset that is not published, so no public calculator can reproduce their figure. What matters is the behaviour: a lender applies the higher of its benchmark and what you declare, which is why understating your spending on an application does not lift your borrowing power.',
+  });
+
+  // ─── Surplus ───────────────────────────────────────────────────────────────
+  const surplus = section('Monthly surplus', [
+    step('Net income a month', r.netMonthlyIncome),
+    step('less living expenses', -r.effectiveExpenses),
+    creditCardLimits > 0 && step(
+      `less credit cards, ${pct(r.creditCardMonthly / creditCardLimits, 1)} of the ${money(creditCardLimits)} limit`,
+      -r.creditCardMonthly,
+      { note: 'Assessed on the limit, not the balance — a card paid off in full every month costs you the same capacity as one that is maxed out' }
+    ),
+    personalLoanMonthly > 0 && step('less personal loan repayment', -personalLoanMonthly),
+    carLoanMonthly > 0 && step('less car loan repayment', -carLoanMonthly),
+    total('Left over each month', r.monthlySurplus),
+    r.helpMonthly > 0 && note(
+      `Your HELP repayment of about ${money(r.helpMonthly)} a month is already taken out inside the tax calculation above, so it is not deducted a second time here. Lenders assess the repayment, not the balance — a small debt and a large one cost roughly the same capacity at the same income.`
+    ),
+  ], {
+    note: 'Closing or reducing a card limit you never draw on is usually the fastest way to lift this number, and it takes days rather than a pay rise.',
+  });
+
+  // ─── Serviceability ────────────────────────────────────────────────────────
+  const serviceability = section('What that surplus borrows', [
+    step('Your rate', `${trim(interestRate)}% p.a.`),
+    step('plus the APRA serviceability buffer', `${trim(buffer)}%`, {
+      note: 'Lenders must confirm you could still repay if rates rose by this much',
+    }),
+    step('Assessment rate', `${trim(r.bufferedRate)}% p.a.`),
+    step('Repayment on $1,000 borrowed, at that rate', factor * 1000, {
+      note: io > 0
+        ? `Principal and interest over the ${trim(termYears - io)} years left after the interest-only period`
+        : `Principal and interest over ${trim(termYears)} years`,
+    }),
+    step('Your monthly surplus', r.monthlySurplus),
+    total('Maximum loan on serviceability', r.maxByServiceability, {
+      note: `Surplus divided by the repayment per dollar at ${trim(r.bufferedRate)}%`,
+    }),
+  ], {
+    note: io > 0
+      ? 'An interest-only loan is not assessed on the interest-only repayment. The lender assesses the higher principal and interest repayment that starts once that period ends, over a shorter remaining term — which is why interest-only reduces, rather than increases, how much you can borrow.'
+      : 'The buffer is the reason a lender lends less than your current repayment capacity suggests. Every extra percentage point of buffer costs roughly 8 to 10 percent of borrowing power.',
+  });
+
+  // ─── Deposit ───────────────────────────────────────────────────────────────
+  const depositSection = deposit > 0 && r.maxByDeposit !== null ? section('What your deposit reaches', [
+    step('Deposit', deposit),
+    step('Maximum loan to value ratio', pct(r.maxLvr, 0), {
+      note: 'The practical ceiling with LMI. 80% is the level that avoids it.',
+    }),
+    step('Property price this deposit reaches', r.maxByDeposit + deposit),
+    step('less the deposit', -deposit),
+    total('Maximum loan on the deposit', r.maxByDeposit),
+    r.maxPropertyPriceNoLmi && step('Price reachable with no LMI', r.maxPropertyPriceNoLmi, {
+      muted: true,
+      note: 'The same deposit at 80% LVR',
+    }),
+  ], {
+    note: 'For most first home buyers this is the constraint that actually binds, not income. Saving another $10,000 of deposit lifts the ceiling by far more than $10,000, because the deposit is leveraged.',
+  }) : null;
+
+  // ─── Which constraint binds ────────────────────────────────────────────────
+  const outcome = section('Which limit binds', [
+    step('Maximum on serviceability', r.maxByServiceability, { muted: true }),
+    step('Maximum on your deposit', r.maxByDeposit === null ? 'No deposit entered' : r.maxByDeposit, { muted: true }),
+    total('Your borrowing power', r.maxBorrowing, { note: 'The lower of the two' }),
+    step('Property price', r.maxPropertyPrice),
+    step('Repayment at your actual rate', r.monthlyRepayment, {
+      note: `${trim(interestRate)}% p.a. over ${trim(termYears)} years, not the assessment rate`,
+    }),
+    step('Debt to income ratio', trim(r.dti), {
+      muted: true,
+      note: 'Total debt divided by gross income. HELP is excluded from this ratio but still counts in serviceability.',
+    }),
+  ], {
+    note: r.bindingConstraint === 'deposit'
+      ? 'Your deposit binds here, not your income. More deposit lifts this figure before a pay rise would.'
+      : 'Your income binds here, not your deposit. A larger deposit raises the price you can pay but not the loan you can service.',
+  });
+
+  return workings([income, expenses, surplus, serviceability, depositSection, outcome], {
+    source: 'APRA APG 223 serviceability guidance',
+  });
 }

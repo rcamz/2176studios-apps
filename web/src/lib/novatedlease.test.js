@@ -9,6 +9,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   calcNovatedLease,
+  explainNovatedLease,
   centsPerKmDeduction,
   fbtPayableOn,
   residualFor,
@@ -624,5 +625,201 @@ describe('every vector in the file is exercised', () => {
     expect(residualValues).toHaveLength(1);
     expect(statutoryRateLookup).toHaveLength(7);
     expect(reportableFringeBenefits).toHaveLength(1);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Workings — "show me how you got there".
+
+const allSteps = (w) => w.sections.flatMap((s) => s.steps);
+const headings = (w) => w.sections.map((s) => s.heading);
+const sec = (w, re) => w.sections.find((s) => re.test(s.heading));
+const find = (w, re) => allSteps(w).find((s) => re.test(s.label));
+const notesOf = (w) => allSteps(w).filter((s) => s.kind === 'note').map((s) => s.label)
+  .concat(w.sections.map((s) => s.note).filter(Boolean)).join(' ');
+const sumTo = (s) => {
+  // Everything above the section's total, ignoring muted asides and notes.
+  const stop = s.steps.findIndex((x) => x.kind === 'total');
+  return s.steps.slice(0, stop)
+    .filter((x) => typeof x.value === 'number' && !x.muted && x.kind !== 'subtotal')
+    .reduce((a, x) => a + x.value, 0);
+};
+
+const evInputs = {
+  vehicleType: 'bev', driveAwayPrice: 65000, onRoadCosts: 3500, termYears: 3,
+  startDate: START, grossSalary: 130000, helpBalance: 40000, runningCosts: 5000,
+  adminFee: 450, financeRate: 7.5, useECM: true,
+};
+const iceInputs = { ...evInputs, vehicleType: 'ice', useECM: false };
+const iceEcmInputs = { ...evInputs, vehicleType: 'ice', useECM: true };
+
+describe('explainNovatedLease', () => {
+  const result = calcNovatedLease(evInputs);
+  const w = explainNovatedLease(result, evInputs);
+
+  it('produces the sections the panel needs', () => {
+    expect(headings(w)).toEqual([
+      'The vehicle price, decomposed',
+      'What gets financed',
+      'The statutory rate, and why',
+      'FBT, or the employee contribution',
+      'What comes out of your salary',
+      'The reportable fringe benefits amount',
+      'What the car costs you in cash',
+    ]);
+  });
+
+  it('decomposes the price into on-roads, GST-inclusive base and GST-exclusive base', () => {
+    const s = sec(w, /vehicle price/);
+    const drive = s.steps.find((x) => /^Drive-away price$/.test(x.label)).value;
+    const onRoads = s.steps.find((x) => /on-road costs$/.test(x.label)).value;
+    const incGst = s.steps.find((x) => x.kind === 'subtotal').value;
+    const gst = s.steps.find((x) => /^less GST/.test(x.label)).value;
+    const exGstLine = s.steps.find((x) => x.kind === 'total').value;
+
+    expect(drive + onRoads).toBeCloseTo(incGst, 6);
+    expect(incGst + gst).toBeCloseTo(exGstLine, 6);
+    expect(drive).toBe(result.driveAwayPrice);
+    expect(incGst).toBe(result.basePriceIncGst);
+    expect(exGstLine).toBe(result.basePriceExGst);
+    expect(-gst).toBeCloseTo(result.gstSavingOnVehicle, 6);
+  });
+
+  it('finances the ex-GST amount and says what that saves', () => {
+    const s = sec(w, /^What gets financed$/);
+    expect(sumTo(s)).toBeCloseTo(result.amountFinanced, 6);
+    expect(s.steps.find((x) => x.kind === 'total').value).toBe(result.amountFinanced);
+    expect(s.note).toMatch(/input tax credit/);
+    expect(s.note).toContain('$5,591'); // the GST that never gets financed
+    expect(find(w, /^Annual lease rental$/).value).toBeCloseTo(result.monthlyRental * 12, 6);
+  });
+
+  it('shows the statutory rate with the reason it applied', () => {
+    const s = sec(w, /statutory rate/);
+    expect(s.steps.find((x) => x.kind === 'total').value).toBe('0%');
+    expect(s.steps.find((x) => /LCT threshold/.test(x.label)).value).toContain('$91,661');
+    expect(s.steps.find((x) => /^Lease commences$/.test(x.label)).value).toBe(START);
+    expect(s.steps.at(-1).kind).toBe('note');
+    expect(s.steps.at(-1).label).toBe(result.statutoryRateLabel);
+  });
+
+  it('an exempt EV shows no FBT and no employee contribution', () => {
+    expect(result.isExempt).toBe(true);
+    const s = sec(w, /^FBT, or the employee contribution$/);
+    expect(s.steps.find((x) => x.kind === 'total').value).toBe(0);
+    expect(s.steps.some((x) => /post-tax employee contribution/.test(x.label))).toBe(false);
+    expect(notesOf(w)).toMatch(/removes the tax. It does not remove the reporting/);
+  });
+
+  it('an exempt EV still produces a reportable amount, and the components add up', () => {
+    expect(result.rfbaApplies).toBe(true);
+    const s = sec(w, /reportable fringe benefits/);
+    const value = s.steps.find((x) => /^Reportable taxable value$/.test(x.label));
+    const grossUp = s.steps.find((x) => /^Grossed up at/.test(x.label)).value;
+    const rfba = s.steps.find((x) => x.kind === 'subtotal').value;
+    const mls = s.steps.find((x) => /Medicare levy surcharge/.test(x.label)).value;
+    const help = s.steps.find((x) => /HELP repayment/.test(x.label)).value;
+    const d293 = s.steps.find((x) => /Division 293/.test(x.label)).value;
+    const cost = s.steps.find((x) => x.kind === 'total').value;
+
+    expect(value.value + grossUp).toBeCloseTo(rfba, 6);
+    expect(rfba).toBeCloseTo(result.rfba, 6);
+    expect(mls + help + d293).toBeCloseTo(cost, 6);
+    expect(cost).toBeCloseTo(result.rfbaCost, 6);
+    // The trap: worked out on the ordinary 20% fraction despite the exemption.
+    expect(value.note).toMatch(/20% statutory fraction even though the car is FBT-exempt/);
+    expect(s.note).toMatch(/Medicare levy surcharge, HELP repayment income and Division 293/);
+  });
+
+  it('the salary section reconciles to the pre-tax deduction', () => {
+    const s = sec(w, /comes out of your salary/);
+    const rental = s.steps.find((x) => /^Annual lease rental$/.test(x.label)).value;
+    const operating = s.steps.find((x) => /^Running costs/.test(x.label)).value;
+    const packaged = s.steps.find((x) => x.kind === 'subtotal').value;
+    expect(rental + operating).toBeCloseTo(packaged, 6);
+    expect(packaged).toBeCloseTo(result.totalPackagedCost, 6);
+    expect(sumTo(s)).toBeCloseTo(result.preTaxDeduction, 6);
+    expect(s.steps.find((x) => x.kind === 'total').value).toBe(result.preTaxDeduction);
+  });
+
+  it('the cash section reconciles to the net annual cost', () => {
+    const s = sec(w, /costs you in cash/);
+    const without = s.steps[0].value;
+    const with_ = s.steps[1].value;
+    expect(without - with_).toBeCloseTo(result.netAnnualCost, 6);
+    expect(s.steps.find((x) => x.kind === 'total').value).toBe(result.netAnnualCost);
+  });
+
+  it('charges FBT or takes a contribution, never both', () => {
+    for (const inp of [evInputs, iceInputs, iceEcmInputs, { ...evInputs, driveAwayPrice: 120000 }]) {
+      const r = calcNovatedLease(inp);
+      const ww = explainNovatedLease(r, inp);
+      const s = sec(ww, /^FBT, or the employee contribution$/);
+      const fbt = s.steps.find((x) => x.kind === 'total').value;
+      const contribution = s.steps.find((x) => /post-tax employee contribution/.test(x.label));
+      const contributed = contribution ? -contribution.value : 0;
+      expect(fbt > 0 && contributed > 0, JSON.stringify(inp.vehicleType + '/' + inp.useECM)).toBe(false);
+      expect(fbt).toBeCloseTo(r.fbtPayable, 6);
+    }
+  });
+
+  it('without the contribution method the gross-up line carries taxable value to FBT', () => {
+    const r = calcNovatedLease(iceInputs);
+    const ww = explainNovatedLease(r, iceInputs);
+    const s = sec(ww, /^FBT, or the employee contribution$/);
+    expect(r.fbtPayable).toBeGreaterThan(0);
+    expect(sumTo(s)).toBeCloseTo(r.fbtPayable, 6);
+    expect(s.steps.find((x) => x.kind === 'total').value).toBe(r.fbtPayable);
+  });
+
+  it('with the contribution method the taxable value nets to nil', () => {
+    const r = calcNovatedLease(iceEcmInputs);
+    const ww = explainNovatedLease(r, iceEcmInputs);
+    const s = sec(ww, /^FBT, or the employee contribution$/);
+    const taxable = s.steps[0].value;
+    const contribution = s.steps.find((x) => /post-tax employee contribution/.test(x.label)).value;
+    const net = s.steps.find((x) => x.kind === 'subtotal').value;
+    expect(taxable).toBeCloseTo(r.fbtTaxableValue, 6);
+    expect(taxable + contribution).toBeCloseTo(net, 6);
+    expect(net).toBeCloseTo(0, 6);
+    expect(s.steps.find((x) => x.kind === 'total').value).toBe(0);
+  });
+
+  it('explains the threshold rather than a cost when no amount is reportable', () => {
+    const tiny = { ...evInputs, driveAwayPrice: 9000, onRoadCosts: 500, runningCosts: 1000, adminFee: 0 };
+    const r = calcNovatedLease(tiny);
+    expect(r.rfbaApplies).toBe(false);
+    const ww = explainNovatedLease(r, tiny);
+    const s = sec(ww, /reportable fringe benefits/);
+    expect(s.steps.some((x) => /costs you a year$/.test(x.label))).toBe(false);
+    expect(s.steps.find((x) => /^Reporting threshold$/.test(x.label)).value).toBe(r.rfbaThreshold);
+    expect(s.steps.at(-1).label).toMatch(/not just the excess/);
+  });
+
+  it('surfaces the plug-in hybrid line only for a plug-in hybrid', () => {
+    const phev = { ...evInputs, vehicleType: 'phev' };
+    const pw = explainNovatedLease(calcNovatedLease(phev), phev);
+    expect(sec(pw, /statutory rate/).steps.some((x) => /grandfathering/i.test(x.label))).toBe(true);
+    expect(sec(w, /statutory rate/).steps.some((x) => /grandfathering/i.test(x.label))).toBe(false);
+  });
+
+  it('flags the cap when the package costs more than the salary', () => {
+    const broke = { ...evInputs, grossSalary: 12000 };
+    const r = calcNovatedLease(broke);
+    expect(r.packageExceedsSalary).toBe(true);
+    const bw = explainNovatedLease(r, broke);
+    const s = sec(bw, /comes out of your salary/);
+    expect(sumTo(s)).toBeCloseTo(r.preTaxDeduction, 6);
+    expect(s.steps.some((x) => /capped at your gross salary/.test(x.label))).toBe(true);
+  });
+
+  it('every numeric step is finite, in every configuration', () => {
+    for (const inp of [evInputs, iceInputs, iceEcmInputs, { ...evInputs, vehicleType: 'phev' },
+                       { ...evInputs, driveAwayPrice: 120000 }, { ...evInputs, grossSalary: 12000 }]) {
+      const ww = explainNovatedLease(calcNovatedLease(inp), inp);
+      for (const s of allSteps(ww)) {
+        if (typeof s.value === 'number') expect(Number.isFinite(s.value), s.label).toBe(true);
+      }
+    }
   });
 });

@@ -11,6 +11,7 @@ import {
   calcFHSSS, releasableAmount, releasableBreakdown, checkEligibility,
   sicRateFor, sicAccrualFactor, daysInCalendarYear, daysBetween, addDays,
   ELIGIBILITY_ITEMS,
+  explainFHSSS,
 } from './fhsss.js';
 import { releasableAmount as releasableVectors } from './vectors/fhsss.vectors.js';
 import { ratesFor } from './rates/index.js';
@@ -255,5 +256,40 @@ describe('§3.7 eligibility gate', () => {
       eligibility: { age18Plus: false },
     });
     expect(r.eligibility.eligible).toBe(false);
+  });
+});
+
+// ─── Workings ────────────────────────────────────────────────────────────────
+describe('explainFHSSS', () => {
+  const inputs = { grossIncome: 95000, annualConcessional: 15000, years: 3, sgRate: 12 };
+  const r = calcFHSSS(inputs);
+  const w = explainFHSSS(r, inputs);
+  const sec = (re) => w.sections.find((s) => re.test(s.heading));
+  const totalOf = (re) => sec(re)?.steps.find((s) => s.kind === 'total')?.value;
+  const allSteps = () => w.sections.flatMap((s) => s.steps);
+
+  it('reports the releasable amount after the 85% haircut', () => {
+    expect(totalOf(/85%/)).toBeCloseTo(r.totalReleasable, 2);
+  });
+
+  it('reports what reaches the deposit', () => {
+    expect(totalOf(/deposit/i)).toBeCloseTo(r.netDeposit, 2);
+  });
+
+  it('[trap] shows the cap applied BEFORE the haircut, as two separate steps', () => {
+    // $25,000 sacrificed -> $15,000 eligible -> $12,750 releasable. Applying
+    // 85% first gives $21,250 -> capped at $15,000, wrong by $2,250.
+    const over = { grossIncome: 95000, annualConcessional: 25000, years: 1, sgRate: 12 };
+    const ow = explainFHSSS(calcFHSSS(over), over);
+    const text = JSON.stringify(ow);
+    expect(text).toContain('15,000');
+    expect(text).toContain('12,750');
+    expect(text).not.toContain('21,250');
+  });
+
+  it('emits only finite numbers', () => {
+    for (const s of allSteps()) {
+      if (typeof s.value === 'number') expect(Number.isFinite(s.value), s.label).toBe(true);
+    }
   });
 });

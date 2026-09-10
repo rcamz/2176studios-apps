@@ -3,7 +3,8 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Cell,
 } from 'recharts';
-import { calcBorrowingPower } from './lib/borrowingpower.js';
+import { calcBorrowingPower, explainBorrowingPower } from './lib/borrowingpower.js';
+import Workings from './Workings.jsx';
 import { LMI_DISCLOSURE } from './lib/lmi.js';
 import { fmt, fmtShort } from './lib/format.js';
 import { num, bool, enumOf, writeUrl } from './lib/urlState.js';
@@ -111,6 +112,7 @@ export default function BorrowingPowerInstance({
   useEffect(() => { onStateChange?.(inputs); }, [inputs, onStateChange]);
 
   const result = useMemo(() => calcBorrowingPower(inputs), [inputs]);
+  const explanation = useMemo(() => explainBorrowingPower(result, inputs), [result, inputs]);
 
   const chartAccent = theme === 'dark' ? '#C9F23A' : '#4B7B00';
   const chartRed    = theme === 'dark' ? '#E87070' : '#D85A30';
@@ -412,6 +414,8 @@ export default function BorrowingPowerInstance({
               </BarChart>
             </ResponsiveContainer>
           </div>
+
+          <Workings data={explanation} />
 
           <div className="disclaimer">
             Estimates only — not financial advice. Uses the APRA 3% serviceability buffer. The living expense figure is our own indicative benchmark: lenders use a licensed dataset that is not published, and apply the higher of it or your declared expenses. Actual capacity varies by lender by $30,000 to $80,000 for the same household, and depends on credit history and full assessment. Speak to a licensed mortgage broker.

@@ -8,6 +8,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   calcHealth,
+  explainHealth,
   bmrMifflinStJeor,
   dailyEnergyForRate,
   safeRateCeiling,
@@ -442,5 +443,238 @@ describe('methodology notes', () => {
     expect(r.goalBlocked).toBe(false);
     expect(r.goalCalories).toBeNull();
     expect(r.chartData).toEqual([]);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Workings — "show me how you got there".
+//
+// Every value in this panel is a formatted STRING carrying its own unit,
+// because the shared renderer prints bare numbers as currency and "$1,855" is
+// not a calorie count. The tests therefore parse what the user actually sees.
+
+const allSteps = (w) => w.sections.flatMap((s) => s.steps);
+const headings = (w) => w.sections.map((s) => s.heading);
+const sec = (w, re) => w.sections.find((s) => re.test(s.heading));
+const find = (w, re) => allSteps(w).find((s) => re.test(s.label));
+// First number in a rendered value: '1,125 kcal' -> 1125, '-0.55 kg/week' -> -0.55.
+const numOf = (v) => Number(String(v).replace(/,/g, '').match(/-?\d+(\.\d+)?/)?.[0]);
+const val = (w, re) => numOf(find(w, re).value);
+// Everything the panel puts in front of a reader, as one string.
+const panelText = (w) => w.sections
+  .flatMap((s) => [s.heading, s.note ?? '', ...s.steps.flatMap((x) => [x.label, String(x.value ?? ''), x.note ?? ''])])
+  .join(' | ');
+const numbersIn = (w) => (panelText(w).replace(/,/g, '').match(/-?\d+(\.\d+)?/g) ?? []).map(Number);
+
+const loseInputs = {
+  heightCm: 180, weightKg: 90, age: 35, sex: 'male',
+  activityLevel: 'moderate', goalType: 'lose', goalWeightKg: 80, goalWeeks: 20,
+  date: '2026-09-10',
+};
+
+describe('explainHealth', () => {
+  const result = calcHealth(loseInputs);
+  const w = explainHealth(result, loseInputs);
+
+  it('produces the sections the panel needs', () => {
+    expect(headings(w)).toEqual([
+      'Resting metabolism (Mifflin-St Jeor)',
+      'Maintenance calories',
+      'The deficit',
+      'Turning that into weight',
+      'Why the projection slows down',
+    ]);
+  });
+
+  it('substitutes the real coefficients so the arithmetic can be followed', () => {
+    const s = sec(w, /Mifflin/);
+    expect(s.steps[0].label).toBe('10 x 90 kg');
+    expect(s.steps[1].label).toBe('+ 6.25 x 180 cm');
+    expect(s.steps[2].label).toBe('- 5 x 35 years');
+    expect(s.steps[3].label).toBe('+ 5 (male constant)');
+    expect(s.steps.map((x) => numOf(x.value)).slice(0, 4)).toEqual([900, 1125, -175, 5]);
+  });
+
+  it('the four BMR terms add up to the BMR', () => {
+    const s = sec(w, /Mifflin/);
+    const terms = s.steps.filter((x) => x.kind === 'line').map((x) => numOf(x.value));
+    const totalShown = numOf(s.steps.find((x) => x.kind === 'total').value);
+    expect(terms.reduce((a, b) => a + b, 0)).toBeCloseTo(
+      bmrMifflinStJeor(90, 180, 35, 'male', RATES), 6
+    );
+    expect(Math.round(terms.reduce((a, b) => a + b, 0))).toBe(totalShown);
+    expect(totalShown).toBe(result.bmr);
+  });
+
+  it('uses the female constant for a female', () => {
+    const inp = { ...loseInputs, sex: 'female' };
+    const fw = explainHealth(calcHealth(inp), inp);
+    const s = sec(fw, /Mifflin/);
+    expect(s.steps[3].label).toBe('- 161 (female constant)');
+    expect(numOf(s.steps[3].value)).toBe(-161);
+  });
+
+  it('applies the activity multiplier to reach maintenance', () => {
+    const s = sec(w, /^Maintenance calories$/);
+    const bmr = numOf(s.steps[0].value);
+    const mult = numOf(s.steps[1].value);
+    const maintenance = numOf(s.steps.find((x) => x.kind === 'total').value);
+    expect(mult).toBe(result.activityMultiplier);
+    expect(s.steps[1].label).toContain(result.activityLabel);
+    expect(Math.round(bmr * mult)).toBe(maintenance);
+    expect(maintenance).toBe(result.maintenanceCalories);
+  });
+
+  it('maintenance plus the deficit is the target intake', () => {
+    const s = sec(w, /^The deficit$/);
+    const maintenance = numOf(s.steps[0].value);
+    const delta = numOf(s.steps[1].value);
+    const target = numOf(s.steps.find((x) => x.kind === 'total').value);
+    expect(maintenance).toBe(result.maintenanceCalories);
+    expect(delta).toBe(result.calorieDeficitOrSurplus);
+    expect(delta).toBeLessThan(0);
+    expect(maintenance + delta).toBe(target);
+    expect(target).toBe(result.goalCalories);
+  });
+
+  it('labels the section a surplus when gaining, and the delta is positive', () => {
+    const inp = { ...loseInputs, goalType: 'gain', goalWeightKg: 95, goalWeeks: 30 };
+    const r = calcHealth(inp);
+    const gw = explainHealth(r, inp);
+    const s = sec(gw, /^The surplus$/);
+    expect(s).toBeTruthy();
+    expect(numOf(s.steps[1].value)).toBe(r.calorieDeficitOrSurplus);
+    expect(r.calorieDeficitOrSurplus).toBeGreaterThan(0);
+    expect(numOf(s.steps[0].value) + numOf(s.steps[1].value))
+      .toBe(numOf(s.steps.find((x) => x.kind === 'total').value));
+  });
+
+  it('converts the daily gap to a weekly weight change at 7,700 kcal per kg', () => {
+    const s = sec(w, /Turning that into weight/);
+    const daily = numOf(s.steps[0].value);
+    const weekly = numOf(s.steps[1].value);
+    const perKg = numOf(s.steps[2].value);
+    const change = numOf(s.steps.find((x) => x.kind === 'total').value);
+    expect(daily).toBe(result.calorieDeficitOrSurplus);
+    expect(weekly).toBeCloseTo(daily * 7, 6);
+    expect(perKg).toBe(H.kcalPerKg);
+    expect(weekly / perKg).toBeCloseTo(change, 2);
+    expect(change).toBe(result.weeklyWeightChange);
+  });
+
+  it('shows BMR falling as weight comes off, and reconciles the drop', () => {
+    const s = sec(w, /projection slows/);
+    const start = numOf(s.steps[0].value);
+    const end = numOf(s.steps[1].value);
+    const drop = numOf(s.steps.find((x) => x.kind === 'total').value);
+    expect(start).toBe(result.projection.startBmr);
+    expect(end).toBe(result.projection.endBmr);
+    expect(start - end).toBe(drop);
+    expect(drop).toBe(result.projection.bmrDrop);
+    expect(drop).toBeGreaterThan(0);
+    expect(s.note).toMatch(/flat-TDEE projection hides this/);
+  });
+
+  it('every rendered number is finite', () => {
+    for (const s of allSteps(w)) {
+      const raw = String(s.value ?? '');
+      if (!/\d/.test(raw)) continue;
+      expect(Number.isFinite(numOf(raw)), `${s.label} = ${raw}`).toBe(true);
+    }
+  });
+
+  // ── The hard blocks (§7.4). The blocked target must not appear anywhere. ──
+
+  const rateOnly = {
+    heightCm: 185, weightKg: 120, age: 30, sex: 'male', activityLevel: 'athlete',
+    goalType: 'lose', goalWeightKg: 112, goalWeeks: 5, date: '2026-09-10',
+  };
+  const floorOnly = {
+    heightCm: 160, weightKg: 55, age: 45, sex: 'female', activityLevel: 'sedentary',
+    goalType: 'lose', goalWeightKg: 52, goalWeeks: 6, date: '2026-09-10',
+  };
+  const bothBlocks = {
+    heightCm: 180, weightKg: 90, age: 35, sex: 'male', activityLevel: 'sedentary',
+    goalType: 'lose', goalWeightKg: 60, goalWeeks: 10, date: '2026-09-10',
+  };
+
+  it.each([
+    ['rate above the safe band', rateOnly, ['RATE_ABOVE_SAFE_BAND']],
+    ['intake below the floor', floorOnly, ['BELOW_MINIMUM_INTAKE']],
+    ['both at once', bothBlocks, ['RATE_ABOVE_SAFE_BAND', 'BELOW_MINIMUM_INTAKE']],
+  ])('withholds the target when %s', (_label, inp, codes) => {
+    const r = calcHealth(inp);
+    expect(r.goalBlocked).toBe(true);
+    expect(r.blockReasons.map((b) => b.code)).toEqual(codes);
+
+    const bw = explainHealth(r, inp);
+    // The blocked figure itself never reaches the panel, in any form.
+    expect(numbersIn(bw)).not.toContain(r.requested.requestedCalories);
+    expect(panelText(bw)).not.toMatch(/Target intake/);
+    // Nor do the sections that would derive it.
+    expect(headings(bw)).not.toContain('The deficit');
+    expect(headings(bw)).not.toContain('The surplus');
+    expect(headings(bw)).not.toContain('Turning that into weight');
+    expect(headings(bw)).not.toContain('Why the projection slows down');
+    // What it does instead: explain the withholding.
+    expect(headings(bw)).toContain('Your goal — no target is shown');
+    for (const b of r.blockReasons) {
+      expect(panelText(bw)).toContain(b.title);
+    }
+    expect(panelText(bw)).toMatch(/deliberately not shown/);
+    // BMR and maintenance are not blocked and are still explained.
+    expect(headings(bw)).toContain('Resting metabolism (Mifflin-St Jeor)');
+    expect(val(bw, /^BMR$/)).toBe(r.bmr);
+  });
+
+  it('shows the safe ceiling only for a rate block and the floor only for a floor block', () => {
+    const rw = explainHealth(calcHealth(rateOnly), rateOnly);
+    const fw = explainHealth(calcHealth(floorOnly), floorOnly);
+    expect(find(rw, /^Ceiling at/)).toBeTruthy();
+    expect(find(rw, /^Minimum intake for/)).toBeUndefined();
+    expect(find(fw, /^Minimum intake for/)).toBeTruthy();
+    expect(find(fw, /^Ceiling at/)).toBeUndefined();
+    expect(val(rw, /^Ceiling at/)).toBe(calcHealth(rateOnly).requested.safeRateCeilingKgPerWeek);
+    expect(val(fw, /^Minimum intake for/)).toBe(calcHealth(floorOnly).minIntake);
+  });
+
+  it('every rendered number in a blocked panel is finite', () => {
+    for (const inp of [rateOnly, floorOnly, bothBlocks]) {
+      const bw = explainHealth(calcHealth(inp), inp);
+      for (const s of allSteps(bw)) {
+        const raw = String(s.value ?? '');
+        if (!/\d/.test(raw)) continue;
+        expect(Number.isFinite(numOf(raw)), `${s.label} = ${raw}`).toBe(true);
+      }
+    }
+  });
+
+  // ── The other states ──
+
+  it('a maintain plan gets BMR and maintenance and nothing further', () => {
+    const inp = { ...loseInputs, goalType: 'maintain', goalWeightKg: null };
+    const mw = explainHealth(calcHealth(inp), inp);
+    expect(headings(mw)).toEqual([
+      'Resting metabolism (Mifflin-St Jeor)',
+      'Maintenance calories',
+      'Your goal',
+    ]);
+    expect(panelText(mw)).toMatch(/No goal set/);
+  });
+
+  it('a goal weight pointing the wrong way is explained, not calculated', () => {
+    const inp = { ...loseInputs, goalType: 'lose', goalWeightKg: 95 };
+    const r = calcHealth(inp);
+    expect(r.goalCalories).toBeNull();
+    const dw = explainHealth(r, inp);
+    expect(headings(dw)).toContain('Your goal');
+    expect(headings(dw)).not.toContain('The deficit');
+    expect(panelText(dw)).toMatch(/does not match the goal direction/);
+  });
+
+  it('renders nothing at all for someone under 18', () => {
+    const inp = { ...loseInputs, age: 15 };
+    const uw = explainHealth(calcHealth(inp), inp);
+    expect(uw.sections).toEqual([]);
   });
 });
