@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import PayTaxInstance from './PayTaxInstance.jsx';
 import AdUnit from './AdUnit.jsx';
 import { VersionFooter } from './VersionFooter.jsx';
+import PageHead from './PageHead.jsx';
 import './PayTaxCalc.css';
 
 const AD_SLOT_BANNER  = 'XXXXXXXXXX';
@@ -92,6 +93,7 @@ export default function PayTaxCalc() {
 
   return (
     <div className="calc-page">
+      <PageHead calcId="paytax" />
       <div className="calc-topbar">
         <Link to="/" className="calc-brand">2176 Studios<span className="brand-dot" /></Link>
         <div className="topbar-actions">

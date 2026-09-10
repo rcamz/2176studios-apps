@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { VersionStocktake } from './VersionFooter.jsx';
+import PageHead from './PageHead.jsx';
 import './Home.css';
 
 const IconBubble = () => (
@@ -155,6 +156,7 @@ export default function Home() {
 
   return (
     <div className="home-wrap">
+      <PageHead calcId="home" />
       <div className="calc-topbar">
         <span className="calc-brand">2176 Studios<span className="brand-dot" /></span>
         <div className="topbar-actions">

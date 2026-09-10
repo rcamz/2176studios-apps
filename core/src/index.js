@@ -23,3 +23,4 @@ export * from './rentvbuy.js';
 export * from './format.js';
 export * from './workings.js';
 export * from './appRoutes.js';
+export * from './appMeta.js';

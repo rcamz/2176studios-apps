@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import RentVBuyInstance from './RentVBuyInstance.jsx';
 import AdUnit from './AdUnit.jsx';
 import { VersionFooter } from './VersionFooter.jsx';
+import PageHead from './PageHead.jsx';
 import './RentVBuyCalc.css';
 
 const AD_SLOT_BANNER  = 'XXXXXXXXXX';
@@ -33,6 +34,7 @@ export default function RentVBuyCalc() {
 
   return (
     <div className="calc-page">
+      <PageHead calcId="rentvbuy" />
       <div className="calc-topbar">
         <Link to="/" className="calc-brand">2176 Studios<span className="brand-dot" /></Link>
         <div className="topbar-actions">

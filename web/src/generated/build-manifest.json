@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-09-10T06:18:40.962Z",
-  "generatedFrom": "a2826fa",
+  "generatedAt": "2026-09-10T06:27:44.945Z",
+  "generatedFrom": "538ee2e",
   "files": {
     "web/src/Home.jsx": {
-      "lastCommit": "2ab3af8",
-      "lastDate": "2026-09-10T03:29:51+00:00",
-      "lastSubject": "Add per-calculator versioning and a build stocktake",
-      "commits": 7
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T06:27:44.945Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 8
     },
     "web/src/Home.css": {
       "lastCommit": "2ab3af8",
@@ -21,10 +21,10 @@
       "commits": 34
     },
     "web/src/MortgageCalc.jsx": {
-      "lastCommit": "2ab3af8",
-      "lastDate": "2026-09-10T03:29:51+00:00",
-      "lastSubject": "Add per-calculator versioning and a build stocktake",
-      "commits": 33
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T06:27:44.945Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 34
     },
     "web/src/PayTaxInstance.jsx": {
       "lastCommit": "766abde",
@@ -33,10 +33,10 @@
       "commits": 9
     },
     "web/src/PayTaxCalc.jsx": {
-      "lastCommit": "2ab3af8",
-      "lastDate": "2026-09-10T03:29:51+00:00",
-      "lastSubject": "Add per-calculator versioning and a build stocktake",
-      "commits": 34
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T06:27:44.945Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 4
     },
     "web/src/BorrowingPowerInstance.jsx": {
       "lastCommit": "b2eac37",
@@ -45,10 +45,10 @@
       "commits": 3
     },
     "web/src/BorrowingPowerCalc.jsx": {
-      "lastCommit": "2ab3af8",
-      "lastDate": "2026-09-10T03:29:51+00:00",
-      "lastSubject": "Add per-calculator versioning and a build stocktake",
-      "commits": 2
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T06:27:44.945Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 3
     },
     "core/src/borrowingpower.js": {
       "lastCommit": "fa6255c",
@@ -63,10 +63,10 @@
       "commits": 3
     },
     "web/src/RentVBuyCalc.jsx": {
-      "lastCommit": "2ab3af8",
-      "lastDate": "2026-09-10T03:29:51+00:00",
-      "lastSubject": "Add per-calculator versioning and a build stocktake",
-      "commits": 2
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T06:27:44.945Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 3
     },
     "core/src/rentvbuy.js": {
       "lastCommit": "fa6255c",
@@ -81,10 +81,10 @@
       "commits": 3
     },
     "web/src/CGTCalc.jsx": {
-      "lastCommit": "2ab3af8",
-      "lastDate": "2026-09-10T03:29:51+00:00",
-      "lastSubject": "Add per-calculator versioning and a build stocktake",
-      "commits": 34
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T06:27:44.945Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 3
     },
     "core/src/cgt.js": {
       "lastCommit": "fa6255c",
@@ -99,10 +99,10 @@
       "commits": 3
     },
     "web/src/RedundancyCalc.jsx": {
-      "lastCommit": "2ab3af8",
-      "lastDate": "2026-09-10T03:29:51+00:00",
-      "lastSubject": "Add per-calculator versioning and a build stocktake",
-      "commits": 2
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T06:27:44.945Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 3
     },
     "core/src/redundancy.js": {
       "lastCommit": "fa6255c",
@@ -117,10 +117,10 @@
       "commits": 3
     },
     "web/src/SalarySacrificeCalc.jsx": {
-      "lastCommit": "2ab3af8",
-      "lastDate": "2026-09-10T03:29:51+00:00",
-      "lastSubject": "Add per-calculator versioning and a build stocktake",
-      "commits": 2
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T06:27:44.945Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 3
     },
     "core/src/salarysacrifice.js": {
       "lastCommit": "fa6255c",
@@ -135,10 +135,10 @@
       "commits": 3
     },
     "web/src/FHSSSCalc.jsx": {
-      "lastCommit": "2ab3af8",
-      "lastDate": "2026-09-10T03:29:51+00:00",
-      "lastSubject": "Add per-calculator versioning and a build stocktake",
-      "commits": 2
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T06:27:44.945Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 3
     },
     "core/src/fhsss.js": {
       "lastCommit": "fa6255c",
@@ -153,10 +153,10 @@
       "commits": 3
     },
     "web/src/RetirementCalc.jsx": {
-      "lastCommit": "2ab3af8",
-      "lastDate": "2026-09-10T03:29:51+00:00",
-      "lastSubject": "Add per-calculator versioning and a build stocktake",
-      "commits": 2
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T06:27:44.945Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 3
     },
     "core/src/retirement.js": {
       "lastCommit": "fa6255c",
@@ -171,10 +171,10 @@
       "commits": 3
     },
     "web/src/NovatedLeaseCalc.jsx": {
-      "lastCommit": "2ab3af8",
-      "lastDate": "2026-09-10T03:29:51+00:00",
-      "lastSubject": "Add per-calculator versioning and a build stocktake",
-      "commits": 2
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T06:27:44.945Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 3
     },
     "core/src/novatedlease.js": {
       "lastCommit": "fa6255c",
@@ -189,10 +189,10 @@
       "commits": 3
     },
     "web/src/SavingsCalc.jsx": {
-      "lastCommit": "2ab3af8",
-      "lastDate": "2026-09-10T03:29:51+00:00",
-      "lastSubject": "Add per-calculator versioning and a build stocktake",
-      "commits": 2
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T06:27:44.945Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 3
     },
     "core/src/savings.js": {
       "lastCommit": "fa6255c",
@@ -207,10 +207,10 @@
       "commits": 4
     },
     "web/src/HealthCalc.jsx": {
-      "lastCommit": "2ab3af8",
-      "lastDate": "2026-09-10T03:29:51+00:00",
-      "lastSubject": "Add per-calculator versioning and a build stocktake",
-      "commits": 2
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T06:27:44.945Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 3
     },
     "core/src/health.js": {
       "lastCommit": "fa6255c",

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import FHSSSInstance from './FHSSSInstance.jsx';
 import AdUnit from './AdUnit.jsx';
 import { VersionFooter } from './VersionFooter.jsx';
+import PageHead from './PageHead.jsx';
 import './FHSSSCalc.css';
 
 const AD_SLOT_BANNER  = 'XXXXXXXXXX';
@@ -33,6 +34,7 @@ export default function FHSSSCalc() {
 
   return (
     <div className="calc-page">
+      <PageHead calcId="fhsss" />
       <div className="calc-topbar">
         <Link to="/" className="calc-brand">2176 Studios<span className="brand-dot" /></Link>
         <div className="topbar-actions">
