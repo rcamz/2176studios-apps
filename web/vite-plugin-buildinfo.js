@@ -55,12 +55,16 @@ export default function buildInfo({ paths = [], root = '..', snapshotFile = 'src
 
     if (perFileAvailable) {
       for (const p of paths) {
-        // A path may be a directory; -- <path> works for both.
+        // --follow traces a file through renames, so moving the calculation
+        // core into its own package does not reset every file's history to
+        // the move commit. It only accepts a single file, not a directory.
+        const isDir = !p.endsWith('.js') && !p.endsWith('.jsx') && !p.endsWith('.css');
+        const follow = isDir ? '' : '--follow ';
         files[p] = {
-          lastCommit: git(`${cwd} log -1 --format=%h -- "${p}"`),
-          lastDate: git(`${cwd} log -1 --format=%cI -- "${p}"`),
-          lastSubject: git(`${cwd} log -1 --format=%s -- "${p}"`),
-          commits: Number(git(`${cwd} rev-list --count HEAD -- "${p}"`, '0')) || 0,
+          lastCommit: git(`${cwd} log -1 ${follow}--format=%h -- "${p}"`),
+          lastDate: git(`${cwd} log -1 ${follow}--format=%cI -- "${p}"`),
+          lastSubject: git(`${cwd} log -1 ${follow}--format=%s -- "${p}"`),
+          commits: Number(git(`${cwd} rev-list --count ${follow}HEAD -- "${p}"`, '0')) || 0,
         };
       }
     } else if (snapshot?.files) {

@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "defaultMode": "bypassPermissions",
+    "allow": [
+      "Bash(git init *)",
+      "Bash(git remote *)",
+      "Bash(git branch *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(git fetch *)",
+      "Bash(sed -i 's/value={inputs\\\\.loanAmount}/value={inputs.loanAmount || '\\\\'''\\\\''}/g' MortgageCalc.jsx)",
+      "Bash(sed -i 's/value={inputs\\\\.termYears}/value={inputs.termYears || '\\\\'''\\\\''}/g' MortgageCalc.jsx)",
+      "Bash(sed -i 's/value={inputs\\\\.annualRatePercent}/value={inputs.annualRatePercent || '\\\\'''\\\\''}/g' MortgageCalc.jsx)",
+      "Bash(sed -i 's/value={inputs\\\\.fixedRatePercent}/value={inputs.fixedRatePercent || '\\\\'''\\\\''}/g' MortgageCalc.jsx)",
+      "Bash(sed -i 's/value={inputs\\\\.fixedPeriodYears}/value={inputs.fixedPeriodYears || '\\\\'''\\\\''}/g' MortgageCalc.jsx)"
+    ]
+  }
+}

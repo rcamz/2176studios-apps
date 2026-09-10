@@ -1,282 +1,288 @@
 {
-  "generatedAt": "2026-09-10T04:29:51.392Z",
-  "generatedFrom": "766abde",
+  "generatedAt": "2026-09-10T05:52:17.502Z",
+  "generatedFrom": "b2eac37",
   "files": {
     "web/src/Home.jsx": {
       "lastCommit": "2ab3af8",
       "lastDate": "2026-09-10T03:29:51+00:00",
       "lastSubject": "Add per-calculator versioning and a build stocktake",
-      "commits": 7
+      "commits": 0
     },
     "web/src/Home.css": {
       "lastCommit": "2ab3af8",
       "lastDate": "2026-09-10T03:29:51+00:00",
       "lastSubject": "Add per-calculator versioning and a build stocktake",
-      "commits": 3
+      "commits": 0
     },
     "web/src/CalcInstance.jsx": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T04:29:51.392Z",
-      "lastSubject": "Uncommitted at snapshot time",
-      "commits": 9
+      "lastCommit": "b2eac37",
+      "lastDate": "2026-09-10T04:30:00+00:00",
+      "lastSubject": "Complete the workings panel across all twelve calculators",
+      "commits": 0
     },
     "web/src/MortgageCalc.jsx": {
       "lastCommit": "2ab3af8",
       "lastDate": "2026-09-10T03:29:51+00:00",
       "lastSubject": "Add per-calculator versioning and a build stocktake",
-      "commits": 33
+      "commits": 0
     },
     "web/src/PayTaxInstance.jsx": {
       "lastCommit": "766abde",
       "lastDate": "2026-09-10T04:01:19+00:00",
       "lastSubject": "Add the show-the-workings panel, starting with Pay/Tax",
-      "commits": 9
+      "commits": 0
     },
     "web/src/PayTaxCalc.jsx": {
       "lastCommit": "2ab3af8",
       "lastDate": "2026-09-10T03:29:51+00:00",
       "lastSubject": "Add per-calculator versioning and a build stocktake",
-      "commits": 3
+      "commits": 0
     },
     "web/src/BorrowingPowerInstance.jsx": {
-      "lastCommit": "5a34c08",
-      "lastDate": "2026-09-10T03:13:56+00:00",
-      "lastSubject": "Borrowing Power rebuild; Pay/Tax year selector and deductions",
-      "commits": 2
+      "lastCommit": "b2eac37",
+      "lastDate": "2026-09-10T04:30:00+00:00",
+      "lastSubject": "Complete the workings panel across all twelve calculators",
+      "commits": 0
     },
     "web/src/BorrowingPowerCalc.jsx": {
       "lastCommit": "2ab3af8",
       "lastDate": "2026-09-10T03:29:51+00:00",
       "lastSubject": "Add per-calculator versioning and a build stocktake",
-      "commits": 2
+      "commits": 0
     },
-    "web/src/lib/borrowingpower.js": {
+    "core/src/borrowingpower.js": {
       "lastCommit": "pending",
-      "lastDate": "2026-09-10T04:29:51.392Z",
+      "lastDate": "2026-09-10T05:52:17.502Z",
       "lastSubject": "Uncommitted at snapshot time",
-      "commits": 3
+      "commits": 1
     },
     "web/src/RentVBuyInstance.jsx": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T04:29:51.392Z",
-      "lastSubject": "Uncommitted at snapshot time",
-      "commits": 3
+      "lastCommit": "b2eac37",
+      "lastDate": "2026-09-10T04:30:00+00:00",
+      "lastSubject": "Complete the workings panel across all twelve calculators",
+      "commits": 0
     },
     "web/src/RentVBuyCalc.jsx": {
       "lastCommit": "2ab3af8",
       "lastDate": "2026-09-10T03:29:51+00:00",
       "lastSubject": "Add per-calculator versioning and a build stocktake",
-      "commits": 2
+      "commits": 0
     },
-    "web/src/lib/rentvbuy.js": {
+    "core/src/rentvbuy.js": {
       "lastCommit": "pending",
-      "lastDate": "2026-09-10T04:29:51.392Z",
+      "lastDate": "2026-09-10T05:52:17.502Z",
       "lastSubject": "Uncommitted at snapshot time",
-      "commits": 3
+      "commits": 1
     },
     "web/src/CGTInstance.jsx": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T04:29:51.392Z",
-      "lastSubject": "Uncommitted at snapshot time",
-      "commits": 3
+      "lastCommit": "b2eac37",
+      "lastDate": "2026-09-10T04:30:00+00:00",
+      "lastSubject": "Complete the workings panel across all twelve calculators",
+      "commits": 0
     },
     "web/src/CGTCalc.jsx": {
       "lastCommit": "2ab3af8",
       "lastDate": "2026-09-10T03:29:51+00:00",
       "lastSubject": "Add per-calculator versioning and a build stocktake",
-      "commits": 2
+      "commits": 0
     },
-    "web/src/lib/cgt.js": {
+    "core/src/cgt.js": {
       "lastCommit": "pending",
-      "lastDate": "2026-09-10T04:29:51.392Z",
+      "lastDate": "2026-09-10T05:52:17.502Z",
       "lastSubject": "Uncommitted at snapshot time",
-      "commits": 3
+      "commits": 1
     },
     "web/src/RedundancyInstance.jsx": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T04:29:51.392Z",
-      "lastSubject": "Uncommitted at snapshot time",
-      "commits": 3
+      "lastCommit": "b2eac37",
+      "lastDate": "2026-09-10T04:30:00+00:00",
+      "lastSubject": "Complete the workings panel across all twelve calculators",
+      "commits": 0
     },
     "web/src/RedundancyCalc.jsx": {
       "lastCommit": "2ab3af8",
       "lastDate": "2026-09-10T03:29:51+00:00",
       "lastSubject": "Add per-calculator versioning and a build stocktake",
-      "commits": 2
+      "commits": 0
     },
-    "web/src/lib/redundancy.js": {
+    "core/src/redundancy.js": {
       "lastCommit": "pending",
-      "lastDate": "2026-09-10T04:29:51.392Z",
+      "lastDate": "2026-09-10T05:52:17.502Z",
       "lastSubject": "Uncommitted at snapshot time",
-      "commits": 3
+      "commits": 1
     },
     "web/src/SalarySacrificeInstance.jsx": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T04:29:51.392Z",
-      "lastSubject": "Uncommitted at snapshot time",
-      "commits": 3
+      "lastCommit": "b2eac37",
+      "lastDate": "2026-09-10T04:30:00+00:00",
+      "lastSubject": "Complete the workings panel across all twelve calculators",
+      "commits": 0
     },
     "web/src/SalarySacrificeCalc.jsx": {
       "lastCommit": "2ab3af8",
       "lastDate": "2026-09-10T03:29:51+00:00",
       "lastSubject": "Add per-calculator versioning and a build stocktake",
-      "commits": 2
+      "commits": 0
     },
-    "web/src/lib/salarysacrifice.js": {
+    "core/src/salarysacrifice.js": {
       "lastCommit": "pending",
-      "lastDate": "2026-09-10T04:29:51.392Z",
+      "lastDate": "2026-09-10T05:52:17.502Z",
       "lastSubject": "Uncommitted at snapshot time",
-      "commits": 3
+      "commits": 1
     },
     "web/src/FHSSSInstance.jsx": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T04:29:51.392Z",
-      "lastSubject": "Uncommitted at snapshot time",
-      "commits": 3
+      "lastCommit": "b2eac37",
+      "lastDate": "2026-09-10T04:30:00+00:00",
+      "lastSubject": "Complete the workings panel across all twelve calculators",
+      "commits": 0
     },
     "web/src/FHSSSCalc.jsx": {
       "lastCommit": "2ab3af8",
       "lastDate": "2026-09-10T03:29:51+00:00",
       "lastSubject": "Add per-calculator versioning and a build stocktake",
-      "commits": 2
+      "commits": 0
     },
-    "web/src/lib/fhsss.js": {
+    "core/src/fhsss.js": {
       "lastCommit": "pending",
-      "lastDate": "2026-09-10T04:29:51.392Z",
+      "lastDate": "2026-09-10T05:52:17.502Z",
       "lastSubject": "Uncommitted at snapshot time",
-      "commits": 3
+      "commits": 1
     },
     "web/src/RetirementInstance.jsx": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T04:29:51.392Z",
-      "lastSubject": "Uncommitted at snapshot time",
-      "commits": 3
+      "lastCommit": "b2eac37",
+      "lastDate": "2026-09-10T04:30:00+00:00",
+      "lastSubject": "Complete the workings panel across all twelve calculators",
+      "commits": 0
     },
     "web/src/RetirementCalc.jsx": {
       "lastCommit": "2ab3af8",
       "lastDate": "2026-09-10T03:29:51+00:00",
       "lastSubject": "Add per-calculator versioning and a build stocktake",
-      "commits": 2
+      "commits": 0
     },
-    "web/src/lib/retirement.js": {
+    "core/src/retirement.js": {
       "lastCommit": "pending",
-      "lastDate": "2026-09-10T04:29:51.392Z",
+      "lastDate": "2026-09-10T05:52:17.502Z",
       "lastSubject": "Uncommitted at snapshot time",
-      "commits": 3
+      "commits": 1
     },
     "web/src/NovatedLeaseInstance.jsx": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T04:29:51.392Z",
-      "lastSubject": "Uncommitted at snapshot time",
-      "commits": 3
+      "lastCommit": "b2eac37",
+      "lastDate": "2026-09-10T04:30:00+00:00",
+      "lastSubject": "Complete the workings panel across all twelve calculators",
+      "commits": 0
     },
     "web/src/NovatedLeaseCalc.jsx": {
       "lastCommit": "2ab3af8",
       "lastDate": "2026-09-10T03:29:51+00:00",
       "lastSubject": "Add per-calculator versioning and a build stocktake",
-      "commits": 2
+      "commits": 0
     },
-    "web/src/lib/novatedlease.js": {
+    "core/src/novatedlease.js": {
       "lastCommit": "pending",
-      "lastDate": "2026-09-10T04:29:51.392Z",
+      "lastDate": "2026-09-10T05:52:17.502Z",
       "lastSubject": "Uncommitted at snapshot time",
-      "commits": 3
+      "commits": 1
     },
     "web/src/SavingsInstance.jsx": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T04:29:51.392Z",
-      "lastSubject": "Uncommitted at snapshot time",
-      "commits": 3
+      "lastCommit": "b2eac37",
+      "lastDate": "2026-09-10T04:30:00+00:00",
+      "lastSubject": "Complete the workings panel across all twelve calculators",
+      "commits": 0
     },
     "web/src/SavingsCalc.jsx": {
       "lastCommit": "2ab3af8",
       "lastDate": "2026-09-10T03:29:51+00:00",
       "lastSubject": "Add per-calculator versioning and a build stocktake",
-      "commits": 2
+      "commits": 0
     },
-    "web/src/lib/savings.js": {
+    "core/src/savings.js": {
       "lastCommit": "pending",
-      "lastDate": "2026-09-10T04:29:51.392Z",
+      "lastDate": "2026-09-10T05:52:17.502Z",
       "lastSubject": "Uncommitted at snapshot time",
-      "commits": 3
+      "commits": 1
     },
     "web/src/HealthInstance.jsx": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T04:29:51.392Z",
-      "lastSubject": "Uncommitted at snapshot time",
-      "commits": 4
+      "lastCommit": "b2eac37",
+      "lastDate": "2026-09-10T04:30:00+00:00",
+      "lastSubject": "Complete the workings panel across all twelve calculators",
+      "commits": 0
     },
     "web/src/HealthCalc.jsx": {
       "lastCommit": "2ab3af8",
       "lastDate": "2026-09-10T03:29:51+00:00",
       "lastSubject": "Add per-calculator versioning and a build stocktake",
-      "commits": 2
+      "commits": 0
     },
-    "web/src/lib/health.js": {
+    "core/src/health.js": {
       "lastCommit": "pending",
-      "lastDate": "2026-09-10T04:29:51.392Z",
+      "lastDate": "2026-09-10T05:52:17.502Z",
       "lastSubject": "Uncommitted at snapshot time",
-      "commits": 4
-    },
-    "web/src/lib/rates": {
-      "lastCommit": "d1eef8e",
-      "lastDate": "2026-09-10T03:05:21+00:00",
-      "lastSubject": "Rewrite eight calculators against the verified rates",
-      "commits": 2
-    },
-    "web/src/lib/paytax.js": {
-      "lastCommit": "766abde",
-      "lastDate": "2026-09-10T04:01:19+00:00",
-      "lastSubject": "Add the show-the-workings panel, starting with Pay/Tax",
-      "commits": 6
-    },
-    "web/src/lib/amortize.js": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T04:29:51.392Z",
-      "lastSubject": "Uncommitted at snapshot time",
-      "commits": 4
-    },
-    "web/src/lib/stampduty.js": {
-      "lastCommit": "a5ef7fc",
-      "lastDate": "2026-09-10T01:33:04+00:00",
-      "lastSubject": "Rebuild stamp duty for all eight jurisdictions, contract-date keyed",
       "commits": 1
     },
-    "web/src/lib/lmi.js": {
-      "lastCommit": "0ef3910",
-      "lastDate": "2026-09-10T02:44:45+00:00",
-      "lastSubject": "Mortgage: fix offset and extras bugs, add fortnightly repayments and LMI",
+    "core/src/rates": {
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T05:52:17.502Z",
+      "lastSubject": "Uncommitted at snapshot time",
       "commits": 1
     },
-    "web/src/lib/format.js": {
-      "lastCommit": "5f63afd",
-      "lastDate": "2026-09-10T01:25:34+00:00",
-      "lastSubject": "Rewrite tax engine against verified FY2026-27 rates",
+    "core/src/paytax.js": {
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T05:52:17.502Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 1
+    },
+    "core/src/amortize.js": {
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T05:52:17.502Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 1
+    },
+    "core/src/stampduty.js": {
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T05:52:17.502Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 1
+    },
+    "core/src/lmi.js": {
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T05:52:17.502Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 1
+    },
+    "core/src/format.js": {
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T05:52:17.502Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 1
+    },
+    "core/src/workings.js": {
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T05:52:17.502Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 1
+    },
+    "core/src/vectors": {
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T05:52:17.502Z",
+      "lastSubject": "Uncommitted at snapshot time",
       "commits": 1
     },
     "web/src/lib/urlState.js": {
       "lastCommit": "5f63afd",
       "lastDate": "2026-09-10T01:25:34+00:00",
       "lastSubject": "Rewrite tax engine against verified FY2026-27 rates",
-      "commits": 1
-    },
-    "web/src/lib/vectors": {
-      "lastCommit": "a5ef7fc",
-      "lastDate": "2026-09-10T01:33:04+00:00",
-      "lastSubject": "Rebuild stamp duty for all eight jurisdictions, contract-date keyed",
-      "commits": 2
+      "commits": 0
     },
     "web/src/calc-shared.css": {
       "lastCommit": "766abde",
       "lastDate": "2026-09-10T04:01:19+00:00",
       "lastSubject": "Add the show-the-workings panel, starting with Pay/Tax",
-      "commits": 4
+      "commits": 0
     },
     "web/src/base.css": {
       "lastCommit": "57889a3",
       "lastDate": "2026-09-09T09:50:25+00:00",
       "lastSubject": "Desktop comparison mode + mobile/desktop split layout",
-      "commits": 5
+      "commits": 0
     }
   }
 }

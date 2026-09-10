@@ -4,6 +4,13 @@
   "private": true,
   "main": "src/index.js",
   "scripts": {
-    "test": "node --test"
+    "test": "echo \"Tests run from the web workspace, which owns the vitest install\" && exit 0"
+  },
+  "description": "Platform-agnostic calculation core shared by the web build and each standalone app",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.js",
+    "./rates": "./src/rates/index.js",
+    "./*": "./src/*.js"
   }
 }

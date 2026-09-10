@@ -19,14 +19,14 @@ const S = (id, name, path) => ({ id, name, path });
 // in every calculator that imports it, which is why dependants inherit the
 // date rather than appearing untouched.
 export const SHARED = [
-  S('rates',      'Rates registry (FY2026-27)', 'web/src/lib/rates'),
-  S('paytax',     'Tax engine',                 'web/src/lib/paytax.js'),
-  S('amortize',   'Amortisation engine',        'web/src/lib/amortize.js'),
-  S('stampduty',  'Stamp duty, 8 jurisdictions','web/src/lib/stampduty.js'),
-  S('lmi',        'Lenders mortgage insurance', 'web/src/lib/lmi.js'),
-  S('format',     'Shared formatters',          'web/src/lib/format.js'),
+  S('rates',      'Rates registry (FY2026-27)', 'core/src/rates'),
+  S('paytax',     'Tax engine',                 'core/src/paytax.js'),
+  S('amortize',   'Amortisation engine',        'core/src/amortize.js'),
+  S('stampduty',  'Stamp duty, 8 jurisdictions','core/src/stampduty.js'),
+  S('lmi',        'Lenders mortgage insurance', 'core/src/lmi.js'),
+  S('format',     'Shared formatters',          'core/src/format.js'),
   S('urlState',   'URL state helpers',          'web/src/lib/urlState.js'),
-  S('vectors',    'Regression test vectors',    'web/src/lib/vectors'),
+  S('vectors',    'Regression test vectors',    'core/src/vectors'),
   S('styles',     'Shared stylesheet',          'web/src/calc-shared.css'),
   S('tokens',     'Design tokens',              'web/src/base.css'),
 ];
@@ -53,52 +53,52 @@ export const CALCS = [
   },
   {
     id: 'borrowingpower', name: 'Borrowing Power', href: '/borrowingpowercalc', version: '2.0.0',
-    paths: ['web/src/BorrowingPowerInstance.jsx', 'web/src/BorrowingPowerCalc.jsx', 'web/src/lib/borrowingpower.js'],
+    paths: ['web/src/BorrowingPowerInstance.jsx', 'web/src/BorrowingPowerCalc.jsx', 'core/src/borrowingpower.js'],
     deps: ['paytax', 'rates', 'lmi', 'format', 'urlState', 'styles', 'tokens'],
   },
   {
     id: 'rentvbuy', name: 'Rent vs. Buy', href: '/rentvbuycalc', version: '2.0.0',
-    paths: ['web/src/RentVBuyInstance.jsx', 'web/src/RentVBuyCalc.jsx', 'web/src/lib/rentvbuy.js'],
+    paths: ['web/src/RentVBuyInstance.jsx', 'web/src/RentVBuyCalc.jsx', 'core/src/rentvbuy.js'],
     deps: ['amortize', 'stampduty', 'lmi', 'paytax', 'rates', 'format', 'urlState', 'styles', 'tokens'],
   },
   {
     id: 'cgt', name: 'Capital Gains Tax', href: '/cgtcalc', version: '2.0.0',
-    paths: ['web/src/CGTInstance.jsx', 'web/src/CGTCalc.jsx', 'web/src/lib/cgt.js'],
+    paths: ['web/src/CGTInstance.jsx', 'web/src/CGTCalc.jsx', 'core/src/cgt.js'],
     deps: ['paytax', 'rates', 'format', 'urlState', 'styles', 'tokens'],
   },
   {
     id: 'redundancy', name: 'Redundancy Pay', href: '/redundancycalc', version: '2.0.0',
-    paths: ['web/src/RedundancyInstance.jsx', 'web/src/RedundancyCalc.jsx', 'web/src/lib/redundancy.js'],
+    paths: ['web/src/RedundancyInstance.jsx', 'web/src/RedundancyCalc.jsx', 'core/src/redundancy.js'],
     deps: ['paytax', 'rates', 'format', 'urlState', 'styles', 'tokens'],
   },
   {
     id: 'salarysacrifice', name: 'Salary Sacrifice', href: '/salarysacrificecalc', version: '2.0.0',
-    paths: ['web/src/SalarySacrificeInstance.jsx', 'web/src/SalarySacrificeCalc.jsx', 'web/src/lib/salarysacrifice.js'],
+    paths: ['web/src/SalarySacrificeInstance.jsx', 'web/src/SalarySacrificeCalc.jsx', 'core/src/salarysacrifice.js'],
     deps: ['paytax', 'rates', 'format', 'urlState', 'styles', 'tokens'],
   },
   {
     id: 'fhsss', name: 'First Home Super Saver', href: '/fhssscalc', version: '2.0.0',
-    paths: ['web/src/FHSSSInstance.jsx', 'web/src/FHSSSCalc.jsx', 'web/src/lib/fhsss.js'],
+    paths: ['web/src/FHSSSInstance.jsx', 'web/src/FHSSSCalc.jsx', 'core/src/fhsss.js'],
     deps: ['paytax', 'rates', 'format', 'urlState', 'styles', 'tokens'],
   },
   {
     id: 'retirement', name: 'Retirement / Super', href: '/retirementcalc', version: '2.0.0',
-    paths: ['web/src/RetirementInstance.jsx', 'web/src/RetirementCalc.jsx', 'web/src/lib/retirement.js'],
+    paths: ['web/src/RetirementInstance.jsx', 'web/src/RetirementCalc.jsx', 'core/src/retirement.js'],
     deps: ['paytax', 'rates', 'format', 'urlState', 'styles', 'tokens'],
   },
   {
     id: 'novatedlease', name: 'Novated Lease', href: '/novatedleasecalc', version: '2.0.0',
-    paths: ['web/src/NovatedLeaseInstance.jsx', 'web/src/NovatedLeaseCalc.jsx', 'web/src/lib/novatedlease.js'],
+    paths: ['web/src/NovatedLeaseInstance.jsx', 'web/src/NovatedLeaseCalc.jsx', 'core/src/novatedlease.js'],
     deps: ['paytax', 'rates', 'format', 'urlState', 'styles', 'tokens'],
   },
   {
     id: 'savings', name: 'Savings', href: '/savingscalc', version: '2.0.0',
-    paths: ['web/src/SavingsInstance.jsx', 'web/src/SavingsCalc.jsx', 'web/src/lib/savings.js'],
+    paths: ['web/src/SavingsInstance.jsx', 'web/src/SavingsCalc.jsx', 'core/src/savings.js'],
     deps: ['format', 'urlState', 'styles', 'tokens'],
   },
   {
     id: 'health', name: 'Health', href: '/healthcalc', version: '2.0.0',
-    paths: ['web/src/HealthInstance.jsx', 'web/src/HealthCalc.jsx', 'web/src/lib/health.js'],
+    paths: ['web/src/HealthInstance.jsx', 'web/src/HealthCalc.jsx', 'core/src/health.js'],
     deps: ['rates', 'format', 'urlState', 'styles', 'tokens'],
   },
 ];
