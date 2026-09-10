@@ -117,6 +117,10 @@ export const BUILD = {
   branch: buildInfo.branch,
   dirty: buildInfo.dirty,
   builtAt: buildInfo.builtAt,
+  // False when the build ran against a shallow clone or without git, in which
+  // case per-file dates are withheld rather than shown as 12 identical rows.
+  perFileAvailable: buildInfo.perFileAvailable !== false,
+  shallow: Boolean(buildInfo.shallow),
 };
 
 function fileInfo(path) {

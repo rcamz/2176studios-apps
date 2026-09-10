@@ -13,9 +13,13 @@ export function VersionFooter({ calcId }) {
   return (
     <footer className="version-footer">
       <span className="version-badge">v{s.version}</span>
-      <span className="version-sep">·</span>
-      <span>Updated {formatDate(s.lastDate)}</span>
-      {s.viaDependency && (
+      {BUILD.perFileAvailable && (
+        <>
+          <span className="version-sep">·</span>
+          <span>Updated {formatDate(s.lastDate)}</span>
+        </>
+      )}
+      {BUILD.perFileAvailable && s.viaDependency && (
         <>
           <span className="version-sep">·</span>
           <span title={`Most recent change came from ${s.changedBy}, which this calculator uses`}>
@@ -85,6 +89,15 @@ export function VersionStocktake() {
           {BUILD.dirty && (
             <p className="stocktake-warn">
               This build was made with uncommitted changes, so it does not correspond to any commit.
+            </p>
+          )}
+
+          {!BUILD.perFileAvailable && (
+            <p className="stocktake-warn">
+              Per-file history is unavailable in this build — it ran against a shallow clone, which
+              carries only one commit. Every file would report that same commit, so the dates below
+              are withheld rather than shown as identical and misleading. The build commit above is
+              still accurate. Set the clone depth to full in your CI settings to restore them.
             </p>
           )}
 

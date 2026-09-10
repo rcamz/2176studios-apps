@@ -20,17 +20,26 @@ export default function buildInfo({ paths = [], root = '..' } = {}) {
 
   function collect() {
     const cwd = `git -C "${root}"`;
-    const files = {};
 
-    for (const p of paths) {
-      // A path may be a directory; -- <path> works for both.
-      const lastDate = git(`${cwd} log -1 --format=%cI -- "${p}"`);
-      files[p] = {
-        lastCommit: git(`${cwd} log -1 --format=%h -- "${p}"`),
-        lastDate,
-        lastSubject: git(`${cwd} log -1 --format=%s -- "${p}"`),
-        commits: Number(git(`${cwd} rev-list --count HEAD -- "${p}"`, '0')) || 0,
-      };
+    const hasGit = git(`${cwd} rev-parse --git-dir`) !== '';
+    // CI providers commonly clone with --depth=1. With one commit of history,
+    // `git log -1 -- <path>` returns that same commit for EVERY path, so
+    // per-file dates would all be identical and meaningless. Reporting them
+    // anyway would look plausible and be false, so they are withheld instead.
+    const shallow = git(`${cwd} rev-parse --is-shallow-repository`) === 'true';
+    const perFileAvailable = hasGit && !shallow;
+
+    const files = {};
+    if (perFileAvailable) {
+      for (const p of paths) {
+        // A path may be a directory; -- <path> works for both.
+        files[p] = {
+          lastCommit: git(`${cwd} log -1 --format=%h -- "${p}"`),
+          lastDate: git(`${cwd} log -1 --format=%cI -- "${p}"`),
+          lastSubject: git(`${cwd} log -1 --format=%s -- "${p}"`),
+          commits: Number(git(`${cwd} rev-list --count HEAD -- "${p}"`, '0')) || 0,
+        };
+      }
     }
 
     return {
@@ -41,6 +50,9 @@ export default function buildInfo({ paths = [], root = '..' } = {}) {
       // correspond to any commit — worth surfacing rather than hiding.
       dirty: git(`${cwd} status --porcelain`).length > 0,
       builtAt: new Date().toISOString(),
+      hasGit,
+      shallow,
+      perFileAvailable,
       files,
     };
   }
