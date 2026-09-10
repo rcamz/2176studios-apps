@@ -1,0 +1,11 @@
+# index.html must never be cached: it names the fingerprinted asset bundle, so
+# a stale copy pins the browser to an old deploy.
+/index.html
+  Cache-Control: public, max-age=0, must-revalidate
+
+/
+  Cache-Control: public, max-age=0, must-revalidate
+
+# Asset filenames contain a content hash, so they can be cached indefinitely.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable

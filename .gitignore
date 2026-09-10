@@ -5,3 +5,9 @@ build/
 .env.local
 .DS_Store
 *.local
+
+# This workstation routes npm through an internal Artifactory mirror, so any
+# lockfile generated here pins `resolved` URLs to quantium.jfrog.io — a host
+# CI build servers cannot reach, which breaks every deploy. Ignored until one
+# can be generated against the public registry.
+package-lock.json
