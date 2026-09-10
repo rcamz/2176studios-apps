@@ -788,12 +788,17 @@ select.field-select {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 18px 18px 96px;
+  /* The floating ad bar is fixed to the bottom on mobile and is 107px tall:
+     90px unit + 8px padding top and bottom + 1px border. Anything less than
+     that here puts the version text behind it, invisible. */
+  padding: 18px 18px 132px;
   font-size: 0.68rem;
   color: var(--text-muted);
   border-top: 1px solid var(--border);
   margin-top: 32px;
 }
+/* The bar is hidden at this width in single-instance mode, so the reservation
+   is no longer needed. */
 @media (min-width: 980px) {
   .version-footer { padding-bottom: 28px; }
 }
