@@ -46,6 +46,13 @@ const HOLIDAY = [
   { from: 190000, rate: 0.45, base: 54100 },
 ];
 
+// Companies are not eligible for any CGT discount, so the whole gain is taxed
+// at the applicable company rate.
+const COMPANY_RATES = {
+  standard: 0.30,
+  baseRateEntity: 0.25, // aggregated turnover under $50m with sufficient passive income limits
+};
+
 // Unchanged since 2020-21. Non-refundable, and PAYG withholding ignores it —
 // never apply LITO to a per-pay figure.
 const LITO = {
@@ -66,6 +73,7 @@ export const incomeTax = [
     foreign: FOREIGN,
     holiday: HOLIDAY,
     lito: LITO,
+    company: COMPANY_RATES,
     standardWorkDeduction: null,
   },
   {
@@ -78,6 +86,7 @@ export const incomeTax = [
     foreign: FOREIGN,
     holiday: HOLIDAY,
     lito: LITO,
+    company: COMPANY_RATES,
     // Tax Reform No. 1 Act 2026, Sch 4. Live from FY2026-27. The taxpayer picks
     // the higher of this or substantiated expenses, so it is a floor, never an
     // automatic addition.
@@ -98,6 +107,7 @@ export const incomeTax = [
     foreign: FOREIGN,
     holiday: HOLIDAY,
     lito: LITO,
+    company: COMPANY_RATES,
     standardWorkDeduction: {
       amount: 1000,
       requiresWorkIncome: true,

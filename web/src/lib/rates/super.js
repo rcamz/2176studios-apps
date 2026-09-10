@@ -24,6 +24,9 @@ export const superannuation = [
 
     sgRate: 0.12,          // also 12.00% from 1 Jul 2027; no further rises legislated
     contributionsTax: 0.15,
+    // Complying fund earnings rate in accumulation phase. Pension-phase
+    // earnings are tax-free.
+    fundEarningsTaxRate: 0.15,
 
     concessionalCap: 32500,      // AWOTE-indexed, up from $30,000
     nonConcessionalCap: 130000,

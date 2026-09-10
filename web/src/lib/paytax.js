@@ -210,6 +210,11 @@ export function calcPayTax(inputs = {}) {
     otherDeductions = 0,
     reportableFringeBenefits = 0,
     totalNetInvestmentLoss = 0,
+    // Defaults to salary sacrifice, but callers can pass it explicitly —
+    // deductible personal contributions are also reportable, and a caller
+    // modelling a packaged benefit needs to set this without it being inferred
+    // from a sacrifice amount it never passed.
+    reportableSuperContributions = null,
     senior = false,
     family = false,
     dependentChildren = 0,
@@ -243,11 +248,13 @@ export function calcPayTax(inputs = {}) {
 
   // Salary sacrifice and reportable fringe benefits are added BACK for both of
   // these — sacrificing does not reduce HELP or MLS exposure.
+  const resc = reportableSuperContributions ?? salarySacrifice;
+
   const mlsIncome = mlsIncomeFrom({
     taxableIncome,
     reportableFringeBenefits,
     totalNetInvestmentLosses: totalNetInvestmentLoss,
-    reportableSuperContributions: salarySacrifice,
+    reportableSuperContributions: resc,
   });
   const mls = residency === 'resident'
     ? mlsOn(mlsIncome, hasPrivateCover, rates, { family, dependentChildren })
@@ -257,7 +264,7 @@ export function calcPayTax(inputs = {}) {
     taxableIncome,
     reportableFringeBenefits,
     totalNetInvestmentLoss,
-    reportableSuperContributions: salarySacrifice,
+    reportableSuperContributions: resc,
   });
   const helpRepayment = helpRepaymentOn(repaymentIncome, balance, rates);
 

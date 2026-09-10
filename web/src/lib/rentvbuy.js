@@ -1,184 +1,201 @@
-// Rent vs Buy calculator — 2026-27 stamp duty rates
+// Rent vs buy, for an owner-occupied home.
+//
+// Rewritten to fix four structural problems in the previous model, each of
+// which pushed the answer the same way:
+//
+//  1. Interest was computed on the OPENING balance for a whole year, ignoring
+//     amortisation. It now uses the same month-by-month engine as the mortgage
+//     calculator instead of a parallel, wrong one.
+//  2. The renter's "tax" multiplied their CONTRIBUTION by 0.7 rather than
+//     taxing the RETURN, which systematically understated renter wealth.
+//  3. Surplus was floored at zero, so when rent exceeded the cost of owning
+//     the renter neither invested nor drew down — asymmetric, and it flattered
+//     renting in expensive rental markets.
+//  4. The main residence CGT exemption was absent. The buyer's gain is
+//     tax-free; the renter's portfolio is not. That is a structural advantage
+//     of buying and it was simply missing.
 
-// Stamp duty calculators per state (2026-27 estimated, general rates)
-function stampDutyNSW(price, firstHome) {
-  if (firstHome && price <= 800000) return 0;
-  if (firstHome && price <= 1000000) return ((price - 800000) / 200000) * stampDutyNSW(1000000, false);
-  if (price <= 16000)  return price * 0.0125;
-  if (price <= 35000)  return 200 + (price - 16000) * 0.015;
-  if (price <= 93000)  return 485 + (price - 35000) * 0.0175;
-  if (price <= 351000) return 1500 + (price - 93000) * 0.035;
-  if (price <= 1168000) return 10530 + (price - 351000) * 0.045;
-  return 47295 + (price - 1168000) * 0.055;
-}
+import { amortize, summarize } from './amortize.js';
+import { calcStampDuty } from './stampduty.js';
+import { estimateLmi } from './lmi.js';
+import { ratesFor } from './rates/index.js';
+import { negativeGearing } from './rates/cgt.js';
+import { getMarginalRate } from './paytax.js';
 
-function stampDutyVIC(price, firstHome) {
-  if (firstHome && price <= 600000) return 0;
-  if (firstHome && price <= 750000) {
-    const full = stampDutyVIC(price, false);
-    return full * (1 - (750000 - price) / 150000);
-  }
-  if (price <= 25000)  return price * 0.014;
-  if (price <= 130000) return 350 + (price - 25000) * 0.024;
-  if (price <= 960000) return 2870 + (price - 130000) * 0.06;
-  return 55000 + (price - 960000) * 0.065;
-}
-
-function stampDutyQLD(price, firstHome) {
-  let duty = 0;
-  if (price <= 5000)        duty = 0;
-  else if (price <= 75000)  duty = (price - 5000) * 0.015;
-  else if (price <= 540000) duty = 1050 + (price - 75000) * 0.035;
-  else if (price <= 1000000) duty = 17325 + (price - 540000) * 0.045;
-  else                       duty = 38025 + (price - 1000000) * 0.0575;
-  // QLD first home grant: rebate up to $8,750 for new homes under $750k
-  if (firstHome && price <= 750000) duty = Math.max(0, duty - 8750);
-  return duty;
-}
-
-function stampDutySA(price) {
-  if (price <= 12000)  return price * 0.01;
-  if (price <= 30000)  return 120 + (price - 12000) * 0.02;
-  if (price <= 50000)  return 480 + (price - 30000) * 0.03;
-  if (price <= 100000) return 1080 + (price - 50000) * 0.035;
-  if (price <= 200000) return 2830 + (price - 100000) * 0.04;
-  if (price <= 250000) return 6830 + (price - 200000) * 0.045;
-  if (price <= 300000) return 9080 + (price - 250000) * 0.05;
-  if (price <= 500000) return 11580 + (price - 300000) * 0.055;
-  return 22580 + (price - 500000) * 0.055;
-}
-
-function stampDutyWA(price, firstHome) {
-  let duty = 0;
-  if (price <= 80000)        duty = price * 0.019;
-  else if (price <= 100000)  duty = 1520 + (price - 80000) * 0.0285;
-  else if (price <= 250000)  duty = 2090 + (price - 100000) * 0.03;
-  else if (price <= 500000)  duty = 6590 + (price - 250000) * 0.0415;
-  else                        duty = 16965 + (price - 500000) * 0.0515;
-  if (firstHome && price <= 430000) duty = 0;
-  else if (firstHome && price <= 530000) duty = duty * (price - 430000) / 100000;
-  return duty;
-}
-
-function stampDutyACT(price) {
-  if (price <= 200000)  return price * 0.006;
-  if (price <= 300000)  return 1200 + (price - 200000) * 0.023;
-  if (price <= 500000)  return 3500 + (price - 300000) * 0.028;
-  if (price <= 750000)  return 9100 + (price - 500000) * 0.038;
-  if (price <= 1000000) return 18600 + (price - 750000) * 0.043;
-  if (price <= 1455000) return 29350 + (price - 1000000) * 0.055;
-  return 54375 + (price - 1455000) * 0.057;
-}
-
-function stampDutyTAS(price) {
-  if (price <= 3000)    return 50;
-  if (price <= 25000)   return 50 + (price - 3000) * 0.015;
-  if (price <= 75000)   return 380 + (price - 25000) * 0.0225;
-  if (price <= 200000)  return 1505 + (price - 75000) * 0.035;
-  if (price <= 375000)  return 5880 + (price - 200000) * 0.04;
-  if (price <= 725000)  return 12880 + (price - 375000) * 0.0425;
-  return 27755 + (price - 725000) * 0.045;
-}
-
-function stampDutyNT(price) {
-  if (price < 525000) return (price * 0.065 - 710) * price / 525000;
-  return price * 0.065 - 710;
-}
-
-function getStampDuty(price, state, firstHome) {
-  switch (state) {
-    case 'NSW': return stampDutyNSW(price, firstHome);
-    case 'VIC': return stampDutyVIC(price, firstHome);
-    case 'QLD': return stampDutyQLD(price, firstHome);
-    case 'SA':  return stampDutySA(price);
-    case 'WA':  return stampDutyWA(price, firstHome);
-    case 'ACT': return stampDutyACT(price);
-    case 'TAS': return stampDutyTAS(price);
-    case 'NT':  return stampDutyNT(price);
-    default:    return stampDutyNSW(price, firstHome);
-  }
-}
-
-function monthlyPI(principal, annualRate, termYears) {
-  const r = annualRate / 100 / 12;
-  const n = termYears * 12;
-  if (r === 0) return principal / n;
-  return principal * r / (1 - Math.pow(1 + r, -n));
-}
-
-export function calcRentVsBuy(inputs) {
+export function calcRentVsBuy(inputs = {}) {
   const {
-    purchasePrice = 700000,
+    purchasePrice = 800000,
     state = 'NSW',
-    firstHome = false,
-    deposit = 140000,
+    firstHomeBuyer = false,
+    propertyType = 'established',
+    contractDate = new Date().toISOString().slice(0, 10),
+    firstHomeGuarantee = false,
+
+    deposit = 160000,
     mortgageRate = 6.0,
     loanTerm = 30,
+    capitaliseStampDuty = false,
+
     propertyGrowth = 4,
-    annualRent = 30000,
-    rentIncrease = 3,
-    depositReturn = 7,
     ongoingCosts = 8000,
-    sellingCosts = 2,
+    purchaseCosts = 3000,      // conveyancing, building and pest, loan fees
+    sellingCosts = 2,          // % of sale price
+
+    annualRent = 36000,
+    rentIncrease = 3,
+    investmentReturn = 7,
+
+    grossIncome = 120000,
     comparisonYears = 10,
+    date = new Date(),
   } = inputs;
 
-  const stampDuty = Math.max(0, getStampDuty(purchasePrice, state, firstHome));
-  const loanAmount = purchasePrice - deposit + stampDuty;
-  const monthlyMortgage = monthlyPI(loanAmount, mortgageRate, loanTerm);
+  const rates = ratesFor(date);
 
-  let buyerEquity = deposit - stampDuty;
-  let renterWealth = deposit;
-  let currentPropertyValue = purchasePrice;
-  let mortgageBalance = loanAmount;
+  // ─── Upfront ───────────────────────────────────────────────────────────────
+  const { duty: stampDuty } = calcStampDuty({
+    state, value: purchasePrice, firstHomeBuyer, propertyType,
+    contractDate, settlementDate: contractDate,
+  });
+
+  const baseLoan = Math.max(0, purchasePrice - deposit);
+  const lmi = estimateLmi({
+    loanAmount: baseLoan, propertyValue: purchasePrice, date, firstHomeGuarantee,
+  });
+  const lmiPremium = lmi.payable ? lmi.midpoint : 0;
+
+  // Lenders generally require duty to be paid in cash rather than capitalised,
+  // so this defaults off. When it is capitalised the buyer needs less cash but
+  // borrows more and pays interest on it.
+  const loanAmount = baseLoan + lmiPremium + (capitaliseStampDuty ? stampDuty : 0);
+  const buyerUpfrontCash =
+    deposit + purchaseCosts + (capitaliseStampDuty ? 0 : stampDuty);
+
+  // ─── Buyer: real amortisation ──────────────────────────────────────────────
+  const rows = amortize({
+    loanAmount,
+    annualRatePercent: mortgageRate,
+    termYears: loanTerm,
+    includeOffset: false,
+    includeExtras: false,
+  });
+  const annualMortgage = (rows[0]?.payment ?? 0) * 12;
+
+  // ─── Renter: same starting capital, invested ───────────────────────────────
+  // The renter does not spend the buyer's upfront cash, so they start with it.
+  let portfolioValue = buyerUpfrontCash;
+  let portfolioCostBase = buyerUpfrontCash;
+
+  let propertyValue = purchasePrice;
+  let currentRent = annualRent;
+  let currentOngoing = ongoingCosts;
   let cumulativeRent = 0;
   let cumulativeInterest = 0;
-  let cumulativeMortgagePayments = 0;
-  let currentRent = annualRent;
+  let cumulativeOwnerOutgoings = 0;
 
-  const chartData = [{ year: 0, 'Buyer equity': Math.round(buyerEquity), 'Renter wealth': Math.round(renterWealth) }];
+  const marginalRate = getMarginalRate(grossIncome, 'resident', rates);
+  const chartData = [{
+    year: 0,
+    'Buyer equity': Math.round(purchasePrice - loanAmount),
+    'Renter wealth': Math.round(portfolioValue),
+  }];
   let breakEvenYear = null;
 
   for (let yr = 1; yr <= comparisonYears; yr++) {
-    // Buyer: property appreciates, mortgage reduces
-    currentPropertyValue *= (1 + propertyGrowth / 100);
-    const yearlyMortgage = monthlyMortgage * 12;
-    const yearlyInterest = mortgageBalance * mortgageRate / 100;
-    const yearlyPrincipal = Math.min(yearlyMortgage - yearlyInterest, mortgageBalance);
-    mortgageBalance = Math.max(0, mortgageBalance - yearlyPrincipal);
-    cumulativeInterest += yearlyInterest;
-    cumulativeMortgagePayments += yearlyMortgage;
-    const sellingCostAmount = currentPropertyValue * (sellingCosts / 100);
-    buyerEquity = currentPropertyValue - mortgageBalance - sellingCostAmount;
+    propertyValue *= 1 + propertyGrowth / 100;
 
-    // Renter: invests deposit at depositReturn, pays rent (vs. mortgage + costs)
-    const renterSurplus = yearlyMortgage + ongoingCosts - currentRent;
-    renterWealth = renterWealth * (1 + depositReturn / 100) + Math.max(0, renterSurplus) * 0.7; // rough tax on investment gains
+    const slice = rows.slice((yr - 1) * 12, yr * 12);
+    const yearInterest = slice.reduce((s, r) => s + r.interest, 0);
+    const yearPaid = slice.reduce((s, r) => s + r.payment, 0);
+    const balance = slice.length ? slice[slice.length - 1].balance : 0;
+    cumulativeInterest += yearInterest;
+
+    const ownerOutgoings = yearPaid + currentOngoing;
+    cumulativeOwnerOutgoings += ownerOutgoings;
+
+    // Signed, not floored. When rent exceeds the cost of owning, the renter
+    // draws down rather than magically contributing nothing.
+    const surplus = ownerOutgoings - currentRent;
+    portfolioValue = portfolioValue * (1 + investmentReturn / 100) + surplus;
+    portfolioCostBase += surplus;
+    if (portfolioValue < 0) portfolioValue = 0;
+
     cumulativeRent += currentRent;
-    currentRent *= (1 + rentIncrease / 100);
+    currentRent *= 1 + rentIncrease / 100;
+    currentOngoing *= 1 + rentIncrease / 100; // rates and strata track inflation too
 
-    chartData.push({ year: yr, 'Buyer equity': Math.round(buyerEquity), 'Renter wealth': Math.round(renterWealth) });
+    // Buyer sells: no CGT, because the main residence is exempt.
+    const sellingCostAmount = propertyValue * (sellingCosts / 100);
+    const buyerEquity = propertyValue - balance - sellingCostAmount;
 
-    if (breakEvenYear === null && buyerEquity > renterWealth) {
-      breakEvenYear = yr;
-    }
+    // Renter liquidates: CGT applies to the gain, with the 50% discount since
+    // the holding period exceeds 12 months.
+    const renterNet = netOfCgt(portfolioValue, portfolioCostBase, marginalRate, rates);
+
+    chartData.push({
+      year: yr,
+      'Buyer equity': Math.round(buyerEquity),
+      'Renter wealth': Math.round(renterNet),
+    });
+
+    if (breakEvenYear === null && buyerEquity > renterNet) breakEvenYear = yr;
   }
 
-  const finalPropertyValue = currentPropertyValue;
-  const projectedPropertyValue = purchasePrice * Math.pow(1 + propertyGrowth / 100, comparisonYears);
+  const final = chartData[chartData.length - 1];
+  const buyerEquity = final['Buyer equity'];
+  const renterWealth = final['Renter wealth'];
+
+  const renterGross = portfolioValue;
+  const renterCgt = renterGross - netOfCgt(renterGross, portfolioCostBase, marginalRate, rates);
+
+  // Grandfathering for the negative gearing quarantine is already live, so a
+  // buyer contemplating renting this out later is affected by their contract
+  // date today.
+  const negativeGearingWarning =
+    contractDate > negativeGearing.grandfatherCutoff.slice(0, 10)
+      ? {
+          level: 'info',
+          title: 'If you later rent this property out',
+          body: `Properties purchased after 7:30pm on 12 May 2026 lose the ability to offset rental losses against other income from the ${negativeGearing.quarantineFromFinancialYear} financial year. Losses can only be offset against other residential property income, and excess losses carry forward. Properties held at the announcement are unaffected until sold.`,
+        }
+      : null;
 
   return {
     stampDuty,
+    lmiPremium,
+    lmiPayable: lmi.payable,
+    lvr: lmi.lvr,
     loanAmount,
-    monthlyMortgage,
-    buyerEquity: Math.round(buyerEquity),
-    renterWealth: Math.round(renterWealth),
-    wealthGap: Math.round(buyerEquity - renterWealth),
+    buyerUpfrontCash,
+    monthlyMortgage: rows[0]?.payment ?? 0,
+    annualMortgage,
+
+    buyerEquity,
+    renterWealth,
+    wealthGap: buyerEquity - renterWealth,
     breakEvenYear,
+
     cumulativeInterest: Math.round(cumulativeInterest),
     cumulativeRent: Math.round(cumulativeRent),
-    cumulativeMortgagePayments: Math.round(cumulativeMortgagePayments),
-    projectedPropertyValue: Math.round(projectedPropertyValue),
+    cumulativeOwnerOutgoings: Math.round(cumulativeOwnerOutgoings),
+    projectedPropertyValue: Math.round(propertyValue),
+    renterPortfolioGross: Math.round(renterGross),
+    renterCgt: Math.round(renterCgt),
+    marginalRate,
+
+    totalLoanInterest: summarize(rows).totalInterest,
     chartData,
+    warnings: [negativeGearingWarning].filter(Boolean),
   };
+}
+
+// The renter's portfolio is not CGT-exempt. Held beyond 12 months, the
+// individual discount applies to the gain.
+function netOfCgt(value, costBase, marginalRate, rates) {
+  const gain = value - costBase;
+  if (gain <= 0) return value;
+  const discount = rates.cgt.individualDiscount ?? 0;
+  const assessable = gain * (1 - discount);
+  const tax = assessable * (marginalRate + rates.medicare.levyRate);
+  return value - tax;
 }

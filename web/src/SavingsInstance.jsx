@@ -4,13 +4,12 @@ import {
   Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
 import { calcSavings } from './lib/savings.js';
+import { fmt, fmtShort, yearsAndMonths } from './lib/format.js';
+import { num, enumOf, writeUrl } from './lib/urlState.js';
 import AdUnit from './AdUnit.jsx';
 
 const AD_SLOT_INLINE = 'XXXXXXXXXX';
 const AD_SLOT_CHART  = 'XXXXXXXXXX';
-
-const fmt = (n) => '$' + Math.round(n).toLocaleString('en-AU');
-const fmtShort = (n) => n >= 1000000 ? `$${(n/1000000).toFixed(1)}M` : n >= 1000 ? `$${Math.round(n/1000)}k` : `$${n}`;
 
 const DEFAULTS = {
   initialDeposit: 10000,
@@ -20,8 +19,16 @@ const DEFAULTS = {
   compoundFreq: 'monthly',
   inflationRate: 2.5,
   taxOnInterest: 0,
+  contributionGrowth: 0,
+  contributionTiming: 'end',
   goalAmount: 0,
+  goalMode: 'time',   // 'time' | 'contribution'
+  goalYears: 3,
 };
+
+const CF_MAP = { m: 'monthly', q: 'quarterly', a: 'annually' };
+const CT_MAP = { s: 'start', e: 'end' };
+const GM_MAP = { t: 'time', c: 'contribution' };
 
 function encodeInputs(inp) {
   const p = new URLSearchParams();
@@ -32,25 +39,34 @@ function encodeInputs(inp) {
   p.set('cf', inp.compoundFreq[0]);
   p.set('ir', inp.inflationRate);
   p.set('tx', inp.taxOnInterest);
+  p.set('cg', inp.contributionGrowth);
+  p.set('ct', inp.contributionTiming[0]);
   p.set('ga', inp.goalAmount);
-  return p.toString();
+  p.set('gm', inp.goalMode[0]);
+  p.set('gy', inp.goalYears);
+  return p;
 }
 
 function decodeParams(search) {
   const p = new URLSearchParams(search);
   if (!p.has('id')) return {};
-  const cfMap = { m: 'monthly', q: 'quarterly', a: 'annually' };
   return {
-    initialDeposit:      parseFloat(p.get('id')) || 10000,
-    monthlyContribution: parseFloat(p.get('mc')) || 500,
-    annualRate:          parseFloat(p.get('ar')) || 5.0,
-    termYears:           parseFloat(p.get('ty')) || 10,
-    compoundFreq:        cfMap[p.get('cf')] ?? 'monthly',
-    inflationRate:       parseFloat(p.get('ir')) || 2.5,
-    taxOnInterest:       parseFloat(p.get('tx')) || 0,
-    goalAmount:          parseFloat(p.get('ga')) || 0,
+    initialDeposit:      num(p.get('id'), DEFAULTS.initialDeposit),
+    monthlyContribution: num(p.get('mc'), DEFAULTS.monthlyContribution),
+    annualRate:          num(p.get('ar'), DEFAULTS.annualRate),
+    termYears:           num(p.get('ty'), DEFAULTS.termYears),
+    compoundFreq:        enumOf(p.get('cf'), CF_MAP, DEFAULTS.compoundFreq),
+    inflationRate:       num(p.get('ir'), DEFAULTS.inflationRate),
+    taxOnInterest:       num(p.get('tx'), DEFAULTS.taxOnInterest),
+    contributionGrowth:  num(p.get('cg'), 0),
+    contributionTiming:  enumOf(p.get('ct'), CT_MAP, DEFAULTS.contributionTiming),
+    goalAmount:          num(p.get('ga'), 0),
+    goalMode:            enumOf(p.get('gm'), GM_MAP, DEFAULTS.goalMode),
+    goalYears:           num(p.get('gy'), DEFAULTS.goalYears),
   };
 }
+
+const WARN_STYLE = { borderColor: 'var(--red)', background: 'rgba(224,82,82,0.06)' };
 
 export default function SavingsInstance({ instanceKey = '', label, onRemove, theme = 'light', isComparison = false }) {
   const [inputs, setInputs] = useState(() =>
@@ -58,11 +74,11 @@ export default function SavingsInstance({ instanceKey = '', label, onRemove, the
   );
 
   const set = (key, val) => setInputs(s => ({ ...s, [key]: val }));
-  const setNum = (key) => (e) => set(key, parseFloat(e.target.value) || 0);
+  const setNum = (key) => (e) => set(key, num(e.target.value, 0));
 
   useEffect(() => {
     if (instanceKey !== '') return;
-    window.history.replaceState(null, '', `${window.location.pathname}?${encodeInputs(inputs)}`);
+    writeUrl(encodeInputs(inputs));
   }, [inputs, instanceKey]);
 
   const result = useMemo(() => calcSavings(inputs), [inputs]);
@@ -74,12 +90,23 @@ export default function SavingsInstance({ instanceKey = '', label, onRemove, the
   const tooltipBg    = theme === 'dark' ? '#1D1D22' : '#FAFAF6';
   const tooltipBorder = theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
 
-  const goalMonths = inputs.goalAmount > 0 ? result.monthsToTarget(inputs.goalAmount) : null;
-  const goalYrs = goalMonths !== null ? Math.floor(goalMonths / 12) : null;
-  const goalMos = goalMonths !== null ? goalMonths % 12 : null;
-  const goalStr = goalMonths !== null
-    ? [goalYrs && `${goalYrs}yr`, goalMos && `${goalMos}mo`].filter(Boolean).join(' ') || '< 1 month'
-    : null;
+  const hasGoal = inputs.goalAmount > 0;
+  const seekTime = inputs.goalMode === 'time';
+
+  // Both goal answers run on the same engine as the balance above, so they are
+  // net of tax and on the compounding frequency the user actually picked.
+  const goalTime = useMemo(
+    () => (hasGoal && seekTime ? result.monthsToTarget(inputs.goalAmount) : null),
+    [result, hasGoal, seekTime, inputs.goalAmount]
+  );
+  const goalTimeReal = useMemo(
+    () => (hasGoal && seekTime ? result.realMonthsToTarget(inputs.goalAmount) : null),
+    [result, hasGoal, seekTime, inputs.goalAmount]
+  );
+  const goalContribution = useMemo(
+    () => (hasGoal && !seekTime ? result.requiredMonthlyContribution(inputs.goalAmount, inputs.goalYears) : null),
+    [result, hasGoal, seekTime, inputs.goalAmount, inputs.goalYears]
+  );
 
   return (
     <div className="calc-instance">
@@ -94,7 +121,7 @@ export default function SavingsInstance({ instanceKey = '', label, onRemove, the
       {!isComparison ? (
         <div className="calc-heading">
           <h1>Savings Calculator<br /><span className="calc-heading-sub">Compound Growth + Goal Tracker</span></h1>
-          <p>Project your savings with compound interest. Set a goal amount to see how long it'll take to reach it.</p>
+          <p>Project your savings with compound interest. Set a goal amount to see how long it'll take — or how much you'd need to put away each month.</p>
         </div>
       ) : (
         <div className="calc-heading calc-heading--compact">
@@ -118,6 +145,14 @@ export default function SavingsInstance({ instanceKey = '', label, onRemove, the
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
                 <input type="number" value={inputs.monthlyContribution || ''} onChange={setNum('monthlyContribution')} min="0" step="100" />
+              </div>
+            </div>
+            <div className="field">
+              <label>Contribution timing</label>
+              <div className="segmented">
+                {[['start', 'Start of month'], ['end', 'End of month']].map(([v, l]) => (
+                  <button key={v} className={inputs.contributionTiming === v ? 'active' : ''} onClick={() => set('contributionTiming', v)}>{l}</button>
+                ))}
               </div>
             </div>
             <div className="field">
@@ -154,10 +189,25 @@ export default function SavingsInstance({ instanceKey = '', label, onRemove, the
               </div>
             </div>
             <div className="field">
+              <label>Contribution indexation</label>
+              <div className="input-wrap has-suffix">
+                <input type="number" value={inputs.contributionGrowth || ''} onChange={setNum('contributionGrowth')} min="0" max="15" step="0.5" placeholder="e.g. 2.5 to match inflation" />
+                <span className="input-suffix">% p.a.</span>
+              </div>
+              <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                Raises your contribution each year. Leave at 0 and a flat $
+                {inputs.monthlyContribution.toLocaleString('en-AU')} shrinks in real terms against an
+                inflation-adjusted result.
+              </div>
+            </div>
+            <div className="field">
               <label>Tax on interest earned</label>
               <div className="input-wrap has-suffix">
                 <input type="number" value={inputs.taxOnInterest || ''} onChange={setNum('taxOnInterest')} min="0" max="50" step="5" placeholder="e.g. 32.5 for marginal rate" />
                 <span className="input-suffix">%</span>
+              </div>
+              <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                Deducted each year on that year's interest, so it reduces what compounds.
               </div>
             </div>
           </div>
@@ -165,22 +215,67 @@ export default function SavingsInstance({ instanceKey = '', label, onRemove, the
           <div className="panel-section">
             <div className="section-title">Savings goal (optional)</div>
             <div className="field">
+              <div className="segmented">
+                {[['time', 'How long?'], ['contribution', 'How much a month?']].map(([v, l]) => (
+                  <button key={v} className={inputs.goalMode === v ? 'active' : ''} onClick={() => set('goalMode', v)}>{l}</button>
+                ))}
+              </div>
+            </div>
+            <div className="field">
               <label>Target amount</label>
               <div className="input-wrap has-prefix">
                 <span className="input-prefix">$</span>
                 <input type="number" value={inputs.goalAmount || ''} onChange={setNum('goalAmount')} min="0" step="5000" placeholder="0 to skip" />
               </div>
             </div>
+            {!seekTime && (
+              <div className="field">
+                <label>Reach it within</label>
+                <div className="input-wrap has-suffix">
+                  <input type="number" value={inputs.goalYears || ''} onChange={setNum('goalYears')} min="1" max="50" step="1" />
+                  <span className="input-suffix">yrs</span>
+                </div>
+              </div>
+            )}
             <AdUnit slotId={AD_SLOT_INLINE} format="horizontal" style={{ marginTop: 12 }} />
           </div>
         </div>
 
         <div className="results-panel">
-          {goalStr !== null && (
-            <div className="rate-callout">
-              <strong>Goal: {fmt(inputs.goalAmount)} reached in {goalStr}</strong>
-              {goalMonths === null ? 'Goal cannot be reached at this rate and contribution level.' : ''}
-            </div>
+          {hasGoal && seekTime && goalTime && (
+            goalTime.reachable ? (
+              <div className="rate-callout">
+                <strong>Goal: {fmt(inputs.goalAmount)} reached in {goalTime.months === 0 ? 'less than a month' : yearsAndMonths(goalTime.months)}</strong>
+                Net of tax, on {inputs.compoundFreq} compounding — the same basis as the balance below.
+                {goalTimeReal?.reachable
+                  ? ` In today's money it takes ${yearsAndMonths(goalTimeReal.months)}.`
+                  : ' In today\'s money it is not reached within 100 years.'}
+              </div>
+            ) : (
+              <div className="rate-callout" style={WARN_STYLE}>
+                <strong>Goal of {fmt(inputs.goalAmount)} cannot be reached</strong>
+                {goalTime.reason}
+              </div>
+            )
+          )}
+
+          {hasGoal && !seekTime && goalContribution && (
+            goalContribution.achievable ? (
+              <div className="rate-callout">
+                <strong>
+                  {goalContribution.monthly > 0
+                    ? `Put away ${fmt(goalContribution.monthly)}/month to reach ${fmt(inputs.goalAmount)} in ${inputs.goalYears} years`
+                    : `${fmt(inputs.goalAmount)} in ${inputs.goalYears} years needs no further contributions`}
+                </strong>
+                {goalContribution.reason ??
+                  `That is ${fmt(goalContribution.totalOutOfPocket)} out of pocket on top of your ${fmt(inputs.initialDeposit)} starting balance, net of tax at ${inputs.taxOnInterest}%.`}
+              </div>
+            ) : (
+              <div className="rate-callout" style={WARN_STYLE}>
+                <strong>Cannot solve this goal</strong>
+                {goalContribution.reason}
+              </div>
+            )
           )}
 
           <div className="savings-card">
@@ -215,8 +310,12 @@ export default function SavingsInstance({ instanceKey = '', label, onRemove, the
               <div className="stat-card-value">{fmt(result.interestTax)}</div>
             </div>
             <div className="stat-card">
-              <div className="stat-card-label">Net balance</div>
-              <div className="stat-card-value">{fmt(result.finalBalance)}</div>
+              <div className="stat-card-label">
+                {inputs.contributionGrowth > 0 ? `Final monthly contribution` : 'Net balance'}
+              </div>
+              <div className="stat-card-value">
+                {inputs.contributionGrowth > 0 ? fmt(result.finalMonthlyContribution) : fmt(result.finalBalance)}
+              </div>
             </div>
           </div>
 
@@ -240,7 +339,12 @@ export default function SavingsInstance({ instanceKey = '', label, onRemove, the
           </div>
 
           <div className="disclaimer">
-            Estimates only. Interest is calculated using compound interest formula. Inflation adjustment is illustrative. Tax on interest is a simplified estimate — actual tax depends on your marginal rate and income. Not financial advice.
+            Estimates only. Contributions are made monthly at the {inputs.contributionTiming === 'start' ? 'start' : 'end'} of
+            each month; interest accrues monthly and is credited {inputs.compoundFreq}. Tax on interest is
+            deducted each year on that year's interest, so it reduces the compounding base — the goal figures
+            above use exactly the same assumptions as the balance. Tax is a simplified flat rate; your actual
+            liability depends on your marginal rate and total income. Inflation adjustment is illustrative.
+            Not financial advice.
           </div>
         </div>
       </div>
