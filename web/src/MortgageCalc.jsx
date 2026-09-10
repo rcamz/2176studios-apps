@@ -50,10 +50,13 @@ let _nextId = 1;
 
 export default function MortgageCalc() {
   const [theme, setTheme] = useState('light');
-  const [instances, setInstances] = useState(() => [{ id: _nextId++, key: '' }]);
+  const [instances, setInstances] = useState(() => [{ id: _nextId++, key: '', seed: null }]);
   const [modal, setModal] = useState(null);
   const [copied, setCopied] = useState(false);
   const instancesRef = useRef(null);
+  // Latest inputs per instance, so a new scenario can start from an existing
+  // one instead of from defaults.
+  const stateRef = useRef({});
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -75,12 +78,16 @@ export default function MortgageCalc() {
 
   const isMulti = instances.length > 1;
 
-  const addInstance = () => {
+  // `copyFrom` seeds the new scenario from an existing one. Comparison is
+  // almost always "the same loan with one thing changed", so starting from
+  // defaults made every comparison a re-entry job.
+  const addInstance = (copyFrom = null) => {
     if (instances.length >= 3) return;
     const usedKeys = new Set(instances.map(i => i.key));
     const nextKey = ['b', 'c'].find(k => !usedKeys.has(k));
     if (!nextKey) return;
-    setInstances(prev => [...prev, { id: _nextId++, key: nextKey }]);
+    const seed = copyFrom !== null ? stateRef.current[copyFrom] ?? null : null;
+    setInstances(prev => [...prev, { id: _nextId++, key: nextKey, seed }]);
     setTimeout(() => {
       if (instancesRef.current) {
         instancesRef.current.scrollTo({ left: instancesRef.current.scrollWidth, behavior: 'smooth' });
@@ -113,15 +120,19 @@ export default function MortgageCalc() {
             onRemove={inst.key !== '' ? () => removeInstance(inst.key) : null}
             theme={theme}
             isComparison={isMulti}
+            seed={inst.seed}
+            onStateChange={(s) => { stateRef.current[inst.key] = s; }}
           />
         ))}
 
-        {/* Ghosted compare card — desktop only, hidden on mobile */}
+        {/* Ghosted compare card — desktop only, hidden on mobile.
+            Duplicates the last scenario rather than starting blank: a
+            comparison is almost always the same loan with one thing changed. */}
         {instances.length < 3 && (
-          <button className="compare-card" onClick={addInstance}>
+          <button className="compare-card" onClick={() => addInstance(instances[instances.length - 1].key)}>
             <span className="compare-card-plus">+</span>
             <span className="compare-card-title">Compare</span>
-            <span className="compare-card-sub">Add a new scenario for side by side comparison</span>
+            <span className="compare-card-sub">Copies {LABELS[instances[instances.length - 1].key]} so you can change one thing</span>
           </button>
         )}
       </div>
