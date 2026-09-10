@@ -18,6 +18,13 @@ import { TRACKED_PATHS as PATHS } from './tracked-paths.mjs';
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = resolve(ROOT, 'web/src/generated/build-manifest.json');
 
+// `git rev-list --count` does not accept --follow, so counting through a
+// rename means listing the commits and measuring the list.
+const countCommits = (path, follow) => {
+  const out = git(`log ${follow}--format=%h -- "${path}"`);
+  return out ? out.split('\n').filter(Boolean).length : 0;
+};
+
 const git = (cmd, fallback = '') => {
   try {
     return execSync(`git -C "${ROOT}" ${cmd}`, {
@@ -64,7 +71,7 @@ for (const p of PATHS) {
     lastCommit: git(`log -1 ${follow}--format=%h -- "${p}"`),
     lastDate: git(`log -1 ${follow}--format=%cI -- "${p}"`),
     lastSubject: git(`log -1 ${follow}--format=%s -- "${p}"`),
-    commits: Number(git(`rev-list --count ${follow}HEAD -- "${p}"`, '0')) || 0,
+    commits: countCommits(p, follow),
   };
 }
 

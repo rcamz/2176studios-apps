@@ -64,7 +64,7 @@ export default function buildInfo({ paths = [], root = '..', snapshotFile = 'src
           lastCommit: git(`${cwd} log -1 ${follow}--format=%h -- "${p}"`),
           lastDate: git(`${cwd} log -1 ${follow}--format=%cI -- "${p}"`),
           lastSubject: git(`${cwd} log -1 ${follow}--format=%s -- "${p}"`),
-          commits: Number(git(`${cwd} rev-list --count ${follow}HEAD -- "${p}"`, '0')) || 0,
+          commits: (git(`${cwd} log ${follow}--format=%h -- "${p}"`) || '').split('\n').filter(Boolean).length,
         };
       }
     } else if (snapshot?.files) {

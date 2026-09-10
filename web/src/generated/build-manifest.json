@@ -1,288 +1,288 @@
 {
-  "generatedAt": "2026-09-10T05:52:17.502Z",
-  "generatedFrom": "b2eac37",
+  "generatedAt": "2026-09-10T05:53:55.988Z",
+  "generatedFrom": "fa6255c",
   "files": {
     "web/src/Home.jsx": {
       "lastCommit": "2ab3af8",
       "lastDate": "2026-09-10T03:29:51+00:00",
       "lastSubject": "Add per-calculator versioning and a build stocktake",
-      "commits": 0
+      "commits": 7
     },
     "web/src/Home.css": {
       "lastCommit": "2ab3af8",
       "lastDate": "2026-09-10T03:29:51+00:00",
       "lastSubject": "Add per-calculator versioning and a build stocktake",
-      "commits": 0
+      "commits": 3
     },
     "web/src/CalcInstance.jsx": {
       "lastCommit": "b2eac37",
       "lastDate": "2026-09-10T04:30:00+00:00",
       "lastSubject": "Complete the workings panel across all twelve calculators",
-      "commits": 0
+      "commits": 34
     },
     "web/src/MortgageCalc.jsx": {
       "lastCommit": "2ab3af8",
       "lastDate": "2026-09-10T03:29:51+00:00",
       "lastSubject": "Add per-calculator versioning and a build stocktake",
-      "commits": 0
+      "commits": 33
     },
     "web/src/PayTaxInstance.jsx": {
       "lastCommit": "766abde",
       "lastDate": "2026-09-10T04:01:19+00:00",
       "lastSubject": "Add the show-the-workings panel, starting with Pay/Tax",
-      "commits": 0
+      "commits": 9
     },
     "web/src/PayTaxCalc.jsx": {
       "lastCommit": "2ab3af8",
       "lastDate": "2026-09-10T03:29:51+00:00",
       "lastSubject": "Add per-calculator versioning and a build stocktake",
-      "commits": 0
+      "commits": 34
     },
     "web/src/BorrowingPowerInstance.jsx": {
       "lastCommit": "b2eac37",
       "lastDate": "2026-09-10T04:30:00+00:00",
       "lastSubject": "Complete the workings panel across all twelve calculators",
-      "commits": 0
+      "commits": 3
     },
     "web/src/BorrowingPowerCalc.jsx": {
       "lastCommit": "2ab3af8",
       "lastDate": "2026-09-10T03:29:51+00:00",
       "lastSubject": "Add per-calculator versioning and a build stocktake",
-      "commits": 0
+      "commits": 2
     },
     "core/src/borrowingpower.js": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T05:52:17.502Z",
-      "lastSubject": "Uncommitted at snapshot time",
-      "commits": 1
+      "lastCommit": "fa6255c",
+      "lastDate": "2026-09-10T05:53:33+00:00",
+      "lastSubject": "Rebuild core as the portable calculation package",
+      "commits": 4
     },
     "web/src/RentVBuyInstance.jsx": {
       "lastCommit": "b2eac37",
       "lastDate": "2026-09-10T04:30:00+00:00",
       "lastSubject": "Complete the workings panel across all twelve calculators",
-      "commits": 0
+      "commits": 3
     },
     "web/src/RentVBuyCalc.jsx": {
       "lastCommit": "2ab3af8",
       "lastDate": "2026-09-10T03:29:51+00:00",
       "lastSubject": "Add per-calculator versioning and a build stocktake",
-      "commits": 0
+      "commits": 2
     },
     "core/src/rentvbuy.js": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T05:52:17.502Z",
-      "lastSubject": "Uncommitted at snapshot time",
-      "commits": 1
+      "lastCommit": "fa6255c",
+      "lastDate": "2026-09-10T05:53:33+00:00",
+      "lastSubject": "Rebuild core as the portable calculation package",
+      "commits": 4
     },
     "web/src/CGTInstance.jsx": {
       "lastCommit": "b2eac37",
       "lastDate": "2026-09-10T04:30:00+00:00",
       "lastSubject": "Complete the workings panel across all twelve calculators",
-      "commits": 0
+      "commits": 3
     },
     "web/src/CGTCalc.jsx": {
       "lastCommit": "2ab3af8",
       "lastDate": "2026-09-10T03:29:51+00:00",
       "lastSubject": "Add per-calculator versioning and a build stocktake",
-      "commits": 0
+      "commits": 34
     },
     "core/src/cgt.js": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T05:52:17.502Z",
-      "lastSubject": "Uncommitted at snapshot time",
-      "commits": 1
+      "lastCommit": "fa6255c",
+      "lastDate": "2026-09-10T05:53:33+00:00",
+      "lastSubject": "Rebuild core as the portable calculation package",
+      "commits": 4
     },
     "web/src/RedundancyInstance.jsx": {
       "lastCommit": "b2eac37",
       "lastDate": "2026-09-10T04:30:00+00:00",
       "lastSubject": "Complete the workings panel across all twelve calculators",
-      "commits": 0
+      "commits": 3
     },
     "web/src/RedundancyCalc.jsx": {
       "lastCommit": "2ab3af8",
       "lastDate": "2026-09-10T03:29:51+00:00",
       "lastSubject": "Add per-calculator versioning and a build stocktake",
-      "commits": 0
+      "commits": 2
     },
     "core/src/redundancy.js": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T05:52:17.502Z",
-      "lastSubject": "Uncommitted at snapshot time",
-      "commits": 1
+      "lastCommit": "fa6255c",
+      "lastDate": "2026-09-10T05:53:33+00:00",
+      "lastSubject": "Rebuild core as the portable calculation package",
+      "commits": 4
     },
     "web/src/SalarySacrificeInstance.jsx": {
       "lastCommit": "b2eac37",
       "lastDate": "2026-09-10T04:30:00+00:00",
       "lastSubject": "Complete the workings panel across all twelve calculators",
-      "commits": 0
+      "commits": 3
     },
     "web/src/SalarySacrificeCalc.jsx": {
       "lastCommit": "2ab3af8",
       "lastDate": "2026-09-10T03:29:51+00:00",
       "lastSubject": "Add per-calculator versioning and a build stocktake",
-      "commits": 0
+      "commits": 2
     },
     "core/src/salarysacrifice.js": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T05:52:17.502Z",
-      "lastSubject": "Uncommitted at snapshot time",
-      "commits": 1
+      "lastCommit": "fa6255c",
+      "lastDate": "2026-09-10T05:53:33+00:00",
+      "lastSubject": "Rebuild core as the portable calculation package",
+      "commits": 4
     },
     "web/src/FHSSSInstance.jsx": {
       "lastCommit": "b2eac37",
       "lastDate": "2026-09-10T04:30:00+00:00",
       "lastSubject": "Complete the workings panel across all twelve calculators",
-      "commits": 0
+      "commits": 3
     },
     "web/src/FHSSSCalc.jsx": {
       "lastCommit": "2ab3af8",
       "lastDate": "2026-09-10T03:29:51+00:00",
       "lastSubject": "Add per-calculator versioning and a build stocktake",
-      "commits": 0
+      "commits": 2
     },
     "core/src/fhsss.js": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T05:52:17.502Z",
-      "lastSubject": "Uncommitted at snapshot time",
-      "commits": 1
+      "lastCommit": "fa6255c",
+      "lastDate": "2026-09-10T05:53:33+00:00",
+      "lastSubject": "Rebuild core as the portable calculation package",
+      "commits": 4
     },
     "web/src/RetirementInstance.jsx": {
       "lastCommit": "b2eac37",
       "lastDate": "2026-09-10T04:30:00+00:00",
       "lastSubject": "Complete the workings panel across all twelve calculators",
-      "commits": 0
+      "commits": 3
     },
     "web/src/RetirementCalc.jsx": {
       "lastCommit": "2ab3af8",
       "lastDate": "2026-09-10T03:29:51+00:00",
       "lastSubject": "Add per-calculator versioning and a build stocktake",
-      "commits": 0
+      "commits": 2
     },
     "core/src/retirement.js": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T05:52:17.502Z",
-      "lastSubject": "Uncommitted at snapshot time",
-      "commits": 1
+      "lastCommit": "fa6255c",
+      "lastDate": "2026-09-10T05:53:33+00:00",
+      "lastSubject": "Rebuild core as the portable calculation package",
+      "commits": 4
     },
     "web/src/NovatedLeaseInstance.jsx": {
       "lastCommit": "b2eac37",
       "lastDate": "2026-09-10T04:30:00+00:00",
       "lastSubject": "Complete the workings panel across all twelve calculators",
-      "commits": 0
+      "commits": 3
     },
     "web/src/NovatedLeaseCalc.jsx": {
       "lastCommit": "2ab3af8",
       "lastDate": "2026-09-10T03:29:51+00:00",
       "lastSubject": "Add per-calculator versioning and a build stocktake",
-      "commits": 0
+      "commits": 2
     },
     "core/src/novatedlease.js": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T05:52:17.502Z",
-      "lastSubject": "Uncommitted at snapshot time",
-      "commits": 1
+      "lastCommit": "fa6255c",
+      "lastDate": "2026-09-10T05:53:33+00:00",
+      "lastSubject": "Rebuild core as the portable calculation package",
+      "commits": 4
     },
     "web/src/SavingsInstance.jsx": {
       "lastCommit": "b2eac37",
       "lastDate": "2026-09-10T04:30:00+00:00",
       "lastSubject": "Complete the workings panel across all twelve calculators",
-      "commits": 0
+      "commits": 3
     },
     "web/src/SavingsCalc.jsx": {
       "lastCommit": "2ab3af8",
       "lastDate": "2026-09-10T03:29:51+00:00",
       "lastSubject": "Add per-calculator versioning and a build stocktake",
-      "commits": 0
+      "commits": 2
     },
     "core/src/savings.js": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T05:52:17.502Z",
-      "lastSubject": "Uncommitted at snapshot time",
-      "commits": 1
+      "lastCommit": "fa6255c",
+      "lastDate": "2026-09-10T05:53:33+00:00",
+      "lastSubject": "Rebuild core as the portable calculation package",
+      "commits": 4
     },
     "web/src/HealthInstance.jsx": {
       "lastCommit": "b2eac37",
       "lastDate": "2026-09-10T04:30:00+00:00",
       "lastSubject": "Complete the workings panel across all twelve calculators",
-      "commits": 0
+      "commits": 4
     },
     "web/src/HealthCalc.jsx": {
       "lastCommit": "2ab3af8",
       "lastDate": "2026-09-10T03:29:51+00:00",
       "lastSubject": "Add per-calculator versioning and a build stocktake",
-      "commits": 0
+      "commits": 2
     },
     "core/src/health.js": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T05:52:17.502Z",
-      "lastSubject": "Uncommitted at snapshot time",
-      "commits": 1
+      "lastCommit": "fa6255c",
+      "lastDate": "2026-09-10T05:53:33+00:00",
+      "lastSubject": "Rebuild core as the portable calculation package",
+      "commits": 5
     },
     "core/src/rates": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T05:52:17.502Z",
-      "lastSubject": "Uncommitted at snapshot time",
+      "lastCommit": "fa6255c",
+      "lastDate": "2026-09-10T05:53:33+00:00",
+      "lastSubject": "Rebuild core as the portable calculation package",
       "commits": 1
     },
     "core/src/paytax.js": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T05:52:17.502Z",
-      "lastSubject": "Uncommitted at snapshot time",
-      "commits": 1
+      "lastCommit": "fa6255c",
+      "lastDate": "2026-09-10T05:53:33+00:00",
+      "lastSubject": "Rebuild core as the portable calculation package",
+      "commits": 7
     },
     "core/src/amortize.js": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T05:52:17.502Z",
-      "lastSubject": "Uncommitted at snapshot time",
-      "commits": 1
+      "lastCommit": "fa6255c",
+      "lastDate": "2026-09-10T05:53:33+00:00",
+      "lastSubject": "Rebuild core as the portable calculation package",
+      "commits": 5
     },
     "core/src/stampduty.js": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T05:52:17.502Z",
-      "lastSubject": "Uncommitted at snapshot time",
-      "commits": 1
+      "lastCommit": "fa6255c",
+      "lastDate": "2026-09-10T05:53:33+00:00",
+      "lastSubject": "Rebuild core as the portable calculation package",
+      "commits": 2
     },
     "core/src/lmi.js": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T05:52:17.502Z",
-      "lastSubject": "Uncommitted at snapshot time",
-      "commits": 1
+      "lastCommit": "fa6255c",
+      "lastDate": "2026-09-10T05:53:33+00:00",
+      "lastSubject": "Rebuild core as the portable calculation package",
+      "commits": 2
     },
     "core/src/format.js": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T05:52:17.502Z",
-      "lastSubject": "Uncommitted at snapshot time",
-      "commits": 1
+      "lastCommit": "fa6255c",
+      "lastDate": "2026-09-10T05:53:33+00:00",
+      "lastSubject": "Rebuild core as the portable calculation package",
+      "commits": 2
     },
     "core/src/workings.js": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T05:52:17.502Z",
-      "lastSubject": "Uncommitted at snapshot time",
-      "commits": 1
+      "lastCommit": "fa6255c",
+      "lastDate": "2026-09-10T05:53:33+00:00",
+      "lastSubject": "Rebuild core as the portable calculation package",
+      "commits": 2
     },
     "core/src/vectors": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T05:52:17.502Z",
-      "lastSubject": "Uncommitted at snapshot time",
+      "lastCommit": "fa6255c",
+      "lastDate": "2026-09-10T05:53:33+00:00",
+      "lastSubject": "Rebuild core as the portable calculation package",
       "commits": 1
     },
     "web/src/lib/urlState.js": {
       "lastCommit": "5f63afd",
       "lastDate": "2026-09-10T01:25:34+00:00",
       "lastSubject": "Rewrite tax engine against verified FY2026-27 rates",
-      "commits": 0
+      "commits": 1
     },
     "web/src/calc-shared.css": {
       "lastCommit": "766abde",
       "lastDate": "2026-09-10T04:01:19+00:00",
       "lastSubject": "Add the show-the-workings panel, starting with Pay/Tax",
-      "commits": 0
+      "commits": 27
     },
     "web/src/base.css": {
       "lastCommit": "57889a3",
       "lastDate": "2026-09-09T09:50:25+00:00",
       "lastSubject": "Desktop comparison mode + mobile/desktop split layout",
-      "commits": 0
+      "commits": 5
     }
   }
 }
