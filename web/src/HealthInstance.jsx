@@ -22,13 +22,11 @@ const DEFAULTS = {
   goalWeightKg: 70,
   goalWeeks: 12,
   bodyFatPercent: 0,   // 0 = not supplied
-  bmiView: 'standard', // 'standard' | 'who-asian'
 };
 
 const AL_CODE = { sedentary: 's', light: 'l', moderate: 'm', high: 'h', athlete: 'a' };
 const AL_MAP  = { s: 'sedentary', l: 'light', m: 'moderate', h: 'high', a: 'athlete' };
 const GT_MAP  = { l: 'lose', m: 'maintain', g: 'gain' };
-const BV_MAP  = { s: 'standard', a: 'who-asian' };
 
 function encodeInputs(inp) {
   const p = new URLSearchParams();
@@ -41,7 +39,6 @@ function encodeInputs(inp) {
   p.set('gw', inp.goalWeightKg);
   p.set('gk', inp.goalWeeks);
   p.set('bf', inp.bodyFatPercent);
-  p.set('bv', inp.bmiView === 'who-asian' ? 'a' : 's');
   return p;
 }
 
@@ -58,7 +55,6 @@ function decodeParams(search) {
     goalWeightKg:   num(p.get('gw'), DEFAULTS.goalWeightKg),
     goalWeeks:      num(p.get('gk'), DEFAULTS.goalWeeks),
     bodyFatPercent: num(p.get('bf'), 0),
-    bmiView:        enumOf(p.get('bv'), BV_MAP, DEFAULTS.bmiView),
   };
 }
 
@@ -230,19 +226,6 @@ export default function HealthInstance({ instanceKey = '', label, onRemove, them
         <AdUnit slotId={AD_SLOT_INLINE} format="horizontal" style={{ marginTop: 12 }} />
       </div>
 
-      <div className="panel-section">
-        <div className="section-title">BMI reference</div>
-        <div className="field">
-          <div className="segmented" role="radiogroup" aria-label="BMI reference" aria-describedby={`${uid}-bmi-view-help`}>
-            <button type="button" role="radio" aria-checked={inputs.bmiView === 'standard'} className={inputs.bmiView === 'standard' ? 'active' : ''} onClick={() => set('bmiView', 'standard')}>Standard</button>
-            <button type="button" role="radio" aria-checked={inputs.bmiView === 'who-asian'} className={inputs.bmiView === 'who-asian' ? 'active' : ''} onClick={() => set('bmiView', 'who-asian')}>WHO Asian-adjusted</button>
-          </div>
-        </div>
-        <div id={`${uid}-bmi-view-help`} style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>
-          Standard WHO cut-offs are the default. The Asian-adjusted view shows the 2004 WHO Expert
-          Consultation's public health action points — not an Australian recommendation.
-        </div>
-      </div>
     </div>
   );
 
@@ -294,9 +277,7 @@ export default function HealthInstance({ instanceKey = '', label, onRemove, them
   const calories = goalShown ? result.goalCalories : result.maintenanceCalories;
   const isLosing = inputs.goalType === 'lose';
 
-  const asianView = inputs.bmiView === 'who-asian';
-  const bmiLabel = asianView ? result.bmiAsianCategory : result.bmiCategory;
-  const bmiColor = asianView ? 'var(--text)' : (bmiColors[result.bmiCategory] ?? '#888');
+  const bmiColor = bmiColors[result.bmiCategory] ?? '#888';
 
   const projWeeksStr = result.projectedWeeks
     ? result.projectedWeeks < 52
@@ -354,8 +335,8 @@ export default function HealthInstance({ instanceKey = '', label, onRemove, them
             </div>
             <div className="savings-meta">
               <div className="savings-stat">
-                <div className="savings-stat-label">BMI{asianView ? ' (WHO Asian view)' : ''}</div>
-                <div className="savings-stat-value" style={{ color: bmiColor }}>{result.bmi} — {bmiLabel}</div>
+                <div className="savings-stat-label">BMI</div>
+                <div className="savings-stat-value" style={{ color: bmiColor }}>{result.bmi} — {result.bmiCategory}</div>
               </div>
               {goalShown && projWeeksStr && (
                 <div className="savings-stat">
@@ -371,15 +352,6 @@ export default function HealthInstance({ instanceKey = '', label, onRemove, them
               )}
             </div>
           </div>
-
-          {asianView && (
-            <div className="rate-callout">
-              <strong>WHO Asian-adjusted action points — optional view</strong>
-              {result.bmiAsian.note} Attribution: {result.bmiAsian.attribution}. BMI is a screening
-              tool; waist circumference adds information it cannot capture. If you are of mixed
-              ancestry, talk to a clinician rather than self-selecting a threshold.
-            </div>
-          )}
 
           <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
             <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--border)', fontSize: '0.63rem', fontWeight: 700, letterSpacing: '0.9px', textTransform: 'uppercase', color: 'var(--text-muted)' }}>

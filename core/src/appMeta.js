@@ -719,7 +719,7 @@ export const APP_META = {
         '• Total daily energy expenditure across five activity levels',
         '• A daily calorie target for weight loss, maintenance or muscle gain',
         '• Protein, carbohydrate and fat targets in grams, scaled to your bodyweight and goal',
-        '• BMI, with an optional WHO Asian-adjusted reference range',
+        '• BMI against the standard WHO cut-offs, with the screening limits stated',
         '• A week-by-week projection to your goal weight, and the date you would reach it',
         '• Metric and imperial units',
         '',

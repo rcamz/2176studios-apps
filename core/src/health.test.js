@@ -17,7 +17,6 @@ import {
   projectWeight,
   bmiFor,
   bmiCategoryFor,
-  asianActionPointFor,
   adaptiveDropPerKg,
   minIntakeFor,
   ACTIVITY_LEVELS,
@@ -392,24 +391,6 @@ describe('BMI', () => {
     [100, 175, 'Obese'],
   ])('%i kg at %i cm → %s', (kg, cm, label) => {
     expect(bmiCategoryFor(bmiFor(kg, cm), RATES)).toBe(label);
-  });
-
-  it('the WHO Asian view is optional and attributed, never the default', () => {
-    expect(H.ethnicityAdjustedBmi.isAustralianDefault).toBe(false);
-    expect(H.ethnicityAdjustedBmi.confidence).toBe('UNVERIFIED');
-
-    const r = calcHealth({ sex: 'male', age: 30, heightCm: 175, weightKg: 75, date: '2026-09-10' });
-    expect(r.bmiCategory).toBe('Healthy weight'); // standard classification stays the default
-    expect(r.bmiAsian.attribution).toMatch(/WHO/);
-    expect(r.bmiAsian.note).toMatch(/NOT confirmed/);
-    expect(r.bmiAsian.note).toMatch(/action points/i);
-  });
-
-  it('reports action points crossed, not a redefined category', () => {
-    const a = asianActionPointFor(28.0, RATES);
-    expect(a.crossed).toEqual([23.0, 27.5]);
-    expect(a.label).toMatch(/27\.5/);
-    expect(a.competingObesityThreshold).toBe(25);
   });
 
   it('surfaces the BMI > 35 overestimation limit', () => {

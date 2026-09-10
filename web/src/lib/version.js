@@ -99,7 +99,7 @@ export const CALCS = [
     deps: ['sitefooter', 'appmeta', 'format', 'urlState', 'styles', 'tokens'],
   },
   {
-    id: 'health', name: 'Health', href: '/healthcalc', version: '2.0.1',
+    id: 'health', name: 'Health', href: '/healthcalc', version: '2.1.0',
     paths: ['web/src/HealthInstance.jsx', 'web/src/HealthCalc.jsx', 'core/src/health.js'],
     deps: ['sitefooter', 'appmeta', 'rates', 'format', 'urlState', 'styles', 'tokens'],
   },

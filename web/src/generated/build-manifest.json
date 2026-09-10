@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-09-10T12:06:51.499Z",
-  "generatedFrom": "a953858",
+  "generatedAt": "2026-09-10T12:20:49.787Z",
+  "generatedFrom": "fadbc1d",
   "files": {
     "web/src/Home.jsx": {
       "lastCommit": "8edc6d0",
@@ -201,10 +201,10 @@
       "commits": 4
     },
     "web/src/HealthInstance.jsx": {
-      "lastCommit": "31464ea",
-      "lastDate": "2026-09-10T07:16:30+00:00",
-      "lastSubject": "Make all twelve calculators accessible",
-      "commits": 5
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T12:20:49.787Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 6
     },
     "web/src/HealthCalc.jsx": {
       "lastCommit": "8edc6d0",
@@ -213,10 +213,10 @@
       "commits": 5
     },
     "core/src/health.js": {
-      "lastCommit": "fa6255c",
-      "lastDate": "2026-09-10T05:53:33+00:00",
-      "lastSubject": "Rebuild core as the portable calculation package",
-      "commits": 5
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T12:20:49.787Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 2
     },
     "web/src/About.jsx": {
       "lastCommit": "a953858",
@@ -231,10 +231,10 @@
       "commits": 1
     },
     "core/src/rates": {
-      "lastCommit": "fa6255c",
-      "lastDate": "2026-09-10T05:53:33+00:00",
-      "lastSubject": "Rebuild core as the portable calculation package",
-      "commits": 1
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T12:20:49.787Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 2
     },
     "core/src/paytax.js": {
       "lastCommit": "fa6255c",
@@ -291,16 +291,16 @@
       "commits": 2
     },
     "core/src/appRoutes.js": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T12:06:51.499Z",
-      "lastSubject": "Uncommitted at snapshot time",
+      "lastCommit": "fadbc1d",
+      "lastDate": "2026-09-10T12:07:08+00:00",
+      "lastSubject": "Point support at the 2176studios handle, and fix a snapshot parsing bug",
       "commits": 4
     },
     "core/src/appMeta.js": {
-      "lastCommit": "8edc6d0",
-      "lastDate": "2026-09-10T11:49:21+00:00",
-      "lastSubject": "Add an About, Contact and Privacy page linked from every footer",
-      "commits": 2
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T12:20:49.787Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 3
     },
     "web/src/calc-shared.css": {
       "lastCommit": "8edc6d0",

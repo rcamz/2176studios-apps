@@ -66,7 +66,6 @@ Implemented, flagged in the UI, and needing confirmation. None are blocking.
 | 15 | CGT gain → Medicare / HELP / MLS | Logically certain, not directly stated | Low risk |
 | 16 | RFBA → Div 293, FTB, child support | Secondary sources only | Low risk |
 | 17 | DRI activity multipliers | Only 2 of 4 ranges confirmed | Labelled "conventional", not DRI |
-| 18 | Australian ethnicity-adjusted BMI | Not confirmed for Australia | Offered as attributed WHO view, not the default |
 
 ---
 
@@ -107,6 +106,7 @@ Shipped deliberately simplified. Each needs a visible caveat in the UI.
 
 | Model | Simplification |
 |---|---|
+| **BMI** | Standard WHO cut-offs only. The 2004 WHO Expert Consultation's Asian action points (23.0 / 27.5 / 32.5 / 37.5) were built and then removed on 10 Sep 2026 — Australian authority for ethnicity-adjusted thresholds was never confirmed, and two competing obesity thresholds (25 and 27.5) are in active use. Reinstating it needs an Australian source, not a WHO one |
 | **Division 296** | Flagged, not computed. Realised earnings is a fund-level figure that can differ from total return by an order of magnitude; computing it would mean inventing the key variable. Pending ATO guidance, first assessments 2027-28 |
 | **Living expense benchmark** | HEM tables are proprietary and unpublished. Using our own documented approximation. Must **not** be labelled "HEM" |
 | **LMI** | Indicative bands from Helia's public estimator. Required label: *"LMI numbers vary from bank to bank. These are indicative, for research purposes."* |

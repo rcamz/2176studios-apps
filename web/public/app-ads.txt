@@ -1,0 +1,6 @@
+# Authorised Digital Sellers for Apps.
+# Must be reachable at the root of the developer website declared on each
+# Play listing (https://2176studios.com/app-ads.txt) or the apps receive
+# almost no programmatic demand. Mirrors ads.txt — AdMob and AdSense share
+# the same publisher number.
+google.com, ca-pub-9072302221360810, DIRECT, f08c47fec0942fa0

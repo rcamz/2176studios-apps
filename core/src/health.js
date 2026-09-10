@@ -88,38 +88,6 @@ export function bmiCategoryFor(bmi, rates = DEFAULT_RATES) {
   return rates.health.bmiCategories[rates.health.bmiCategories.length - 1].label;
 }
 
-// WHO 2004 Expert Consultation ACTION POINTS — 23.0 / 27.5 / 32.5 / 37.5.
-// The consultation RETAINED the standard cut-offs as the international
-// classification and declined to set population-specific ones (§2.13), so this
-// is offered as an optional attributed view, never as the Australian default.
-export function asianActionPointFor(bmi, rates = DEFAULT_RATES) {
-  const e = rates.health.ethnicityAdjustedBmi;
-  const points = e.actionPoints;
-  const labels = [
-    'Below the first action point (23.0)',
-    'Increased risk — action point 23.0',
-    'High risk — action point 27.5',
-    'Very high risk — action point 32.5',
-    'Highest risk — action point 37.5',
-  ];
-  let idx = 0;
-  for (const p of points) if (bmi >= p) idx += 1;
-  return {
-    label: labels[idx],
-    crossed: points.filter((p) => bmi >= p),
-    attribution: e.attribution,
-    confidence: e.confidence,
-    isAustralianDefault: e.isAustralianDefault,
-    competingObesityThreshold: e.competingObesityThreshold,
-    note:
-      'The 2004 WHO Expert Consultation retained the standard cut-offs as the international ' +
-      'classification and identified these as public health action points instead. Two obesity ' +
-      `thresholds are in active use — ${points[1]} (Expert Consultation) and ` +
-      `${e.competingObesityThreshold} (WHO Western Pacific / South and South-East Asian consensus). ` +
-      'Australian authority for ethnicity-adjusted thresholds is NOT confirmed.',
-  };
-}
-
 // ─── Protein ─────────────────────────────────────────────────────────────────
 
 // Scaling basis matters more than the coefficient (§3.12). Multiplying g/kg by
@@ -320,7 +288,6 @@ export function calcHealth(inputs = {}) {
     goalWeightKg = null,
     goalWeeks = 12,
     bodyFatPercent = null,
-    bmiView = 'standard', // 'standard' | 'who-asian'
     date = new Date(),
   } = inputs;
 
@@ -376,8 +343,6 @@ export function calcHealth(inputs = {}) {
   const bmiExact = bmiFor(weightKg, heightCm);
   const bmi = round(bmiExact, 1);
   const bmiCategory = bmiCategoryFor(bmiExact, rates);
-  const asian = asianActionPointFor(bmiExact, rates);
-  const bmiAsianCategory = asian.label;
 
   if (bmiExact > h.bmrOverestimatesAboveBmi) {
     warnings.push({
@@ -431,9 +396,6 @@ export function calcHealth(inputs = {}) {
     activityLabel: activity.label,
     bmi,
     bmiCategory,
-    bmiAsianCategory,
-    bmiAsian: asian,
-    bmiView,
     bodyFatPercent: bfPct,
     leanMassKg: lbm === null ? null : round(lbm, 1),
     fatMassKg: lbm === null ? null : round(weightKg - lbm, 1),

@@ -86,19 +86,5 @@ export const health = [
       { max: 30,   label: 'Overweight' },
       { max: null, label: 'Obese' },
     ],
-    // WHO's 2004 Expert Consultation RETAINED the standard cut-offs as the
-    // international classification and declined to set population-specific
-    // ones, identifying public health action points at 23.0 / 27.5 / 32.5 /
-    // 37.5 instead. Two competing obesity thresholds are in active use (27.5
-    // from the Consultation, 25 from WPRO). Australian authority NOT confirmed.
-    // Offer as an optional, attributed view — never as the Australian default.
-    ethnicityAdjustedBmi: {
-      available: true,
-      isAustralianDefault: false,
-      confidence: 'UNVERIFIED',
-      attribution: 'WHO Asian-adjusted action points, 2004 Expert Consultation',
-      actionPoints: [23.0, 27.5, 32.5, 37.5],
-      competingObesityThreshold: 25,
-    },
   },
 ];
