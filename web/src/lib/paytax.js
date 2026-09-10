@@ -318,3 +318,95 @@ export function grossFromNet(targetAnnualNet, inputs = {}) {
   }
   return (lo + hi) / 2;
 }
+
+// ─── Explanation ─────────────────────────────────────────────────────────────
+
+import {
+  workings, section, step, subtotal, total, note, bracketBreakdown,
+} from './workings.js';
+
+const money = (n) => '$' + Math.round(n).toLocaleString('en-AU');
+const pct = (r) => (r * 100).toFixed(r * 100 % 1 === 0 ? 0 : 1) + '%';
+
+/**
+ * Build a step-by-step account of a calcPayTax result.
+ *
+ * Separate from calcPayTax so the hot path stays free of presentation
+ * concerns and the explanation is opt-in.
+ */
+export function explainPayTax(result, inputs = {}) {
+  const r = result;
+  const rates = r.rates;
+  const residency = inputs.residency ?? 'resident';
+  const scale = scaleFor(residency, rates);
+
+  const income = section('Taxable income', [
+    step('Gross income', r.grossIncome),
+    r.salarySacrifice > 0 && step('less salary sacrifice to super', -r.salarySacrifice),
+    r.deductionClaimed > 0 && step(
+      r.usedStandardDeduction ? 'less standard work deduction' : 'less work-related deductions',
+      -r.deductionClaimed,
+      { note: r.usedStandardDeduction
+          ? 'The $1,000 standard deduction, claimed because it exceeds your substantiated expenses'
+          : 'Your substantiated expenses, claimed because they exceed the $1,000 standard deduction' }
+    ),
+    total('Taxable income', r.taxableIncome),
+  ]);
+
+  const brackets = section('Income tax, bracket by bracket', [
+    ...bracketBreakdown(r.taxableIncome, scale, money, pct),
+    // Only worth a subtotal line when an offset actually follows it.
+    r.lito > 0 && subtotal('Tax before offsets', r.incomeTax + r.lito),
+    r.lito > 0 && step('less Low Income Tax Offset', -r.lito, {
+      note: 'Non-refundable, and ignored by PAYG withholding — it arrives at tax time',
+    }),
+    total('Income tax', r.incomeTax),
+  ], {
+    note: 'Only the slice of income inside each bracket is taxed at that rate. Crossing a bracket never re-taxes the income below it.',
+  });
+
+  const levies = section('Levies', [
+    step(`Medicare levy at ${pct(rates.medicare.levyRate)}`, r.medicareLevy),
+    r.mls > 0 && step('Medicare levy surcharge', r.mls, {
+      note: `Charged on the whole ${money(r.mlsIncome)} income for surcharge purposes, not just the amount above the threshold`,
+    }),
+    r.mls === 0 && inputs.hasPrivateCover && note('No surcharge — you hold private hospital cover.'),
+    total('Total levies', r.medicareLevy + r.mls),
+  ]);
+
+  const help = r.helpRepayment > 0 ? section('Study and training loan', [
+    step('Repayment income', r.repaymentIncome, {
+      note: r.repaymentIncome !== r.taxableIncome
+        ? 'Taxable income with reportable super and fringe benefits added back'
+        : null,
+    }),
+    r.salarySacrifice > 0 && note('Salary sacrifice is added back here, so it does not reduce your repayment. Sacrificing to lower a HELP bill is a common piece of bad advice.'),
+    total('Compulsory repayment', r.helpRepayment),
+  ]) : null;
+
+  const superSec = section('Superannuation', [
+    step('Employer contributions', r.superAmount, { note: `${inputs.sgRate ?? 12}% of gross, paid on top of your salary` }),
+    r.salarySacrifice > 0 && step('Your salary sacrifice', r.salarySacrifice),
+    subtotal('Total concessional contributions', r.concessionalContributions),
+    step('Concessional cap', r.concessionalCap, { muted: true }),
+    r.division293 > 0 && step('Division 293 tax', r.division293, {
+      note: 'Income plus contributions exceed $250,000, so those contributions are taxed at 30% rather than 15%',
+    }),
+  ]);
+
+  const outcome = section('Take-home', [
+    step('Taxable income', r.taxableIncome),
+    step('less income tax', -r.incomeTax),
+    step('less Medicare levy', -r.medicareLevy),
+    r.mls > 0 && step('less Medicare levy surcharge', -r.mls),
+    r.helpRepayment > 0 && step('less study loan repayment', -r.helpRepayment),
+    total('Take-home pay', r.takeHome),
+    step('Effective tax rate', `${(r.effectiveTaxRate * 100).toFixed(1)}%`, { muted: true }),
+    step('Marginal rate', pct(r.marginalRate), { muted: true }),
+  ]);
+
+  return workings([income, brackets, levies, help, superSec, outcome], {
+    source: 'Australian Taxation Office rates',
+    asAt: rates.__fy ? `FY${rates.__fy}` : null,
+  });
+}

@@ -3,7 +3,8 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Cell,
 } from 'recharts';
-import { calcPayTax, byFreq, toAnnual, grossFromNet } from './lib/paytax.js';
+import { calcPayTax, explainPayTax, byFreq, toAnnual, grossFromNet } from './lib/paytax.js';
+import Workings from './Workings.jsx';
 import { availableFinancialYears, financialYearRange, financialYear } from './lib/rates/index.js';
 import { fmt, fmtPct } from './lib/format.js';
 import { num, bool, enumOf, writeUrl } from './lib/urlState.js';
@@ -141,6 +142,11 @@ export default function PayTaxInstance({
   const result = useMemo(
     () => calcPayTax({ ...inputs, grossIncome: annualGross, date: asAtDate }),
     [inputs, annualGross, asAtDate]
+  );
+
+  const explanation = useMemo(
+    () => explainPayTax(result, { ...inputs, grossIncome: annualGross }),
+    [result, inputs, annualGross]
   );
 
   const showFreq = inputs.freq;
@@ -537,6 +543,8 @@ export default function PayTaxInstance({
               Reduces taxable income to {fmt(result.taxableIncome)}. Tax saving vs. taking as cash: {fmt(inputs.salarySacrifice * result.marginalRate - inputs.salarySacrifice * 0.15)}/yr at your marginal rate.
             </div>
           )}
+
+          <Workings data={explanation} />
 
           <div className="disclaimer">
             Estimates only — not financial advice. Based on 2026–27 ATO rates (estimated). Net-to-gross uses iterative back-calculation — result may vary slightly from employer payroll. Does not include state taxes, FBT, or investment income. Consult a licensed adviser for personal decisions.

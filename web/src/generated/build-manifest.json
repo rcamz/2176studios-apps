@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-09-10T03:52:42.251Z",
-  "generatedFrom": "5f2d311",
+  "generatedAt": "2026-09-10T04:01:06.182Z",
+  "generatedFrom": "c290dc8",
   "files": {
     "web/src/Home.jsx": {
       "lastCommit": "2ab3af8",
@@ -225,10 +225,10 @@
       "commits": 2
     },
     "web/src/lib/paytax.js": {
-      "lastCommit": "d1eef8e",
-      "lastDate": "2026-09-10T03:05:21+00:00",
-      "lastSubject": "Rewrite eight calculators against the verified rates",
-      "commits": 5
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T04:01:06.182Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 6
     },
     "web/src/lib/amortize.js": {
       "lastCommit": "0ef3910",
@@ -267,10 +267,10 @@
       "commits": 2
     },
     "web/src/calc-shared.css": {
-      "lastCommit": "ca0042a",
-      "lastDate": "2026-09-10T03:38:31+00:00",
-      "lastSubject": "Stop the mobile ad bar covering the version footer",
-      "commits": 3
+      "lastCommit": "pending",
+      "lastDate": "2026-09-10T04:01:06.182Z",
+      "lastSubject": "Uncommitted at snapshot time",
+      "commits": 4
     },
     "web/src/base.css": {
       "lastCommit": "57889a3",
