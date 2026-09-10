@@ -84,6 +84,14 @@ export function VersionStocktake() {
               <span className="stk-k">Tax data verified</span>
               <span className="stk-v">{formatDate(RATES_VERIFIED)} · next review {formatDate(RATES_NEXT_REVIEW)}</span>
             </div>
+            <div>
+              <span className="stk-k">File history from</span>
+              <span className="stk-v">
+                {BUILD.source === 'snapshot'
+                  ? `snapshot at ${BUILD.snapshotFrom ?? 'unknown'}`
+                  : BUILD.source}
+              </span>
+            </div>
           </div>
 
           {BUILD.dirty && (
@@ -94,10 +102,11 @@ export function VersionStocktake() {
 
           {!BUILD.perFileAvailable && (
             <p className="stocktake-warn">
-              Per-file history is unavailable in this build — it ran against a shallow clone, which
-              carries only one commit. Every file would report that same commit, so the dates below
-              are withheld rather than shown as identical and misleading. The build commit above is
-              still accurate. Set the clone depth to full in your CI settings to restore them.
+              Per-file history is unavailable in this build. It ran against a shallow clone with no
+              committed snapshot to fall back on, so every file would report the same commit. The
+              dates are withheld rather than shown as identical and misleading — the build commit
+              above is still accurate. Run <code>npm run version:snapshot</code> and commit the
+              result to restore them.
             </p>
           )}
 
@@ -158,6 +167,7 @@ export function VersionStocktake() {
             Version numbers are curated by hand; dates and commits are read from git at build time, so they cannot drift.
             A calculator shows “changed by” a shared module when that module moved more recently than its own files —
             the tax engine changing moves the numbers in every calculator that uses it.
+            {BUILD.source === 'snapshot' && ' CI clones shallow, so per-file dates come from a snapshot committed alongside the code; the build commit above is read live either way.'}
           </p>
         </div>
       )}

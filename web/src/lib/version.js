@@ -121,6 +121,11 @@ export const BUILD = {
   // case per-file dates are withheld rather than shown as 12 identical rows.
   perFileAvailable: buildInfo.perFileAvailable !== false,
   shallow: Boolean(buildInfo.shallow),
+  // 'git' | 'git (unshallowed)' | 'snapshot' — where the per-file dates came
+  // from. CI clones shallow, so a snapshot committed from a full clone is the
+  // usual source in production.
+  source: buildInfo.source ?? 'git',
+  snapshotFrom: buildInfo.snapshotFrom ?? null,
 };
 
 function fileInfo(path) {

@@ -5,31 +5,54 @@
 // read from git, so it cannot drift from what was actually committed.
 
 import { execSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 
-const git = (cmd, fallback = '') => {
+const git = (cmd, fallback = '', timeout = 10_000) => {
   try {
-    return execSync(cmd, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+    return execSync(cmd, {
+      encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout,
+    }).trim();
   } catch {
     return fallback;
   }
 };
 
-export default function buildInfo({ paths = [], root = '..' } = {}) {
+function loadSnapshot(file) {
+  try {
+    return JSON.parse(readFileSync(file, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+export default function buildInfo({ paths = [], root = '..', snapshotFile = 'src/generated/build-manifest.json' } = {}) {
   const VIRTUAL_ID = 'virtual:build-info';
   const RESOLVED_ID = '\0' + VIRTUAL_ID;
+  const snapshot = loadSnapshot(snapshotFile);
 
   function collect() {
     const cwd = `git -C "${root}"`;
 
     const hasGit = git(`${cwd} rev-parse --git-dir`) !== '';
+    let shallow = git(`${cwd} rev-parse --is-shallow-repository`) === 'true';
+    let source = 'git';
+
     // CI providers commonly clone with --depth=1. With one commit of history,
     // `git log -1 -- <path>` returns that same commit for EVERY path, so
-    // per-file dates would all be identical and meaningless. Reporting them
-    // anyway would look plausible and be false, so they are withheld instead.
-    const shallow = git(`${cwd} rev-parse --is-shallow-repository`) === 'true';
-    const perFileAvailable = hasGit && !shallow;
+    // per-file dates would be identical and meaningless.
+    //
+    // First try to deepen the clone. The container just cloned from the remote,
+    // so the fetch usually succeeds; it is bounded so a hang cannot stall the
+    // build.
+    if (shallow) {
+      git(`${cwd} fetch --unshallow --quiet`, '', 60_000);
+      shallow = git(`${cwd} rev-parse --is-shallow-repository`) === 'true';
+      if (!shallow) source = 'git (unshallowed)';
+    }
 
-    const files = {};
+    let files = {};
+    let perFileAvailable = hasGit && !shallow;
+
     if (perFileAvailable) {
       for (const p of paths) {
         // A path may be a directory; -- <path> works for both.
@@ -40,6 +63,12 @@ export default function buildInfo({ paths = [], root = '..' } = {}) {
           commits: Number(git(`${cwd} rev-list --count HEAD -- "${p}"`, '0')) || 0,
         };
       }
+    } else if (snapshot?.files) {
+      // Still shallow. Fall back to the snapshot committed from a machine that
+      // had the full history — accurate as at the commit that produced it.
+      files = snapshot.files;
+      perFileAvailable = true;
+      source = 'snapshot';
     }
 
     return {
@@ -53,6 +82,8 @@ export default function buildInfo({ paths = [], root = '..' } = {}) {
       hasGit,
       shallow,
       perFileAvailable,
+      source,
+      snapshotFrom: source === 'snapshot' ? snapshot.generatedFrom : null,
       files,
     };
   }
