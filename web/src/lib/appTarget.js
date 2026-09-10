@@ -38,3 +38,10 @@ export function canonicalShareUrl() {
 
   return SITE_ORIGIN + path + search;
 }
+
+// Marks the document so the stylesheet can drop the ad-bar spacing and apply
+// window insets. Done here rather than in a component so it lands before the
+// first paint, and once rather than per calculator.
+if (IS_STANDALONE && typeof document !== 'undefined') {
+  document.documentElement.dataset.standalone = APP_TARGET;
+}

@@ -234,3 +234,45 @@ select:focus-visible {
   padding-top: 9px;
 }
 .site-footer + .stocktake { margin-left: auto; margin-right: auto; }
+
+
+/* ─── Packaged app layout ─────────────────────────────────────────────── */
+/*
+ * Set on <html> by lib/appTarget.js. Two things differ from the web site:
+ *
+ * 1. There is no floating ad bar, so the space reserved for it — 132px under
+ *    the version footer, plus the gap under the disclaimer — is dead
+ *    whitespace at the bottom of every screen.
+ * 2. The window is edge to edge on Android 15, so the status bar and the
+ *    navigation buttons sit on top of the page unless it insets itself.
+ *    MainActivity measures the real insets and sets --safe-*; env() is the
+ *    fallback for iOS and for a browser.
+ */
+:root[data-standalone] {
+  --safe-top:    env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left:   env(safe-area-inset-left, 0px);
+  --safe-right:  env(safe-area-inset-right, 0px);
+}
+
+:root[data-standalone] .ad-bar-float,
+:root[data-standalone] .ad-sidebar { display: none; }
+
+:root[data-standalone] .calc-page .version-footer {
+  padding-bottom: calc(20px + var(--safe-bottom));
+}
+
+:root[data-standalone] .disclaimer { margin-bottom: 0; }
+
+/* The topbar is sticky, so its own padding is what keeps the brand clear of
+   the status bar. */
+:root[data-standalone] .calc-topbar {
+  padding-top: calc(9px + var(--safe-top));
+}
+
+:root[data-standalone] body {
+  /* On body only. .calc-page is inside it, so insetting both doubles the
+     gutter on a notched phone in landscape. */
+  padding-left: var(--safe-left);
+  padding-right: var(--safe-right);
+}

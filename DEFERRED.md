@@ -163,10 +163,10 @@ donation, as support for the app, or as payment for anything in it. Donations
 are generally exempt from Play Billing, but "generally" is not a basis for
 shipping twelve listings.
 
-Until it is checked, the Android builds hide the link: `SiteFooter.jsx` reads
-`VITE_HIDE_SUPPORT`, so the wrapper build sets `VITE_HIDE_SUPPORT=1` and ships
-without it. The web site always shows it. If the policy turns out to permit it,
-delete the flag; if not, the apps are already compliant.
+**Reversed 10 Sep 2026 by decision:** the link ships in the app. Donations are
+generally exempt from Play Billing and that is the bet being taken. The retreat
+is still one flag — `VITE_HIDE_SUPPORT=1` at build time removes it with no code
+change — so if a review objects it is a rebuild, not a rewrite.
 
 ---
 
@@ -179,6 +179,7 @@ From building the Health app at v0.8 (10 Sep 2026). See `apps/README.md`.
 | 1 | **Rate registry is not tree-shaken.** `ratesFor()` resolves every domain from one index, so the Health app carries novated lease FBT scalars, stamp duty schedules and Age Pension thresholds it never reads | ~40KB per app. Needs per-domain resolution |
 | 2 | **Fonts load from fonts.googleapis.com** | First launch offline falls back to the system sans stack. Bundling the two faces makes the app genuinely offline |
 | 3 | **No release signing config.** Debug builds only | Blocks any upload. Needs a keystore plus Play App Signing enrolment |
+| 3b | **Buy Me a Coffee link now ships in the app**, by decision on 10 Sep 2026, reversing the hold in §6.1. Play's Payments policy generally exempts donations; that is the bet | If review objects, `VITE_HIDE_SUPPORT=1` removes it without a code change |
 | 4 | **No screenshots.** Play requires at least two phone screenshots | Blocks submission |
 | 5 | **Icons are generated placeholders** | Fine for testing, thin for a listing |
 | 6 | **Health is a stricter review category than finance** | The calorie hard block is protective and worth citing in the review notes |

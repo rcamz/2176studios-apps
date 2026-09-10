@@ -9,7 +9,7 @@
 // and run Gradle.
 
 import { execSync } from 'node:child_process';
-import { existsSync, rmSync, writeFileSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, rmSync, writeFileSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { resolve, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -55,12 +55,30 @@ function run(cmd, cwd, extraEnv = {}) {
   }
 }
 
-// ── 1. Web bundle, this calculator only ─────────────────────────────────
+// ── 1. Version, from the app's package.json ────────────────────────────
+// One place to bump. Play rejects an upload whose versionCode has not
+// increased, and doing it by hand across twelve apps is the easiest mistake
+// in the whole pipeline to make.
+const pkg = JSON.parse(readFileSync(join(APP_DIR, 'package.json'), 'utf8'));
+const versionName = pkg.version;
+const versionCode = pkg.androidVersionCode;
+if (!Number.isInteger(versionCode)) {
+  fail(`apps/${app}/package.json needs an integer "androidVersionCode".`);
+}
+
+const gradlePath = join(APP_DIR, 'android/app/build.gradle');
+const gradle = readFileSync(gradlePath, 'utf8')
+  .replace(/versionCode \d+/, `versionCode ${versionCode}`)
+  .replace(/versionName "[^"]*"/, `versionName "${versionName}"`);
+writeFileSync(gradlePath, gradle);
+console.log(`\n${app} ${versionName} (versionCode ${versionCode})`);
+
+// ── 2. Web bundle, this calculator only ─────────────────────────────────
 const dist = resolve(ROOT, 'web', `dist-${app}`);
 rmSync(dist, { recursive: true, force: true });
 run(`npx vite build --outDir dist-${app}`, resolve(ROOT, 'web'), { VITE_APP_TARGET: app });
 
-// ── 2. Strip what only a web server needs ───────────────────────────────
+// ── 3. Strip what only a web server needs ───────────────────────────────
 // Vite copies everything in public/. Shipping robots.txt, a sitemap and two
 // ads.txt files inside an APK is dead weight, and ads.txt in an app is
 // meaningless — it authorises sellers for a *website*.
@@ -75,14 +93,14 @@ console.log(`\nStripped ${stripped} web-only file(s) from the app bundle.`);
 // Gradle needs the SDK location, and this file is machine-specific.
 writeFileSync(join(APP_DIR, 'android/local.properties'), `sdk.dir=${SDK}\n`);
 
-// ── 3. Into the native project ──────────────────────────────────────────
+// ── 4. Into the native project ──────────────────────────────────────────
 run('npx cap sync android', APP_DIR);
 
-// ── 4. Gradle ───────────────────────────────────────────────────────────
+// ── 5. Gradle ───────────────────────────────────────────────────────────
 const task = release ? 'assembleRelease' : 'assembleDebug';
 run(`./gradlew ${task} --no-daemon`, join(APP_DIR, 'android'));
 
-// ── 5. Report ───────────────────────────────────────────────────────────
+// ── 6. Report ───────────────────────────────────────────────────────────
 const outDir = join(APP_DIR, 'android/app/build/outputs/apk', release ? 'release' : 'debug');
 const apks = existsSync(outDir) ? readdirSync(outDir).filter((f) => f.endsWith('.apk')) : [];
 if (!apks.length) fail(`Gradle finished but no APK appeared in ${outDir}`);

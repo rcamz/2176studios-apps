@@ -796,7 +796,7 @@ select.field-select {
 }
 
 /* ─── Workings panel ──────────────────────────────────────────────────── */
-.workings { padding: 4px 0 14px; }
+.workings { padding: 10px 16px 16px; }
 .workings-section { margin-bottom: 18px; }
 .workings-section:last-of-type { margin-bottom: 6px; }
 .workings-heading {
