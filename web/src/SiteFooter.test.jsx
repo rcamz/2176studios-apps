@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import SiteFooter from './SiteFooter.jsx';
 import About from './About.jsx';
 import { CALCS, SHARED } from './lib/version.js';
-import { APP_ROUTES, routeFor } from '../../core/src/appRoutes.js';
+import { APP_ROUTES, routeFor, SUPPORT_URL, SUPPORT_EMAIL } from '../../core/src/appRoutes.js';
 import { APP_META } from '../../core/src/appMeta.js';
 
 const SRC = dirname(fileURLToPath(import.meta.url));
@@ -16,25 +16,34 @@ const at = (path) => (route) => renderToStaticMarkup(
   <MemoryRouter initialEntries={[path]}>{route}</MemoryRouter>
 );
 
-const SUPPORT = 'support@2176studios.com';
+const SUPPORT = SUPPORT_EMAIL;
 
 describe('SiteFooter', () => {
   const html = at('/')(<SiteFooter />);
 
-  it('offers exactly the three links, in order', () => {
-    const labels = [...html.matchAll(/site-footer-link[^>]*>([^<]+)</g)].map((m) => m[1]);
-    expect(labels).toEqual(['About', 'Contact', 'Privacy']);
+  it('offers exactly the four links, in order', () => {
+    const labels = [...html.matchAll(/site-footer-link[^"]*"[^>]*>\s*([^<]+?)\s*</g)].map((m) => m[1]);
+    expect(labels).toEqual(['About', 'Contact', 'Privacy', 'Buy me a coffee']);
   });
 
-  it('points every link at a section of the one about page', () => {
+  it('points the first three at sections of the one about page', () => {
     const hrefs = [...html.matchAll(/href="([^"]+)"/g)].map((m) => m[1]);
-    expect(hrefs).toEqual(['/about#about', '/about#contact', '/about#privacy']);
+    expect(hrefs.slice(0, 3)).toEqual(['/about#about', '/about#contact', '/about#privacy']);
   });
 
   it('separates them with pipes that a screen reader does not read out', () => {
     const seps = [...html.matchAll(/<span class="site-footer-sep" aria-hidden="true">\|<\/span>/g)];
-    // Two separators for three links — not a trailing one.
-    expect(seps).toHaveLength(2);
+    // Three separators for four links — not a trailing one.
+    expect(seps).toHaveLength(3);
+  });
+
+  it('opens the support page in a new tab without leaking the referrer window', () => {
+    expect(html).toContain(`href="${SUPPORT_URL}"`);
+    // target="_blank" without rel="noopener" hands the opened page a live
+    // handle on ours via window.opener.
+    const tag = html.match(/<a[^>]*site-footer-link--support[^>]*>/)[0];
+    expect(tag).toMatch(/target="_blank"/);
+    expect(tag).toMatch(/rel="noopener noreferrer"/);
   });
 
   it('is a labelled landmark rather than an anonymous row of links', () => {
@@ -98,6 +107,12 @@ describe('About page', () => {
 
   it('warns that share links carry the figures in the address', () => {
     expect(html).toMatch(/encoded in the (web )?address/i);
+  });
+
+  it('mentions support as optional, next to the advertising disclosure', () => {
+    expect(html).toContain(SUPPORT_URL);
+    expect(html).toMatch(/entirely optional/i);
+    expect(html).toMatch(/nothing here is paywalled/i);
   });
 
   it('does not claim to be advice or ATO-affiliated', () => {

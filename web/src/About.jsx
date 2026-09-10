@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import PageHead from './PageHead.jsx';
+import { SUPPORT_URL, SUPPORT_EMAIL } from '../../core/src/appRoutes.js';
 import SiteFooter from './SiteFooter.jsx';
 import { VersionFooter } from './VersionFooter.jsx';
 import './About.css';
-
-const SUPPORT_EMAIL = 'support@2176studios.com';
 
 // Shown at the foot of the privacy section. Update it whenever the policy
 // changes in substance, not when the page is merely restyled.
@@ -102,7 +101,15 @@ export default function About() {
           </p>
           <p>
             The site carries advertising, which is how it stays free. Ads do not
-            influence any calculation.
+            influence any calculation, and no advertiser has any say in what a
+            calculator says.
+          </p>
+          <p>
+            If one of these saved you an afternoon or a bad decision, you can{' '}
+            <a href={SUPPORT_URL} target="_blank" rel="noopener noreferrer">
+              buy me a coffee
+            </a>. It is entirely optional — nothing here is paywalled, and
+            nothing ever will be.
           </p>
         </section>
 

@@ -154,3 +154,16 @@ Adding a fourth means editing the policy in the same commit.
 `web/src/SiteFooter.test.jsx` asserts the disclosures are present, not that they
 are still accurate — only a person can check that.
 
+### 6.1 Buy Me a Coffee link in the Android builds — unresolved
+
+The footer links out to Buy Me a Coffee. On the web that is unremarkable. In a
+Play-distributed app, a link to an external payment page runs into the Payments
+policy, and the answer differs depending on whether the money is read as a
+donation, as support for the app, or as payment for anything in it. Donations
+are generally exempt from Play Billing, but "generally" is not a basis for
+shipping twelve listings.
+
+Until it is checked, the Android builds hide the link: `SiteFooter.jsx` reads
+`VITE_HIDE_SUPPORT`, so the wrapper build sets `VITE_HIDE_SUPPORT=1` and ships
+without it. The web site always shows it. If the policy turns out to permit it,
+delete the flag; if not, the apps are already compliant.

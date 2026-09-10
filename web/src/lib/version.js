@@ -103,7 +103,7 @@ export const CALCS = [
     deps: ['sitefooter', 'rates', 'format', 'urlState', 'styles', 'tokens'],
   },
   {
-    id: 'about', name: 'About / Contact / Privacy', href: '/about', version: '1.0.0',
+    id: 'about', name: 'About / Contact / Privacy', href: '/about', version: '1.1.0',
     paths: ['web/src/About.jsx', 'web/src/About.css'],
     deps: ['sitefooter', 'tokens'],
   },

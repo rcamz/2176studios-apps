@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-09-10T11:47:49.699Z",
-  "generatedFrom": "31464ea",
+  "generatedAt": "2026-09-10T11:59:50.951Z",
+  "generatedFrom": "8edc6d0",
   "files": {
     "web/src/Home.jsx": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T11:47:49.699Z",
-      "lastSubject": "Uncommitted at snapshot time",
+      "lastCommit": "8edc6d0",
+      "lastDate": "2026-09-10T11:49:21+00:00",
+      "lastSubject": "Add an About, Contact and Privacy page linked from every footer",
       "commits": 9
     },
     "web/src/Home.css": {
@@ -21,9 +21,9 @@
       "commits": 35
     },
     "web/src/MortgageCalc.jsx": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T11:47:49.699Z",
-      "lastSubject": "Uncommitted at snapshot time",
+      "lastCommit": "8edc6d0",
+      "lastDate": "2026-09-10T11:49:21+00:00",
+      "lastSubject": "Add an About, Contact and Privacy page linked from every footer",
       "commits": 36
     },
     "web/src/PayTaxInstance.jsx": {
@@ -33,10 +33,10 @@
       "commits": 10
     },
     "web/src/PayTaxCalc.jsx": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T11:47:49.699Z",
-      "lastSubject": "Uncommitted at snapshot time",
-      "commits": 6
+      "lastCommit": "8edc6d0",
+      "lastDate": "2026-09-10T11:49:21+00:00",
+      "lastSubject": "Add an About, Contact and Privacy page linked from every footer",
+      "commits": 37
     },
     "web/src/BorrowingPowerInstance.jsx": {
       "lastCommit": "31464ea",
@@ -45,9 +45,9 @@
       "commits": 4
     },
     "web/src/BorrowingPowerCalc.jsx": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T11:47:49.699Z",
-      "lastSubject": "Uncommitted at snapshot time",
+      "lastCommit": "8edc6d0",
+      "lastDate": "2026-09-10T11:49:21+00:00",
+      "lastSubject": "Add an About, Contact and Privacy page linked from every footer",
       "commits": 5
     },
     "core/src/borrowingpower.js": {
@@ -63,9 +63,9 @@
       "commits": 4
     },
     "web/src/RentVBuyCalc.jsx": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T11:47:49.699Z",
-      "lastSubject": "Uncommitted at snapshot time",
+      "lastCommit": "8edc6d0",
+      "lastDate": "2026-09-10T11:49:21+00:00",
+      "lastSubject": "Add an About, Contact and Privacy page linked from every footer",
       "commits": 5
     },
     "core/src/rentvbuy.js": {
@@ -81,10 +81,10 @@
       "commits": 4
     },
     "web/src/CGTCalc.jsx": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T11:47:49.699Z",
-      "lastSubject": "Uncommitted at snapshot time",
-      "commits": 5
+      "lastCommit": "8edc6d0",
+      "lastDate": "2026-09-10T11:49:21+00:00",
+      "lastSubject": "Add an About, Contact and Privacy page linked from every footer",
+      "commits": 37
     },
     "core/src/cgt.js": {
       "lastCommit": "fa6255c",
@@ -99,9 +99,9 @@
       "commits": 4
     },
     "web/src/RedundancyCalc.jsx": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T11:47:49.699Z",
-      "lastSubject": "Uncommitted at snapshot time",
+      "lastCommit": "8edc6d0",
+      "lastDate": "2026-09-10T11:49:21+00:00",
+      "lastSubject": "Add an About, Contact and Privacy page linked from every footer",
       "commits": 5
     },
     "core/src/redundancy.js": {
@@ -117,9 +117,9 @@
       "commits": 4
     },
     "web/src/SalarySacrificeCalc.jsx": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T11:47:49.699Z",
-      "lastSubject": "Uncommitted at snapshot time",
+      "lastCommit": "8edc6d0",
+      "lastDate": "2026-09-10T11:49:21+00:00",
+      "lastSubject": "Add an About, Contact and Privacy page linked from every footer",
       "commits": 5
     },
     "core/src/salarysacrifice.js": {
@@ -135,9 +135,9 @@
       "commits": 4
     },
     "web/src/FHSSSCalc.jsx": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T11:47:49.699Z",
-      "lastSubject": "Uncommitted at snapshot time",
+      "lastCommit": "8edc6d0",
+      "lastDate": "2026-09-10T11:49:21+00:00",
+      "lastSubject": "Add an About, Contact and Privacy page linked from every footer",
       "commits": 5
     },
     "core/src/fhsss.js": {
@@ -153,9 +153,9 @@
       "commits": 4
     },
     "web/src/RetirementCalc.jsx": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T11:47:49.699Z",
-      "lastSubject": "Uncommitted at snapshot time",
+      "lastCommit": "8edc6d0",
+      "lastDate": "2026-09-10T11:49:21+00:00",
+      "lastSubject": "Add an About, Contact and Privacy page linked from every footer",
       "commits": 5
     },
     "core/src/retirement.js": {
@@ -171,9 +171,9 @@
       "commits": 4
     },
     "web/src/NovatedLeaseCalc.jsx": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T11:47:49.699Z",
-      "lastSubject": "Uncommitted at snapshot time",
+      "lastCommit": "8edc6d0",
+      "lastDate": "2026-09-10T11:49:21+00:00",
+      "lastSubject": "Add an About, Contact and Privacy page linked from every footer",
       "commits": 5
     },
     "core/src/novatedlease.js": {
@@ -189,9 +189,9 @@
       "commits": 4
     },
     "web/src/SavingsCalc.jsx": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T11:47:49.699Z",
-      "lastSubject": "Uncommitted at snapshot time",
+      "lastCommit": "8edc6d0",
+      "lastDate": "2026-09-10T11:49:21+00:00",
+      "lastSubject": "Add an About, Contact and Privacy page linked from every footer",
       "commits": 5
     },
     "core/src/savings.js": {
@@ -207,9 +207,9 @@
       "commits": 5
     },
     "web/src/HealthCalc.jsx": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T11:47:49.699Z",
-      "lastSubject": "Uncommitted at snapshot time",
+      "lastCommit": "8edc6d0",
+      "lastDate": "2026-09-10T11:49:21+00:00",
+      "lastSubject": "Add an About, Contact and Privacy page linked from every footer",
       "commits": 5
     },
     "core/src/health.js": {
@@ -220,14 +220,14 @@
     },
     "web/src/About.jsx": {
       "lastCommit": "pending",
-      "lastDate": "2026-09-10T11:47:49.699Z",
+      "lastDate": "2026-09-10T11:59:50.951Z",
       "lastSubject": "Uncommitted at snapshot time",
-      "commits": 1
+      "commits": 2
     },
     "web/src/About.css": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T11:47:49.699Z",
-      "lastSubject": "Uncommitted at snapshot time",
+      "lastCommit": "8edc6d0",
+      "lastDate": "2026-09-10T11:49:21+00:00",
+      "lastSubject": "Add an About, Contact and Privacy page linked from every footer",
       "commits": 1
     },
     "core/src/rates": {
@@ -286,21 +286,21 @@
     },
     "web/src/SiteFooter.jsx": {
       "lastCommit": "pending",
-      "lastDate": "2026-09-10T11:47:49.699Z",
+      "lastDate": "2026-09-10T11:59:50.951Z",
       "lastSubject": "Uncommitted at snapshot time",
-      "commits": 1
+      "commits": 2
     },
     "web/src/calc-shared.css": {
-      "lastCommit": "pending",
-      "lastDate": "2026-09-10T11:47:49.699Z",
-      "lastSubject": "Uncommitted at snapshot time",
-      "commits": 5
+      "lastCommit": "8edc6d0",
+      "lastDate": "2026-09-10T11:49:21+00:00",
+      "lastSubject": "Add an About, Contact and Privacy page linked from every footer",
+      "commits": 28
     },
     "web/src/base.css": {
       "lastCommit": "pending",
-      "lastDate": "2026-09-10T11:47:49.699Z",
+      "lastDate": "2026-09-10T11:59:50.951Z",
       "lastSubject": "Uncommitted at snapshot time",
-      "commits": 7
+      "commits": 8
     }
   }
 }

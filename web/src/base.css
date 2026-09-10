@@ -219,6 +219,12 @@ select:focus-visible {
 .site-footer-link:hover { color: var(--text); text-decoration: underline; }
 .site-footer-sep { color: var(--text-muted); opacity: 0.35; user-select: none; }
 
+/* Slightly warmer than its neighbours — it is an invitation, not a policy
+   link — but still quiet enough not to read as an ad. */
+.site-footer-link--support { color: var(--accent); }
+.site-footer-link--support:hover { color: var(--accent); }
+.site-footer-ext { font-size: 0.85em; margin-left: 3px; opacity: 0.7; }
+
 /* The version stamp sits immediately below, so the pair reads as one footer
    with a single rule above it rather than two stacked boxes. */
 .site-footer + .version-footer,
